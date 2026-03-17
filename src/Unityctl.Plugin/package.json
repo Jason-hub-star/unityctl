@@ -1,0 +1,16 @@
+{
+  "name": "com.unityctl.bridge",
+  "version": "0.1.0",
+  "displayName": "unityctl Bridge",
+  "description": "Unity Editor bridge for unityctl CLI — enables batchmode commands and IPC communication.",
+  "unity": "2021.3",
+  "author": {
+    "name": "unityctl"
+  },
+  "keywords": [
+    "cli",
+    "automation",
+    "batchmode",
+    "ci"
+  ]
+}
