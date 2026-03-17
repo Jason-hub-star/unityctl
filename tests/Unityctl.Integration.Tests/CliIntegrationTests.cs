@@ -71,6 +71,33 @@ public class CliIntegrationTests
             $"Expected exit code 0 or 1, got {exitCode}");
     }
 
+    [Fact]
+    public async Task Tools_PrintsToolList()
+    {
+        if (!EnsureCanExecute()) return;
+
+        var (exitCode, stdout, stderr) = await RunCli("tools");
+        _output.WriteLine($"stdout: {stdout}");
+        _output.WriteLine($"stderr: {stderr}");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("init", stdout);
+        Assert.Contains("build", stdout);
+        Assert.Contains("tools", stdout);
+    }
+
+    [Fact]
+    public async Task Tools_Json_ReturnsValidJsonArray()
+    {
+        if (!EnsureCanExecute()) return;
+
+        var (exitCode, stdout, _) = await RunCli("tools", "--json");
+        Assert.Equal(0, exitCode);
+        // Verify it's valid JSON with expected structure
+        Assert.StartsWith("[", stdout.Trim());
+        Assert.Contains("\"name\"", stdout);
+        Assert.Contains("\"parameters\"", stdout);
+    }
+
     /// <summary>
     /// Returns true if tests can proceed. If false, writes a diagnostic
     /// message explaining why the test is being skipped.

@@ -23,4 +23,7 @@ app.Add("test", (string project, string mode = "edit", string? filter = null, bo
 app.Add("check", (string project, string type = "compile", bool json = false) =>
     CheckCommand.Execute(project, type, json));
 
+app.Add("tools", (bool json = false) =>
+    ToolsCommand.Execute(json));
+
 app.Run(args);
