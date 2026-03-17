@@ -1,0 +1,26 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.vs/
+.vs/
+
+## IDE
+.idea/
+*.swp
+*.sln.DotSettings.user
+
+## Build output
+publish/
+artifacts/
+
+## Unity Plugin shared source copies
+src/Unityctl.Plugin/Editor/Shared~/
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Temp
+*.tmp
