@@ -6,7 +6,16 @@ public static class ConsoleOutput
 {
     public static void PrintResponse(CommandResponse response)
     {
-        if (response.Success)
+        if (response.StatusCode == StatusCode.Accepted)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("ACCEPTED [104]");
+            Console.ResetColor();
+            if (!string.IsNullOrEmpty(response.Message))
+                Console.Write($" — {response.Message}");
+            Console.WriteLine();
+        }
+        else if (response.Success)
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.Write("OK");

@@ -1,50 +1,64 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Unityctl.Plugin.Editor.Shared;
 
 namespace Unityctl.Plugin.Editor.Commands
 {
-    public class CheckHandler : IUnityctlCommand
+    public class CheckHandler : CommandHandlerBase
     {
-        public string CommandName => "check";
+        public override string CommandName => WellKnownCommands.Check;
 
-        public CommandResponse Execute(CommandRequest request)
+        protected override CommandResponse ExecuteInEditor(CommandRequest request)
         {
-#if UNITY_EDITOR
-            try
+            var type = request.GetParam("type", "compile");
+
+            if (type != "compile")
             {
-                var type = request.GetParam("type", "compile");
-
-                if (type != "compile")
-                {
-                    return CommandResponse.Fail(StatusCode.InvalidParameters,
-                        $"Unknown check type: {type}. Currently only 'compile' is supported.");
-                }
-
-                var assemblyNames = UnityEditor.Compilation.CompilationPipeline
-                    .GetAssemblies(UnityEditor.Compilation.AssembliesType.Player)
-                    .Select(a => a.name)
-                    .ToArray();
-
-                var data = new JObject
-                {
-                    ["assemblies"] = assemblyNames.Length,
-                    ["assemblyNames"] = string.Join(", ", assemblyNames.Take(10)),
-                    ["isCompiling"] = UnityEditor.EditorApplication.isCompiling
-                };
-                return CommandResponse.Ok("Compilation check passed", data);
+                return InvalidParameters(
+                    $"Unknown check type: {type}. Currently only 'compile' is supported.");
             }
-            catch (Exception e)
+
+            var assemblyNames = UnityEditor.Compilation.CompilationPipeline
+                .GetAssemblies(UnityEditor.Compilation.AssembliesType.Player)
+                .Select(a => a.name)
+                .ToArray();
+
+            var isCompiling = UnityEditor.EditorApplication.isCompiling;
+            var scriptCompilationFailed = UnityEditor.EditorUtility.scriptCompilationFailed;
+            var data = new JObject
             {
-                return CommandResponse.Fail(StatusCode.UnknownError,
-                    $"Compile check failed: {e.Message}",
-                    new List<string> { e.StackTrace });
+                ["assemblies"] = assemblyNames.Length,
+                ["assemblyNames"] = string.Join(", ", assemblyNames.Take(10)),
+                ["isCompiling"] = isCompiling,
+                ["scriptCompilationFailed"] = scriptCompilationFailed
+            };
+
+            if (isCompiling)
+            {
+                return Fail(
+                    StatusCode.Compiling,
+                    "Script compilation is still in progress.",
+                    data);
             }
-#else
-            return CommandResponse.Fail(StatusCode.UnknownError, "Not running in Unity Editor");
-#endif
+
+            if (scriptCompilationFailed)
+            {
+                return Fail(
+                    StatusCode.UnknownError,
+                    "Compilation check failed. Resolve Unity compiler errors and try again.",
+                    data);
+            }
+
+            return Ok("Compilation check passed", data);
+        }
+
+        protected override CommandResponse HandleException(Exception exception)
+        {
+            return Fail(
+                StatusCode.UnknownError,
+                $"Compile check failed: {exception.Message}",
+                errors: GetStackTrace(exception));
         }
     }
 }

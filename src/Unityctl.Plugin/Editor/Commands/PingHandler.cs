@@ -5,7 +5,7 @@ namespace Unityctl.Plugin.Editor.Commands
 {
     public class PingHandler : IUnityctlCommand
     {
-        public string CommandName => "ping";
+        public string CommandName => WellKnownCommands.Ping;
 
         public CommandResponse Execute(CommandRequest request)
         {

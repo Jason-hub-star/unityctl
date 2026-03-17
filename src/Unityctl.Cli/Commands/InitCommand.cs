@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Unityctl.Core.Setup;
 
 namespace Unityctl.Cli.Commands;
 
@@ -43,7 +44,21 @@ public static class InitCommand
             return;
         }
 
-        var packageSource = source ?? "file:../../unityctl/src/Unityctl.Plugin";
+        if (!PluginSourceLocator.TryResolvePackageSource(
+                source,
+                out var packageSource,
+                out var resolvedDirectory,
+                out var error))
+        {
+            Console.Error.WriteLine($"ERROR: {error}");
+            if (string.IsNullOrWhiteSpace(source))
+                Console.Error.WriteLine("Tip: run this from the unityctl workspace or pass --source <path-to-src/Unityctl.Plugin>.");
+            else
+                Console.Error.WriteLine("Tip: --source must point at a local Unityctl.Plugin folder that contains package.json.");
+            Environment.Exit(1);
+            return;
+        }
+
         dependencies.Add(packageName, JsonValue.Create(packageSource));
 
         var options = new JsonSerializerOptions { WriteIndented = true };
@@ -51,6 +66,7 @@ public static class InitCommand
         File.WriteAllText(manifestPath, output);
 
         Console.WriteLine($"Added {packageName} to {manifestPath}");
+        Console.WriteLine($"Plugin source: {resolvedDirectory}");
         Console.WriteLine("Unity will import the plugin on next Editor open or domain reload.");
     }
 }

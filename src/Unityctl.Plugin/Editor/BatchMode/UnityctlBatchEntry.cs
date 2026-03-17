@@ -13,6 +13,12 @@ namespace Unityctl.Plugin.Editor.BatchMode
     /// </summary>
     public static class UnityctlBatchEntry
     {
+        private const int BatchTimeoutSeconds = 300;
+
+        private static string _pendingResponsePath;
+        private static string _pendingRequestId;
+        private static DateTime _pollStartedAt;
+
         public static void Execute()
         {
             string command = null;
@@ -72,6 +78,19 @@ namespace Unityctl.Plugin.Editor.BatchMode
 
                 Log($"Executing command: {request.command}");
                 response = CommandRegistry.Dispatch(request);
+
+                // If Accepted, wait for async completion via polling
+                if (response.statusCode == (int)StatusCode.Accepted && !string.IsNullOrEmpty(response.requestId))
+                {
+                    Log($"Accepted — waiting for async completion (requestId={response.requestId})");
+                    _pendingResponsePath = responsePath;
+                    _pendingRequestId = response.requestId;
+                    _pollStartedAt = DateTime.UtcNow;
+#if UNITY_EDITOR
+                    UnityEditor.EditorApplication.update += PollUpdate;
+#endif
+                    return; // Do NOT quit yet — PollUpdate will write response and quit
+                }
             }
             catch (Exception e)
             {
@@ -81,6 +100,36 @@ namespace Unityctl.Plugin.Editor.BatchMode
                     new System.Collections.Generic.List<string> { e.StackTrace });
             }
 
+            WriteResponseAndQuit(responsePath, response);
+        }
+
+#if UNITY_EDITOR
+        private static void PollUpdate()
+        {
+            var state = AsyncOperationRegistry.TryGet(_pendingRequestId);
+            if (state != null && state.Status == AsyncStatus.Completed)
+            {
+                UnityEditor.EditorApplication.update -= PollUpdate;
+                Log($"Async operation completed (requestId={_pendingRequestId})");
+                WriteResponseAndQuit(_pendingResponsePath, state.Response);
+                return;
+            }
+
+            // Timeout check
+            if ((DateTime.UtcNow - _pollStartedAt).TotalSeconds > BatchTimeoutSeconds)
+            {
+                UnityEditor.EditorApplication.update -= PollUpdate;
+                Log($"Async operation timed out after {BatchTimeoutSeconds}s (requestId={_pendingRequestId})");
+                var timeout = CommandResponse.Fail(
+                    StatusCode.TestFailed,
+                    $"Test execution timed out after {BatchTimeoutSeconds}s");
+                WriteResponseAndQuit(_pendingResponsePath, timeout);
+            }
+        }
+#endif
+
+        private static void WriteResponseAndQuit(string responsePath, CommandResponse response)
+        {
             try
             {
                 var responseJson = JsonConvert.SerializeObject(response, Formatting.Indented);

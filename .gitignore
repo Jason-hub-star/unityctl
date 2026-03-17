@@ -15,8 +15,7 @@ obj/
 publish/
 artifacts/
 
-## Unity Plugin shared source copies
-src/Unityctl.Plugin/Editor/Shared~/
+## Unity Plugin shared source copies (checked in for Phase 2B+)
 
 ## OS
 Thumbs.db

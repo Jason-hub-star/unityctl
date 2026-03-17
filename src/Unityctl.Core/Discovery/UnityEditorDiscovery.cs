@@ -41,7 +41,9 @@ public sealed class UnityEditorDiscovery
             ScanEditorDirectory(searchPath, editors);
         }
 
-        return editors.Values.OrderByDescending(e => e.Version).ToList();
+        return editors.Values
+            .OrderByDescending(e => e.Version, UnityVersionComparer.Instance)
+            .ToList();
     }
 
     public UnityEditorInfo? FindEditorForProject(string projectPath)
@@ -55,7 +57,10 @@ public sealed class UnityEditorDiscovery
 
         var editors = FindEditors();
         return editors.FirstOrDefault(e => e.Version == version)
-            ?? editors.FirstOrDefault(e => e.Version.StartsWith(version.Split('.')[0] + "."));
+            ?? editors
+                .Where(e => SharesMajorVersion(e.Version, version))
+                .OrderByDescending(e => e.Version, UnityVersionComparer.Instance)
+                .FirstOrDefault();
     }
 
     private void ParseEditorsJson(string json, Dictionary<string, UnityEditorInfo> editors)
@@ -118,5 +123,14 @@ public sealed class UnityEditorDiscovery
             }
         }
         return null;
+    }
+
+    private static bool SharesMajorVersion(string candidate, string requested)
+    {
+        var candidateMajor = candidate.Split('.').FirstOrDefault();
+        var requestedMajor = requested.Split('.').FirstOrDefault();
+        return candidateMajor != null
+            && requestedMajor != null
+            && candidateMajor.Equals(requestedMajor, StringComparison.OrdinalIgnoreCase);
     }
 }

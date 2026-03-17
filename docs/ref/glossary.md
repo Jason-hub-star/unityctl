@@ -9,7 +9,13 @@
 
 `AppLocker`: 특정 실행 파일이나 어셈블리의 실행·로딩을 막을 수 있는 Windows 정책 계층입니다.
 
+`Accepted`: 비동기 작업이 시작되었음을 나타내는 StatusCode (104). CLI는 `test-result`로 폴링하여 완료를 확인합니다.
+
 `async command`: 즉시 끝나지 않고, 나중에 콜백으로 결과를 돌려주는 Unity 명령입니다.
+
+`AsyncCommandRunner`: CLI에서 Accepted 응답 후 `test-result`를 주기적으로 폴링하여 비동기 명령 완료를 대기하는 실행기입니다. delegate 주입으로 테스트 가능합니다.
+
+`AsyncOperationRegistry`: Plugin 내에서 비동기 작업 상태를 관리하는 저장소입니다. single-flight guard, age-check, TTL prune을 제공합니다.
 
 ## B
 
@@ -91,7 +97,7 @@
 
 ## M
 
-`MCP`: Model Context Protocol입니다. 에이전트-도구 통합에 강한 프로토콜이며, 이 프로젝트는 MCP의 상위 호환을 목표로 합니다. 필요시 MCP C# SDK v1.0의 `[McpToolType]`으로 ~100줄 브릿지 가능합니다.
+`MCP`: Model Context Protocol입니다. 에이전트-도구 통합에 강한 프로토콜이며, 이 프로젝트는 MCP의 상위 호환을 목표로 합니다. 필요시 MCP C# SDK의 `[McpServerToolType]` / `[McpServerTool]`로 ~100줄 수준의 브릿지가 가능합니다.
 
 `MCP bridge`: unityctl 커맨드를 MCP 서버로 래핑하는 선택적 호환 레이어입니다. MCP C# SDK v1.0을 활용하며 Phase 5 이후 제공 예정입니다.
 
@@ -113,7 +119,9 @@
 
 `Phase 2B`: 열린 Editor와 빠르게 통신하기 위한 IPC 구현 단계입니다.
 
-`Phase 2C`: 비동기 명령 처리와 batch 신뢰성 개선 단계입니다.
+`Phase 2C`: 비동기 명령 처리 단계입니다. Polling 모델(Accepted → test-result), single-flight guard, leaf-only 집계, IErrorCallbacks, AsyncCommandRunner를 구현했습니다. 완료 상태.
+
+`polling model`: CLI가 초기 Accepted 응답 후 주기적으로 `test-result`를 조회하여 비동기 명령 완료를 확인하는 패턴입니다.
 
 `Platform abstraction`: 운영체제별 차이를 인터페이스 뒤로 숨겨 상위 로직을 공통으로 유지하려는 설계 방식입니다.
 

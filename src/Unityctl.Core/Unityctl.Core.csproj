@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Unityctl.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Unityctl.Shared\Unityctl.Shared.csproj" />
   </ItemGroup>
 </Project>

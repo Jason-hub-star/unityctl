@@ -3,13 +3,12 @@ using Unityctl.Plugin.Editor.Shared;
 
 namespace Unityctl.Plugin.Editor.Commands
 {
-    public class StatusHandler : IUnityctlCommand
+    public class StatusHandler : CommandHandlerBase
     {
-        public string CommandName => "status";
+        public override string CommandName => WellKnownCommands.Status;
 
-        public CommandResponse Execute(CommandRequest request)
+        protected override CommandResponse ExecuteInEditor(CommandRequest request)
         {
-#if UNITY_EDITOR
             var isCompiling = UnityEditor.EditorApplication.isCompiling;
             var isPlaying = UnityEditor.EditorApplication.isPlaying;
             var isUpdating = UnityEditor.EditorApplication.isUpdating;
@@ -34,16 +33,7 @@ namespace Unityctl.Plugin.Editor.Commands
                 ["platform"] = UnityEditor.EditorUserBuildSettings.activeBuildTarget.ToString()
             };
 
-            return new CommandResponse
-            {
-                statusCode = (int)code,
-                success = true,
-                message = code.ToString(),
-                data = data
-            };
-#else
-            return CommandResponse.Fail(StatusCode.UnknownError, "Not running in Unity Editor");
-#endif
+            return Ok(code, code.ToString(), data);
         }
     }
 }

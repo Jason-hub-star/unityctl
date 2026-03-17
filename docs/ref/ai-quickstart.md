@@ -27,11 +27,13 @@ Before calling commands, discover what's available:
 # Human-readable list
 dotnet run --project src/Unityctl.Cli -- tools
 
-# Machine-readable JSON (MCP tools/list equivalent)
+# Machine-readable JSON (MCP-inspired discovery subset)
 dotnet run --project src/Unityctl.Cli -- tools --json
 ```
 
 The `--json` output returns a JSON array of tool definitions with name, description, category, and parameter schemas. This is the recommended way for AI agents to dynamically discover available commands.
+
+Note: this is a reduced discovery format inspired by MCP `tools/list`, not the full MCP tool schema.
 
 ## Common Workflows
 
@@ -40,6 +42,13 @@ The `--json` output returns a JSON array of tool definitions with name, descript
 ```bash
 dotnet run --project src/Unityctl.Cli -- check --project "/path/to/project" --json
 # Exit code 0 = success, 1 = failure
+```
+
+### Verify a running Editor is reachable
+
+```bash
+dotnet run --project src/Unityctl.Cli -- ping --project "/path/to/project" --json
+dotnet run --project src/Unityctl.Cli -- status --project "/path/to/project" --json
 ```
 
 ### Run EditMode tests
@@ -69,17 +78,21 @@ Commands accept typed parameters via JSON payload. The CLI maps command-line fla
 | 0 | Ready | Success | Done |
 | 100-103 | Transient | Unity is busy | Retry (auto with --wait) |
 | 200 | NotFound | No Unity installed | Install Unity |
-| 201 | ProjectLocked | Editor has project open | Close Editor or wait for IPC (Phase 2B) |
+| 201 | ProjectLocked | Batch fallback cannot take the project lock | Use IPC with `ping`/`status` or close the Editor |
 | 203 | PluginNotInstalled | Plugin missing | Run `init` |
 | 500+ | Error | Something broke | Check logs |
 
 ## Transport Selection
 
 The `CommandExecutor` selects transport automatically:
-1. **IPC** (Phase 2B): if Unity Editor is running with plugin → <200ms response
+1. **IPC** (Phase 2B): if Unity Editor is running with plugin → low-latency response (best-effort, not hard-guaranteed)
 2. **Batch**: spawn Unity in batchmode → 30-120s response
 
-Currently only batch transport is implemented. IPC will be added in Phase 2B.
+Current state:
+
+- IPC transport is implemented and used for `ping`, `status`, `check`, and `test-start` when a matching Editor is running
+- Batch remains the fallback path
+- `build` is also routed through the running Editor path; success still depends on the Unity project's own compile state
 
 ## MCP Compatibility
 
@@ -94,12 +107,12 @@ unityctl is designed as a **superset** of MCP for Unity workflows:
 | Tasks | Session Layer | Planned (Phase 3A) |
 | Streaming | Watch Mode | Planned (Phase 3C) |
 
-If MCP bridge is needed, the MCP C# SDK v1.0 `[McpToolType]` attribute can wrap unityctl commands in ~100 lines.
+If MCP bridge is needed, the MCP C# SDK can wrap unityctl commands in ~100 lines using `[McpServerToolType]` and `[McpServerTool]`.
 
 ## Error Recovery
 
 If a command fails, check:
 1. `editor list` — is Unity installed?
 2. `init --project <path>` — is the plugin installed?
-3. Is the project locked by a running Editor? (batch transport limitation)
+3. `ping --project <path>` — is the running Editor reachable over IPC?
 4. Check the log file path in the error output for Unity logs.

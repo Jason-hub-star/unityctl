@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ConsoleAppFramework" Version="5.3.3" />
+    <InternalsVisibleTo Include="Unityctl.Cli.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ConsoleAppFramework" Version="5.3.3" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

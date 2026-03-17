@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using Unityctl.Cli.Execution;
 using Unityctl.Cli.Output;
 using Unityctl.Core.Discovery;
 using Unityctl.Core.Platform;
@@ -9,15 +10,40 @@ namespace Unityctl.Cli.Commands;
 
 public static class TestCommand
 {
-    public static void Execute(string project, string mode = "edit", string? filter = null, bool json = false)
+    public static void Execute(
+        string project,
+        string mode = "edit",
+        string? filter = null,
+        bool wait = true,
+        int timeout = 300,
+        bool json = false)
     {
-        var platform = PlatformFactory.Create();
-        var discovery = new UnityEditorDiscovery(platform);
-        var executor = new CommandExecutor(platform, discovery);
+        var exitCode = ExecuteAsync(project, mode, filter, wait, timeout, json).GetAwaiter().GetResult();
+        Environment.Exit(exitCode);
+    }
+
+    internal static async Task<int> ExecuteAsync(
+        string project,
+        string mode,
+        string? filter,
+        bool wait,
+        int timeout,
+        bool json)
+    {
+        var isPlayMode = mode.Equals("play", StringComparison.OrdinalIgnoreCase)
+                         || mode.Equals("playmode", StringComparison.OrdinalIgnoreCase);
+
+        // PlayMode + --wait: force no-wait with warning
+        if (isPlayMode && wait)
+        {
+            Console.Error.WriteLine(
+                "[unityctl] Warning: PlayMode tests cause domain reload — --wait is not supported. Running with --no-wait.");
+            wait = false;
+        }
 
         var request = new CommandRequest
         {
-            Command = "test",
+            Command = WellKnownCommands.Test,
             Parameters = new JsonObject
             {
                 ["mode"] = mode,
@@ -25,17 +51,26 @@ public static class TestCommand
             }
         };
 
-        var response = executor.ExecuteAsync(project, request).GetAwaiter().GetResult();
+        var platform = PlatformFactory.Create();
+        var discovery = new UnityEditorDiscovery(platform);
+        var executor = new CommandExecutor(platform, discovery);
 
-        if (json)
-            JsonOutput.PrintResponse(response);
+        CommandResponse response;
+
+        if (wait)
+        {
+            response = await AsyncCommandRunner.ExecuteAsync(
+                project,
+                request,
+                async (proj, req, ct) => await executor.ExecuteAsync(proj, req, ct: ct),
+                timeout);
+        }
         else
         {
-            ConsoleOutput.PrintResponse(response);
-            if (!response.Success)
-                ConsoleOutput.PrintRecovery(response.StatusCode);
+            response = await executor.ExecuteAsync(project, request);
         }
 
-        Environment.Exit(response.Success ? 0 : 1);
+        CommandRunner.PrintResponse(response, json);
+        return CommandRunner.GetExitCode(response);
     }
 }

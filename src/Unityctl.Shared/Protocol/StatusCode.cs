@@ -10,6 +10,7 @@ public enum StatusCode
     Reloading = 101,
     EnteringPlayMode = 102,
     Busy = 103,
+    Accepted = 104,
 
     // Fatal — immediate failure (2xx)
     NotFound = 200,

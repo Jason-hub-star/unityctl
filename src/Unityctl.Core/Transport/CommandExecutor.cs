@@ -49,12 +49,14 @@ public sealed class CommandExecutor
         CommandRequest request,
         CancellationToken ct)
     {
-        // Phase 2B: try IPC first
-        // var ipc = new IpcTransport(projectPath);
-        // if (await ipc.ProbeAsync(ct))
-        //     return await ipc.SendAsync(request, ct);
+        // IPC first: probe checks if an Editor with IPC server is running
+        await using var ipc = new IpcTransport(projectPath);
+        if (await ipc.ProbeAsync(ct))
+        {
+            return await ipc.SendAsync(request, ct);
+        }
 
-        // Fallback: batch transport
+        // Fallback: batch transport (only when probe fails, NOT on SendAsync failure)
         await using var batch = new BatchTransport(_platform, _discovery, projectPath);
         return await batch.SendAsync(request, ct);
     }

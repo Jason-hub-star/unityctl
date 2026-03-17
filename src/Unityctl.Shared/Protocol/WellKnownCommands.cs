@@ -7,4 +7,5 @@ public static class WellKnownCommands
     public const string Build = "build";
     public const string Test = "test";
     public const string Check = "check";
+    public const string TestResult = "test-result";
 }

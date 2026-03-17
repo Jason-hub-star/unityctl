@@ -2,40 +2,27 @@ using Unityctl.Shared.Models;
 
 namespace Unityctl.Core.Platform;
 
-public sealed class LinuxPlatform : IPlatformServices
+public sealed class LinuxPlatform : PlatformServicesBase
 {
-    public string GetUnityHubEditorsJsonPath()
+    public override string GetUnityHubEditorsJsonPath()
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return Path.Combine(home, ".config", "UnityHub", "editors.json");
     }
 
-    public IEnumerable<string> GetDefaultEditorSearchPaths()
+    public override IEnumerable<string> GetDefaultEditorSearchPaths()
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         yield return Path.Combine(home, "Unity", "Hub", "Editor");
     }
 
-    public string GetUnityExecutablePath(string editorBasePath)
+    public override string GetUnityExecutablePath(string editorBasePath)
         => Path.Combine(editorBasePath, "Editor", "Unity");
 
-    public IEnumerable<UnityProcessInfo> FindRunningUnityProcesses()
+    public override IEnumerable<UnityProcessInfo> FindRunningUnityProcesses()
     {
         // Phase 2B: /proc/pid/cmdline parsing
         yield break;
     }
 
-    public bool IsProjectLocked(string projectPath)
-    {
-        var lockFile = Path.Combine(projectPath, "Temp", "UnityLockfile");
-        return File.Exists(lockFile);
-    }
-
-    public Stream CreateIpcClientStream(string projectPath)
-    {
-        throw new NotImplementedException("IPC transport is Phase 2B");
-    }
-
-    public string GetTempResponseFilePath()
-        => Path.Combine(Path.GetTempPath(), $"unityctl-res-{Guid.NewGuid():N}.json");
 }

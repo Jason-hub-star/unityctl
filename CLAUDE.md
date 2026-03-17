@@ -1,0 +1,130 @@
+# unityctl 프로젝트 인덱스
+
+unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
+이 문서만 읽어도 현재 단계, 규칙, 다음 행동을 빠르게 파악할 수 있게 유지합니다.
+
+## 저장소 경계
+- Write Repo: `.` (저장소 루트 — clone 위치 무관)
+
+## 시작 순서 (필수)
+1. `AGENTS.md` (Codex) 또는 `CLAUDE.md` (Claude) — 동일 정책 진입 문서
+2. `docs/ref/architecture-mermaid.md`
+3. `docs/status/PROJECT-STATUS.md`
+4. `docs/ref/phase-roadmap.md`
+5. `docs/ref/code-patterns.md` (코드 작성 전 필수)
+
+## 현재 상태 (2026-03-18)
+- Phase 0~1B: Done
+- Phase 1C (CI/CD): Hold (CI 있음, release.yml + README 미완)
+- Phase 2A/2A+: Done (Foundation + Tools Metadata)
+- Phase 2B (IPC Transport): Done
+- Phase 2C (Async Commands): Done
+- Phase 3~5: Ready
+
+최근 확정 사항:
+- Phase 2C Async Commands 구현 완료 (2026-03-18): AsyncOperationRegistry (single-flight + age-check + TTL), TestResultCollector (ICallbacks + IErrorCallbacks, leaf-only), AsyncCommandRunner (delegate 주입 폴링), `--no-wait`/`--timeout`, PlayMode 경고, ACCEPTED [104] 출력, BatchEntry Accepted 대기. robotapp 404개 테스트 폴링 완료, 85개 dotnet 테스트 통과
+- Phase 2B IPC Transport 구현 완료 (2026-03-17)
+- 개발 문서 거버넌스 이식 (2026-03-17)
+
+## 실행 규칙 (MUST)
+1. 기존 코드/타입/유틸 우선 재사용, 중복 구현 금지
+2. `src/` 폴더 구조를 모듈 Source of Truth로 사용
+3. Shared 수정 시 Plugin `Editor/Shared/` 동기화 필수
+4. 문서와 코드 상태가 다르면 코드/테스트 실제 상태를 우선
+5. 명시 요청 없이는 임의 Git 파괴 명령 금지
+6. **C# 파일 생성/수정 전에 `docs/ref/code-patterns.md`를 반드시 읽고 패턴 준수**
+7. `TreatWarningsAsErrors=true` — 경고 0이어야 빌드 성공
+8. Plugin 코드는 Unity API에 의존 → `dotnet build` 불가, Unity Editor에서 컴파일 확인
+
+## Quick Commands
+
+```bash
+dotnet build unityctl.slnx                                          # 빌드
+dotnet test unityctl.slnx                                           # 전체 테스트 (85개)
+dotnet test unityctl.slnx --filter "FullyQualifiedName!~Integration" # 유닛만
+dotnet run --project src/Unityctl.Cli -- <command> [options]         # CLI 실행
+```
+
+## Architecture
+
+```
+unityctl.slnx
+├── src/Unityctl.Shared    (netstandard2.1)  프로토콜 + 모델 + 상수
+├── src/Unityctl.Core      (net10.0)         비즈니스 로직 (transport, discovery, retry)
+├── src/Unityctl.Cli       (net10.0)         얇은 CLI 셸 → Core에 위임
+├── src/Unityctl.Plugin    (Unity UPM)       Editor 브릿지 (솔루션 빌드에 미포함)
+├── tests/*Tests           xUnit 테스트 (85개)
+└── docs/                  ref/ + status/ + daily/ + weekly/
+```
+
+**의존성 방향**: `Shared ← Core ← Cli`. Plugin은 Unity 내에서만 컴파일.
+
+## Tech Stack
+
+| 항목 | 값 |
+|------|-----|
+| 런타임 | .NET 10 (SDK 10.0.201) |
+| CLI 프레임워크 | ConsoleAppFramework 5.3.3 (Cysharp, delegate 기반 등록) |
+| Shared 타겟 | .NET Standard 2.1 |
+| JSON (CLI/Core) | System.Text.Json + Source Generator (`JsonContext`) |
+| JSON (Plugin) | Newtonsoft.Json 3.2.1 (`JsonConvert`, `JObject`) |
+| 테스트 | xUnit 2.9.2 |
+| Unity 최소 | 2021.3+ |
+| CI | GitHub Actions (Win/Mac/Linux 매트릭스) |
+
+## Key Design Decisions
+
+- **Payload 타입**: `JsonObject` / `JObject` — `Dictionary<string, object?>` 사용 금지
+- **파이프명**: SHA256 해시 기반 결정적 생성 (`Constants.GetPipeName()`)
+- **Transport 전략**: IPC probe-first → Batch 폴백 (CommandExecutor 자동 선택)
+- **IPC framing**: `[4-byte LE length][UTF-8 JSON]` — 10MB 최대
+- **IPC 서버**: 동기 I/O + 백그라운드 Thread (Unity Mono 비동기 미검증)
+- **Plugin ↔ Shared**: 소스 직접 복사 (타입 10개 미만)
+- **batchmode 응답**: response-file 패턴 (stdout/log 오염 방지)
+
+## Phase Status
+
+| Phase | 상태 | 요약 |
+|-------|------|------|
+| 0~1B | ✅ 완료 | 골격, Plugin, CLI 기본, 핵심 기능 |
+| 1C | ⚠️ Hold | CI 있음, release.yml + README 미완 |
+| 2A/2A+ | ✅ 완료 | Foundation + Tools Metadata |
+| 2B | ✅ 완료 | IPC Transport (Named Pipe, probe-first) |
+| **2C** | ✅ 완료 | **Async Commands** (polling, single-flight, ACCEPTED) |
+| 3A~3C | 🔲 | Session, Flight Recorder, Watch Mode |
+| 4A~4B | 🔲 | Ghost Mode, Scene Diff |
+| 5 | 🔲 | Agent Layer (JSON 워크플로우) |
+
+## Source of Truth 문서
+- 탐색 인덱스: `AGENTS.md`
+- 아키텍처 (빠른 맥락): `docs/ref/architecture-mermaid.md`
+- 코드 패턴: `docs/ref/code-patterns.md`
+- Phase 로드맵: `docs/ref/phase-roadmap.md`
+- Phase 2B 설계: `docs/ref/phase-2b-plan.md`
+- 프로젝트 상태: `docs/status/PROJECT-STATUS.md`
+- Phase 실행 보드: `docs/status/PHASE-EXECUTION-BOARD.md`
+- 사용자 가이드: `docs/ref/getting-started.md`
+- AI 빠른 시작: `docs/ref/ai-quickstart.md`
+- 용어 사전: `docs/ref/glossary.md`
+- 개발 진행 상세: `docs/DEVELOPMENT.md`
+
+## Task Routing
+1. 아키텍처/설계 확인: `docs/ref/architecture-mermaid.md`
+2. 현재 상태 확인: `docs/status/PROJECT-STATUS.md`
+3. Phase별 실행 현황: `docs/status/PHASE-EXECUTION-BOARD.md`
+4. 코드 작성 전 패턴: `docs/ref/code-patterns.md`
+5. IPC Transport 설계: `docs/ref/phase-2b-plan.md`
+6. 전체 로드맵: `docs/ref/phase-roadmap.md`
+7. 개발 진행 상세 이력: `docs/DEVELOPMENT.md`
+
+## 테스트 표준
+- 총 85개 (Shared 19 + Core 30 + Cli 30 + Integration 6)
+- `dotnet test unityctl.slnx` green 필수
+- Integration.Tests는 AppLocker 감지 + graceful skip
+
+## 즉시 다음 작업
+1. 도메인 리로드 후 IPC 자동 복구를 더 강하게 재현/종결 검증
+2. batch worker에서 IPC 서버 미기동 로그 검증
+3. pure transport-only latency 측정
+4. Phase 3A — Session Layer 착수
+5. Phase 1C 잔여 (release.yml, README)

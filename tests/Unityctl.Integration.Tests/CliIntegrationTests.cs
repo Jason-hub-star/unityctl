@@ -81,6 +81,7 @@ public class CliIntegrationTests
         _output.WriteLine($"stderr: {stderr}");
         Assert.Equal(0, exitCode);
         Assert.Contains("init", stdout);
+        Assert.Contains("ping", stdout);
         Assert.Contains("build", stdout);
         Assert.Contains("tools", stdout);
     }

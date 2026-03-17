@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Unityctl.Cli\Unityctl.Cli.csproj" />
     <ProjectReference Include="..\..\src\Unityctl.Core\Unityctl.Core.csproj" />
   </ItemGroup>
 </Project>
