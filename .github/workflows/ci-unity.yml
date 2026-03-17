@@ -1,0 +1,36 @@
+name: CI — Unity Integration
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  unity-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        unityVersion:
+          - 2021.3.11f1
+          - 6000.0.64f1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build CLI
+        run: dotnet build src/Unityctl.Cli -c Release
+
+      # GameCI Unity Test Runner
+      - uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: tests/Unityctl.Integration/SampleUnityProject
+          unityVersion: ${{ matrix.unityVersion }}
+          testMode: editmode
+          customParameters: -nographics
