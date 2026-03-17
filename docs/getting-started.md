@@ -64,6 +64,15 @@ dotnet run --project src/Unityctl.Cli -- test --project "C:/MyGame" --mode edit
 dotnet run --project src/Unityctl.Cli -- build --project "C:/MyGame" --target StandaloneWindows64
 ```
 
+### 6. Discover available tools
+
+```bash
+dotnet run --project src/Unityctl.Cli -- tools
+dotnet run --project src/Unityctl.Cli -- tools --json
+```
+
+The `--json` variant returns a machine-readable JSON array (equivalent to MCP `tools/list`) for AI agent integration.
+
 ## JSON Output
 
 All commands support `--json` for machine-readable output:

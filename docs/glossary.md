@@ -37,6 +37,8 @@
 
 `compile-only retry`: Unity가 첫 batch 실행에서 실제 명령 대신 스크립트 컴파일만 하고 끝났을 때 자동으로 한 번 더 실행하는 복구 패턴입니다.
 
+`CompileWatcher`: `CompilationPipeline.compilationStarted/Finished` 이벤트를 감시하여 컴파일 상태를 실시간 스트리밍하는 Watch Mode 컴포넌트입니다.
+
 `control plane`: 상태 조회, 명령 실행, 세션 유지, 기록을 통합 제어하는 계층이라는 뜻입니다. 이 프로젝트의 장기 정체성을 설명하는 표현입니다.
 
 ## D
@@ -75,6 +77,8 @@
 
 ## J
 
+`JSON workflow`: `unityctl exec --workflow workflow.json`으로 여러 커맨드를 순차 실행하는 방식입니다. 커스텀 DSL 대신 JSON 파일로 워크플로우를 정의하여 구현 복잡도를 줄입니다.
+
 `JsonContext`: `System.Text.Json`의 소스 생성 직렬화 컨텍스트입니다.
 
 `JsonConvert`: Newtonsoft.Json에서 사용하는 주요 JSON 직렬화 API입니다.
@@ -87,7 +91,9 @@
 
 ## M
 
-`MCP`: Model Context Protocol입니다. 에이전트-도구 통합에 강한 프로토콜이며, 이 프로젝트는 MCP와 다른 강점으로 차별화하려는 방향입니다.
+`MCP`: Model Context Protocol입니다. 에이전트-도구 통합에 강한 프로토콜이며, 이 프로젝트는 MCP의 상위 호환을 목표로 합니다. 필요시 MCP C# SDK v1.0의 `[McpToolType]`으로 ~100줄 브릿지 가능합니다.
+
+`MCP bridge`: unityctl 커맨드를 MCP 서버로 래핑하는 선택적 호환 레이어입니다. MCP C# SDK v1.0을 활용하며 Phase 5 이후 제공 예정입니다.
 
 `Named Pipe`: Windows에서 사용하는 IPC 방식입니다.
 
@@ -125,7 +131,9 @@
 
 ## S
 
-`Scene Diff`: 씬 스냅샷 두 개를 비교해서 추가·삭제·변경된 구조를 보여주는 예정 기능입니다.
+`Scene Diff`: 씬 스냅샷 두 개를 비교해서 추가·삭제·변경된 구조를 보여주는 예정 기능입니다. `SerializedProperty.DataEquals()` API를 활용하여 YAML 파싱 없이 의미적 비교를 수행합니다.
+
+`SerializedProperty.DataEquals()`: Unity 내장 API로, 두 `SerializedProperty` 값이 같은지 비교합니다. Scene Diff에서 YAML 파싱 대신 사용하여 프리팹 오버라이드도 자동 처리합니다.
 
 `Session Layer`: 열린 Unity Editor와 장기 연결을 유지하면서 빠른 상호작용을 담당하는 계층입니다.
 
@@ -144,6 +152,8 @@
 ## T
 
 `tmux for Unity`: 장기 세션, 재접속, 지속 작업 흐름을 강조하기 위해 비전 문서에서 쓰는 비유 표현입니다.
+
+`tool discovery`: `unityctl tools --json`으로 AI 에이전트가 사용 가능한 커맨드를 동적으로 발견하는 기능입니다. MCP의 `tools/list`를 대체합니다.
 
 `transport`: 명령을 실제로 전달하는 방식입니다. 예를 들어 batchmode 또는 IPC가 transport가 됩니다.
 
@@ -170,6 +180,10 @@
 `UnityctlBatchEntry`: `-executeMethod`로 batchmode에서 Unity가 진입하는 메서드입니다.
 
 `UPM`: Unity Package Manager입니다. Unity의 공식 패키지 시스템입니다.
+
+## V
+
+`VYaml`: YamlDotNet 대비 6배 빠른 고성능 YAML 파서입니다. Unity의 `stripped` 태그를 네이티브 지원하며, Scene Diff의 외부 파싱 대안으로 확보되어 있습니다.
 
 ## W
 

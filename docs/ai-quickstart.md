@@ -19,6 +19,20 @@ dotnet run --project src/Unityctl.Cli -- init --project "/path/to/unity/project"
 dotnet run --project src/Unityctl.Cli -- editor list --json
 ```
 
+## Tool Discovery
+
+Before calling commands, discover what's available:
+
+```bash
+# Human-readable list
+dotnet run --project src/Unityctl.Cli -- tools
+
+# Machine-readable JSON (MCP tools/list equivalent)
+dotnet run --project src/Unityctl.Cli -- tools --json
+```
+
+The `--json` output returns a JSON array of tool definitions with name, description, category, and parameter schemas. This is the recommended way for AI agents to dynamically discover available commands.
+
 ## Common Workflows
 
 ### Check if project compiles
@@ -66,6 +80,21 @@ The `CommandExecutor` selects transport automatically:
 2. **Batch**: spawn Unity in batchmode → 30-120s response
 
 Currently only batch transport is implemented. IPC will be added in Phase 2B.
+
+## MCP Compatibility
+
+unityctl is designed as a **superset** of MCP for Unity workflows:
+
+| MCP Feature | unityctl Equivalent | Status |
+|-------------|-------------------|--------|
+| `tools/list` | `unityctl tools --json` | Available |
+| Tool execution | CLI commands + `--json` | Available |
+| Prompts | `ai-quickstart.md` | Available |
+| Resources | Flight Recorder + Scene Snapshot | Planned (Phase 3B, 4B) |
+| Tasks | Session Layer | Planned (Phase 3A) |
+| Streaming | Watch Mode | Planned (Phase 3C) |
+
+If MCP bridge is needed, the MCP C# SDK v1.0 `[McpToolType]` attribute can wrap unityctl commands in ~100 lines.
 
 ## Error Recovery
 
