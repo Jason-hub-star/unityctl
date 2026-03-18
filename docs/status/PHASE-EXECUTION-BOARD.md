@@ -8,7 +8,7 @@
 | Phase 0.5 | Plugin Bootstrap | P0 | Done | CLAUDE.md | 2026-03-17 |
 | Phase 1A | CLI 기본 (Discovery, BatchMode, Retry) | P0 | Done | docs/ref/architecture-mermaid.md | 2026-03-17 |
 | Phase 1B | 핵심 기능 (Build, Test, Check Handler) | P0 | Done | docs/ref/code-patterns.md | 2026-03-17 |
-| Phase 1C | 테스트 + 배포 | P1 | Hold | .github/workflows/ | 2026-03-17 |
+| Phase 1C | 테스트 + 배포 | P1 | Done | .github/workflows/ | 2026-03-18 |
 | Phase 2A | Foundation (Payload, Core 추출) | P0 | Done | docs/ref/architecture-mermaid.md | 2026-03-17 |
 | Phase 2A+ | Tools Metadata | P0 | Done | docs/ref/phase-roadmap.md | 2026-03-17 |
 | Phase 2B | IPC Transport (Named Pipe) | P0 | Done | docs/ref/phase-2b-plan.md | 2026-03-17 |
