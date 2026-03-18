@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Unityctl.Cli.Output;
+using Unityctl.Core.Diagnostics;
 using Unityctl.Core.Discovery;
 using Unityctl.Core.FlightRecorder;
 using Unityctl.Core.Platform;
@@ -72,11 +73,28 @@ public static class CommandRunner
 
         ConsoleOutput.PrintResponse(response);
         if (!response.Success)
+        {
+            PrintEditorLogDiagnostics(response.StatusCode);
             ConsoleOutput.PrintRecovery(response.StatusCode);
+        }
     }
 
     internal static int GetExitCode(CommandResponse response)
         => response.Success ? 0 : 1;
+
+    /// <summary>
+    /// For ProjectLocked / Busy failures, read Unity Editor.log and print any compile errors.
+    /// Helps diagnose IPC failures caused by plugin compilation issues.
+    /// </summary>
+    private static void PrintEditorLogDiagnostics(StatusCode statusCode)
+    {
+        if (statusCode is not (StatusCode.ProjectLocked or StatusCode.Busy))
+            return;
+
+        var diagnostics = EditorLogDiagnostics.GetRecentDiagnostics();
+        if (diagnostics != null)
+            Console.Error.WriteLine(diagnostics);
+    }
 
     private static void RecordEntry(
         string project,

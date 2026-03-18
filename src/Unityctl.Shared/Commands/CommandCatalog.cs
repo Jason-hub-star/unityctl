@@ -68,6 +68,13 @@ public static class CommandCatalog
         "meta",
         Parameter("json", "bool", "Output as machine-readable JSON", required: false));
 
+    public static readonly CommandDefinition Doctor = Define(
+        "doctor",
+        "Diagnose Unity project connectivity and plugin health",
+        "meta",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false));
+
     public static readonly CommandDefinition Log = Define(
         "log",
         "Query and manage command execution logs",
@@ -524,6 +531,46 @@ public static class CommandCatalog
         Parameter("pivot", "string", "Pivot as JSON [x,y]", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("ui set-rect");
 
+    // Script Editing v1
+    public static readonly CommandDefinition ScriptCreateCmd = Define(
+        WellKnownCommands.ScriptCreate,
+        "Create a new C# script file",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path for the script (e.g. Assets/Scripts/Player.cs)", required: true),
+        Parameter("className", "string", "C# class name (must match filename)", required: true),
+        Parameter("namespace", "string", "C# namespace", required: false),
+        Parameter("baseType", "string", "Base class (default: MonoBehaviour). Known: MonoBehaviour, ScriptableObject, Editor, EditorWindow", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script create");
+
+    public static readonly CommandDefinition ScriptEditCmd = Define(
+        WellKnownCommands.ScriptEdit,
+        "Replace the contents of an existing C# script file",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path of the script to edit", required: true),
+        Parameter("content", "string", "New file content (whole-file replace)", required: false),
+        Parameter("contentFile", "string", "Local file path to read content from (CLI-only convenience)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script edit");
+
+    public static readonly CommandDefinition ScriptDeleteCmd = Define(
+        WellKnownCommands.ScriptDelete,
+        "Delete a C# script file",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path of the script to delete", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script delete");
+
+    public static readonly CommandDefinition ScriptValidateCmd = Define(
+        WellKnownCommands.ScriptValidate,
+        "Trigger script compilation and return diagnostics",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Script path to filter results by assembly", required: false),
+        Parameter("wait", "bool", "Wait for compilation (default: true)", required: false),
+        Parameter("timeout", "int", "Timeout in seconds (default: 300)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script validate");
+
     public static CommandDefinition[] All { get; } =
     [
         Init,
@@ -534,6 +581,7 @@ public static class CommandCatalog
         Test,
         Check,
         Tools,
+        Doctor,
         Log,
         SessionList,
         SessionStop,
@@ -589,7 +637,12 @@ public static class CommandCatalog
         AnimationCreateControllerCmd,
         UiCanvasCreateCmd,
         UiElementCreateCmd,
-        UiSetRectCmd
+        UiSetRectCmd,
+        // Script Editing v1
+        ScriptCreateCmd,
+        ScriptEditCmd,
+        ScriptDeleteCmd,
+        ScriptValidateCmd
     ];
 
     private static CommandDefinition Define(

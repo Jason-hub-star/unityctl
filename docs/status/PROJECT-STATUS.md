@@ -262,13 +262,26 @@ Write API 실측 검증:
 
 ## 후속 과제
 
-1. **Write API 확장 Unity 실측 검증** (asset/prefab/package/material/animation/ui)
-2. `docs/benchmark/` 산출물 커밋 및 README 링크 연결
-3. MCP raw `tools/list` payload 캡처 하네스 추가
-4. macOS / Linux 실제 테스트
-5. GitHub Actions CI 실행 검증
-6. `dotnet tool` NuGet 패키지 배포
-7. exec 프로퍼티 체이닝 지원 개선
-8. write API property alias 개선 (`mass` -> `m_Mass` 등)
-9. script editing 최소형(create/delete/validate) 설계
-10. Graphics/VFX 또는 script editing 중 다음 우선순위 확정
+1. ~~**Write API 확장 Unity 실측 검증**~~ ✅ 완료 (2026-03-18)
+2. ~~**Phase 2B 후속 검증**~~ ✅ 종결 (IPC 복구 실측, batch silent skip 확인, latency 측정)
+3. `docs/benchmark/` 산출물 커밋 및 README 링크 연결
+4. MCP raw `tools/list` payload 캡처 하네스 추가
+5. macOS / Linux 실제 테스트
+6. GitHub Actions CI 실행 검증
+7. `dotnet tool` NuGet 패키지 배포
+8. exec 프로퍼티 체이닝 지원 개선
+9. write API property alias 개선 (`mass` → `m_Mass` 등)
+10. **script editing 최소형(create/delete/validate) 설계 — 다음 우선순위**
+
+## Transport Latency 실측 (published exe, IPC, 2026-03-18)
+
+| 명령 | Median | Min | Max |
+|------|--------|-----|-----|
+| `ping` | 528ms | 481ms | 592ms |
+| `status` | 523ms | 491ms | 593ms |
+| `check` | 668ms | 605ms | 726ms |
+| `exec` | 567ms | 499ms | 662ms |
+
+- 첫 실행 JIT 오버헤드: ~1779ms (ping 기준)
+- MCP resident mode: ~100ms (프로세스 시작 + probe 없음)
+- CLI published exe 오버헤드: ~400ms (프로세스 시작 ~200ms + IPC probe ~100ms + 기타 ~100ms)

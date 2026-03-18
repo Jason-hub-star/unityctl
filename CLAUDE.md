@@ -32,6 +32,7 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - Write API 확장 (Scene open/create, Undo/Redo, Phase C): Done
 
 최근 확정 사항:
+- Phase 2B 후속 검증 종결 (2026-03-18): IPC 도메인 리로드 자동 복구 실측 완료 (20회 연속 ping 무실패), batch worker IPC silent skip 확인, transport latency 측정 (ping median 528ms, MCP resident 100ms).
 - Schema 정합성 + Material Create (2026-03-18): schema에 `cliName`/`cliFlag` 필드 추가 (CLI 호출명 ↔ IPC 프로토콜명 불일치 근본 해결). `material create` 명령 추가. allowlist 40개. Phase C Unity 실측 완료 (asset/prefab/package/project-settings/animation/ui/material 전부 검증).
 - Write API 확장 구현 완료 (2026-03-18): 28개 신규 write 명령 (Asset CRUD 6 + Prefab 4 + Package/Settings 5 + Material 4 + Animation/UI 5 + Scene open/create 2 + Undo/Redo 2). 총 40개 write/action 명령. MCP 도구 13개 유지 (unityctl_run allowlist 40개). 388개 dotnet 테스트 (Integration 2개 환경 의존 실패 가능).
 - MCP 하이브리드 전략 구현 완료 (2026-03-18): `unityctl_run` (allowlist 12개 write 명령), `unityctl_schema(command=...)` 온디맨드 필터. MCP 도구 12→13개. 356개 dotnet 테스트 통과. Unity 실측 완료.
@@ -150,6 +151,8 @@ unityctl.slnx
 - Integration.Tests는 AppLocker 감지 + graceful skip
 
 ## 즉시 다음 작업
-1. 도메인 리로드 후 IPC 자동 복구를 더 강하게 재현/종결 검증
-2. batch worker에서 IPC 서버 미기동 로그 검증
-3. pure transport-only latency 측정
+1. script editing 최소형 (create/delete/validate) 설계 및 구현
+2. exec 프로퍼티 체이닝 지원 개선
+3. write API property alias 개선 (`mass` → `m_Mass`)
+4. macOS / Linux 실제 테스트
+5. `dotnet tool` NuGet 패키지 배포

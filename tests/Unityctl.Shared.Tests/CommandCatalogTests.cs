@@ -11,7 +11,7 @@ public class CommandCatalogTests
         var names = CommandCatalog.All.Select(command => command.Name).ToArray();
 
         Assert.Equal(
-            ["init", "editor list", "ping", "status", "build", "test", "check", "tools", "log",
+            ["init", "editor list", "ping", "status", "build", "test", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",
              "scene snapshot", "scene diff",
              "schema", "exec", "workflow",
@@ -29,7 +29,9 @@ public class CommandCatalogTests
              "material-create", "material-get", "material-set", "material-set-shader",
              // Phase C-5: Animation + UI
              "animation-create-clip", "animation-create-controller",
-             "ui-canvas-create", "ui-element-create", "ui-set-rect"],
+             "ui-canvas-create", "ui-element-create", "ui-set-rect",
+             // Script Editing v1
+             "script-create", "script-edit", "script-delete", "script-validate"],
             names);
     }
 

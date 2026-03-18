@@ -71,5 +71,12 @@ namespace Unityctl.Plugin.Editor.Shared
         public const string UiCanvasCreate = "ui-canvas-create";
         public const string UiElementCreate = "ui-element-create";
         public const string UiSetRect = "ui-set-rect";
+
+        // Script Editing v1
+        public const string ScriptCreate = "script-create";
+        public const string ScriptEdit = "script-edit";
+        public const string ScriptDelete = "script-delete";
+        public const string ScriptValidate = "script-validate";
+        public const string ScriptValidateResult = "script-validate-result";
     }
 }

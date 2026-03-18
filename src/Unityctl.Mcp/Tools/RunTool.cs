@@ -57,7 +57,12 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.AnimationCreateController,
         WellKnownCommands.UiCanvasCreate,
         WellKnownCommands.UiElementCreate,
-        WellKnownCommands.UiSetRect
+        WellKnownCommands.UiSetRect,
+        // Script Editing v1
+        WellKnownCommands.ScriptCreate,
+        WellKnownCommands.ScriptEdit,
+        WellKnownCommands.ScriptDelete,
+        WellKnownCommands.ScriptValidate
     };
 
     [McpServerTool(Name = "unityctl_run")]

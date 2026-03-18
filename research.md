@@ -1,13 +1,35 @@
-[P1] batch fallback에서는 아직 --no-wait semantics를 만족시킬 수 없습니다. 이건 현재 transport 구조에서 바로 나오는 추론입니다. BatchTransport.cs#L82 에서 CLI는 Unity 프로세스 종료까지 기다리고, revised plan의 UnityctlBatchEntry도 Accepted 후 내부 대기를 하므로, Unity가 떠 있지 않은 경우 --no-wait나 PlayMode 강제 --no-wait가 즉시 반환되지 않습니다. 플랜에 --no-wait는 IPC 전용이라고 못 박거나, batch + --no-wait를 명시적으로 unsupported 처리하는 쪽이 안전합니다.
+Branch 3는 이렇게 잠그는 게 가장 일관됩니다.
 
-[P1] “run이 시작조차 못한 경우” 완료 경로가 아직 비어 있습니다. revised plan은 ICallbacks 중심인데, Unity 공식 문서는 IErrorCallbacks.OnError가 컴파일 오류나 IPrebuildSetup 예외처럼 RunFinished 전에 실패한 경우 호출된다고 설명합니다. 이 경로를 안 넣으면 registry가 Running에 남고 CLI는 timeout까지 폴링할 수 있습니다. 출처: How to get test results
+Q10: script delete는 삭제 성공만 반환하고, 컴파일 영향은 script validate에 위임하는 쪽이 맞습니다.
 
-[P2] non-JSON 출력에서는 Accepted가 최종 성공처럼 보입니다. ConsoleOutput.cs#L7 는 Success=true면 전부 OK로 출력합니다. 그래서 test --no-wait가 완료 성공과 시각적으로 구분되지 않습니다. Accepted를 유지할 거면 ACCEPTED [104] 같은 출력 분기가 하나 필요합니다.
+현재 asset delete도 delete 자체의 성공/실패만 다루고 후속 영향 분석은 하지 않습니다.
+“이 스크립트를 참조하는 파일이 있다” 경고는 v1에서 넣지 않는 게 좋습니다. C# 참조 분석은 심볼 해석까지 가야 해서 범위가 커지고 오탐/누락 리스크도 큽니다.
+권장 흐름은 delete -> validate입니다.
+문서에는 “delete는 semantic impact를 분석하지 않으며, compile fallout은 validate로 확인”이라고 명시하면 충분합니다.
+Q11: Assets/ 하위만 허용으로 고정하면 됩니다.
 
-[P2] Running TTL 30분은 single-flight lockout을 너무 길게 만들 수 있습니다. timeout, reload, start-error가 한 번 나면 다음 test가 prune 전까지 오래 막힐 수 있습니다. 특히 CLI 기본 timeout이 300초라서 gap이 큽니다. HasRunning()에서 즉시 age-check를 하거나, running TTL을 CLI timeout + buffer 수준으로 줄이는 편이 덜 거칠습니다.
+그래서 Packages/는 전부 거부합니다.
+로컬 패키지든 immutable 패키지든 v1에서는 예외를 두지 않는 편이 안전합니다.
+이유는 간단합니다. Packages/를 열기 시작하면 UPM, embedded package, symlink/local package, package cache 경계가 섞이면서 규칙이 복잡해집니다.
+v1 규칙:
+Assets/**/*.cs만 create/edit/delete 허용
+Packages/...는 명시적 에러 반환
+이후 필요하면 별도 Phase에서 “embedded/local package editing”을 독립 기능으로 열면 됩니다.
+Q12: Undo 미지원으로 가는 게 맞습니다.
 
-[P3] revised text의 한 전제는 다시 고치는 게 좋습니다: TestRunnerApi.Execute는 void가 아니라 GUID를 반환합니다. 콜백 혼선 문제를 해결해주진 않지만, 진단 로그나 향후 cancel 지원에는 유용합니다. 출처: Execute
+script delete는 기존 asset delete와 같은 의미 계열로 두고, undo에 기대지 않도록 합니다.
+응답에도 undoSupported=false 같은 힌트를 넣는 건 괜찮지만, 꼭 필요하진 않습니다.
+문서에는 “asset/script file deletion은 Unity Undo stack 복구 대상이 아니다”라고 못 박으면 됩니다.
+정리하면 Branch 3 합의안은 이겁니다.
 
-남은 큰 뼈대는 꽤 좋아졌습니다. 특히 single-flight, leaf-only, idempotent polling, catalog 비노출 결정은 방향이 맞습니다. 위 5개만 플랜에 한 번 더 반영하면 구현 들어가도 될 수준으로 보입니다.
+script delete는 Assets/ 하위 .cs 기존 파일만 삭제
+삭제 자체만 판정, 참조 영향 분석 없음
+후속 컴파일 문제는 script validate에서 확인
+Packages/는 전부 비허용
+Undo 미지원
+이렇게 가면 script 명령군이 전부 같은 철학으로 정렬됩니다.
 
-부가로 두 가지만 더 보면 좋겠습니다. EditMode는 reload가 없다는 문장은 조금 약하게 쓰는 편이 안전하고, AsyncCommandRunner 테스트는 레이어 기준상 tests/Unityctl.Cli.Tests가 더 자연스럽습니다.
+create: 파일 생성
+edit: 기존 파일 전체 교체
+delete: 기존 파일 삭제
+validate: 컴파일 결과 판정

@@ -29,6 +29,9 @@ app.Add("check", (string project, string type = "compile", bool json = false) =>
 app.Add("tools", (bool json = false) =>
     ToolsCommand.Execute(json));
 
+app.Add("doctor", (string project, bool json = false) =>
+    DoctorCommand.Execute(project, json));
+
 app.Add("log", (
         int? last = null,
         bool tail = false,
@@ -227,5 +230,18 @@ app.Add("undo", (string project, bool json = false) =>
 
 app.Add("redo", (string project, bool json = false) =>
     UndoCommand.Redo(project, json));
+
+// Script Editing v1
+app.Add("script create", (string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", bool json = false) =>
+    ScriptCommand.Create(project, path, className, ns, baseType, json));
+
+app.Add("script edit", (string project, string path, string? content = null, string? contentFile = null, bool json = false) =>
+    ScriptCommand.Edit(project, path, content, contentFile, json));
+
+app.Add("script delete", (string project, string path, bool json = false) =>
+    ScriptCommand.Delete(project, path, json));
+
+app.Add("script validate", (string project, string? path = null, bool wait = true, int timeout = 300, bool json = false) =>
+    ScriptCommand.Validate(project, path, wait, timeout, json));
 
 app.Run(args);
