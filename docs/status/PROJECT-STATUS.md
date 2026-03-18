@@ -68,10 +68,48 @@ Unityctl.Mcp resident mode는 CoplayDev와 동등한 100ms대.
 | Unityctl.Mcp.Tests | 7 |
 | Unityctl.Integration.Tests | 19 |
 
+## 경쟁 우위 검증 결과
+
+### 토큰 효율 (Codex 벤치마크)
+
+| 항목 | unityctl | CoplayDev MCP | 배율 |
+|------|----------|---------------|------|
+| 스키마 크기 | 5,024 B (Mcp) | 45,705 B | **9.1x 절감** |
+| 단일 status 왕복 | 467 B | N/A (직접 비교 불가) | — |
+| CoplayDev에 build 도구 없음 | ✅ build/dry-run 있음 | ❌ 없음 | — |
+
+### Headless CI/CD (경쟁자 불가 영역)
+
+| 시나리오 | unityctl | CoplayDev |
+|----------|----------|-----------|
+| Editor 없이 check | ✅ 44 assemblies 확인 | ❌ 불가 |
+| Editor 없이 test | ✅ 410개 실행, 13.1s | ❌ 불가 |
+| Editor 없이 dry-run | ✅ preflight 통과 | ❌ 불가 |
+
+### exec 파워 데모 (80개 커맨드 vs exec 1개)
+
+| Unity API 호출 | 결과 |
+|----------------|------|
+| `PlayerPrefs.GetString` | ✅ "none" |
+| `PlayerSettings.companyName` | ✅ "DefaultCompany" |
+| `PlayerSettings.productName` | ✅ "robotapp2" |
+| `Application.unityVersion` | ✅ "6000.0.64f1" |
+| `Application.dataPath` | ✅ 정확한 경로 |
+| `Application.isPlaying` | ✅ false |
+| 프로퍼티 체이닝 (예: `scenes.Length`) | ❌ 미지원 (한계) |
+
+### 에러 복구 품질
+
+| 시나리오 | 응답 |
+|----------|------|
+| 잘못된 빌드 타겟 | 유효 타겟 목록 포함 JSON 에러 |
+| 존재하지 않는 프로젝트 | StatusCode 200 + 명확한 메시지 |
+| 잘못된 exec 코드 | 보안 제한 메시지 + 허용 네임스페이스 안내 |
+
 ## 후속 과제
 
 1. 벤치마크 리포트 커밋 (Codex 결과)
 2. macOS / Linux 실제 테스트
 3. GitHub Actions CI 실행 검증
 4. `dotnet tool` NuGet 패키지 배포
-5. exec 보안 강화 (허용 네임스페이스 제한 완화 UX)
+5. exec 프로퍼티 체이닝 지원 개선
