@@ -9,7 +9,7 @@
 Let AI agents build scenes, manage assets, and run builds — without ever opening the GUI.
 
 ```
-118 CLI commands · 33 MCP tools · 538 tests · Windows / macOS / Linux
+108 CLI commands · 33 MCP tools · 538 tests · Windows / macOS / Linux
 ```
 
 <p align="center">
@@ -28,23 +28,38 @@ AI agents and CI pipelines need to interact with Unity, but:
 
 ## The Solution
 
-unityctl gives you a single binary that **auto-selects the fastest transport** — IPC when the Editor is running (~100ms), batch mode when it's not — and exposes **118 commands** covering the full Unity Editor surface.
+unityctl gives you a single binary that **auto-selects the fastest transport** — IPC when the Editor is running (~100ms), batch mode when it's not — and exposes **108 commands** covering the full Unity Editor surface.
 
 For AI agents, the companion MCP server compresses everything into **33 tools with a 5 KB schema** — 9x smaller than alternatives.
 
 | | unityctl | Existing Unity MCP |
 |---|---|---|
 | Headless CI/CD | `check` / `test` / `build --dry-run` without Editor | Editor must be open |
-| Schema size | **5 KB** (9x smaller) | 45 KB |
-| Commands | **118** CLI commands, **70** write actions | ~39 tools |
-| Transport | IPC → batch **auto-fallback** | Single path |
+| Schema size | **5 KB** (9x smaller) | 45 KB+ |
+| Commands | **108** CLI commands, **64** write actions | ~34–200 tools |
+| Install | `dotnet tool install -g unityctl` | Node.js + npm + Plugin + port config |
+| Transport | IPC → batch **auto-fallback** | Single path (WebSocket/HTTP) |
+| Domain Reload | Named Pipe — **no disconnection** | WebSocket drops, reconnect needed |
+| CLI without MCP | Full CLI standalone, CI/CD ready | MCP client required |
 | Preflight | `--dry-run` with **19 checks** | — |
+| Diagnostics | `doctor` — IPC/Plugin/Editor auto-diagnosis | — |
 | Flight Recorder | NDJSON audit log | — |
 | Real-time | `watch` console / hierarchy / compilation | — |
 | Scene Diff | Property-level diff with epsilon | — |
 | Batch Execute | Transaction with **rollback** | — |
 | Undo/Redo | Full CLI support | — |
 | Runtime | Native .NET — no Python/TS bridge | Python/TS bridge |
+| License | **MIT** | Some require attribution |
+
+## Why unityctl?
+
+Other Unity MCP servers focus on **tool count**. unityctl focuses on **reliability and efficiency**.
+
+- **Zero-dependency install** — one `dotnet tool install` command. No Node.js, no npm, no port configuration.
+- **No disconnection on Play Mode** — Named Pipe transport survives Unity's Domain Reload. WebSocket-based competitors lose connection every time you press Play.
+- **Works without an Editor** — the only Unity MCP tool that doubles as a standalone CLI. Run `check`, `test`, `build` in CI/CD pipelines with no Editor window.
+- **9x smaller schema** — 33 MCP tools instead of 200+. Every API call sends the full tool schema, so fewer tools = less cost per turn × every turn in the conversation.
+- **Built-in diagnostics** — `doctor` command auto-detects IPC failures, plugin issues, and Editor state. Competitors leave you guessing with "connection failed" errors.
 
 ---
 
@@ -92,7 +107,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 }
 ```
 
-The MCP server exposes 33 tools including `unityctl_run` (70 write commands), `unityctl_schema`, `unityctl_asset_find`, `unityctl_gameobject_find`, `unityctl_screenshot_capture`, and more.
+The MCP server exposes 33 tools including `unityctl_run` (64 write commands), `unityctl_schema`, `unityctl_asset_find`, `unityctl_gameobject_find`, `unityctl_screenshot_capture`, and more.
 
 ---
 
