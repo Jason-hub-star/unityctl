@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/unityctl?label=unityctl)](https://www.nuget.org/packages/unityctl)
 [![NuGet](https://img.shields.io/nuget/v/unityctl-mcp?label=unityctl-mcp)](https://www.nuget.org/packages/unityctl-mcp)
-[![CI](https://github.com/kimjuyoung1127/unityagent/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityagent/actions)
+[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A deterministic control plane for Unity Editor — built for AI agents and CI/CD pipelines.
@@ -192,6 +192,33 @@ unityctl-mcp
 
 Compatible with Claude Code, Cursor, VS Code, and any MCP client.
 
+#### MCP Configuration
+
+**Claude Code** — add to your MCP config:
+
+```json
+{
+  "mcpServers": {
+    "unityctl": {
+      "command": "unityctl-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+**Cursor / VS Code** — add to MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "unityctl": {
+      "command": "unityctl-mcp"
+    }
+  }
+}
+```
+
 ## Testing
 
 ```bash
@@ -207,11 +234,22 @@ dotnet test unityctl.slnx --filter "FullyQualifiedName!~Integration" # Unit only
 | macOS | ✅ | Unix Domain Socket | ✅ | ✅ |
 | Linux | ✅ | Unix Domain Socket | ✅ | ✅ |
 
+## Documentation
+
+- [Getting Started](docs/ref/getting-started.md) — installation, setup, and common workflows
+- [AI Agent Quickstart](docs/ref/ai-quickstart.md) — MCP setup and agent integration guide
+- [Architecture](docs/ref/architecture-mermaid.md) — system design and transport diagrams
+- [Glossary](docs/ref/glossary.md) — key terms and concepts
+
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - [Unity 2021.3+](https://unity.com/download)
 
+## Changelog
+
+See [GitHub Releases](https://github.com/kimjuyoung1127/unityctl/releases) for version history.
+
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE)

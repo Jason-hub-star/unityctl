@@ -1,21 +1,33 @@
-# unityctl Architecture (Quick Context)
+# unityctl Architecture
 
-빠른 시스템 맥락 파악용. 상세는 CLAUDE.md 참조.
+## Project Structure
 
-## 의존성 방향
+```
+unityctl.slnx
+├── src/Unityctl.Shared   (netstandard2.1)  Protocol, models, constants
+├── src/Unityctl.Core     (net10.0)         Business logic (transport, discovery, retry)
+├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
+├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
+├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
+└── tests/*                                 538+ xUnit tests
+```
+
+## Dependency Direction
 
 ```mermaid
 graph LR
     Shared["Unityctl.Shared<br/>(netstandard2.1)"]
     Core["Unityctl.Core<br/>(net10.0)"]
     Cli["Unityctl.Cli<br/>(net10.0)"]
+    Mcp["Unityctl.Mcp<br/>(net10.0)"]
     Plugin["Unityctl.Plugin<br/>(Unity UPM)"]
 
     Shared --> Core --> Cli
-    Shared -.->|소스 복사| Plugin
+    Core --> Mcp
+    Shared -.->|source copy| Plugin
 ```
 
-## Transport 흐름
+## Transport Flow
 
 ```mermaid
 sequenceDiagram
@@ -27,14 +39,14 @@ sequenceDiagram
 
     CLI->>Executor: ExecuteAsync(request)
     Executor->>IPC: ProbeAsync()
-    alt IPC 서버 실행 중
+    alt IPC server running
         IPC-->>Executor: true
         Executor->>IPC: SendAsync(request)
         IPC->>Editor: Named Pipe (4-byte LE + JSON)
         Editor->>Editor: IpcServer → MainThread → Handler
         Editor-->>IPC: CommandResponse
         IPC-->>Executor: response
-    else IPC 불가
+    else IPC unavailable
         IPC-->>Executor: false
         Executor->>Batch: SendAsync(request)
         Batch->>Editor: Unity -batchmode -executeMethod
@@ -44,7 +56,7 @@ sequenceDiagram
     Executor-->>CLI: CommandResponse
 ```
 
-## IPC 서버 내부 구조 (Plugin)
+## IPC Server (Plugin)
 
 ```mermaid
 graph TD
@@ -66,36 +78,49 @@ graph TD
     Handler -->|ManualResetEventSlim.Set()| Listen
 ```
 
-## 프로토콜
+## MCP Server
+
+```mermaid
+graph LR
+    Agent["AI Agent<br/>(Claude, Cursor)"]
+    McpServer["unityctl-mcp<br/>(stdio)"]
+    Core2["Unityctl.Core"]
+    Editor2["Unity Editor"]
+
+    Agent -->|MCP protocol| McpServer
+    McpServer -->|CommandExecutor| Core2
+    Core2 -->|IPC / Batch| Editor2
+```
+
+33 MCP tools including `unityctl_run` (70 write commands via allowlist), `unityctl_schema`, `unityctl_asset_find`, `unityctl_gameobject_find`, `unityctl_screenshot_capture`, and more.
+
+## Wire Protocol
 
 ```
-Wire Format: [4 bytes int32 LE: payload length] [N bytes UTF-8: JSON body]
-Max Message: 10 MB
+Frame:    [4 bytes int32 LE: payload length] [N bytes UTF-8: JSON body]
+Max size: 10 MB
 
 CommandRequest  → { command, parameters, requestId }
 CommandResponse → { statusCode, success, message, data, errors, requestId }
-StatusCode      → 0=Ready, 1xx=Transient, 2xx=Fatal, 5xx=Error
 ```
 
-## 파이프명 생성
+## Pipe Name Generation
 
 ```
 NormalizeProjectPath(path)
-  → GetFullPath → Windows lowercase → \ → / → trim trailing /
+  → GetFullPath → lowercase (Windows) → \ → / → trim trailing /
 GetPipeName(path)
   → SHA256(normalize(path)) → hex → "unityctl_" + first 16 chars
-  → 총 25자 (예: "unityctl_a1b2c3d4e5f6a7b8")
+  → 25 characters total (e.g., "unityctl_a1b2c3d4e5f6a7b8")
 ```
 
-## CLI 커맨드
+## Transport Comparison
 
-| 커맨드 | Transport | 설명 |
-|--------|-----------|------|
-| `init` | 로컬 | manifest.json에 플러그인 추가 |
-| `editor list` | 로컬 | 설치된 Unity Editor 목록 |
-| `ping` | IPC/Batch | 에디터 연결 확인 |
-| `status` | IPC/Batch | 에디터 상태 조회 |
-| `check` | IPC/Batch | 컴파일 상태 확인 |
-| `build` | IPC/Batch | 빌드 실행 |
-| `test` | IPC/Batch | 테스트 실행 (Accepted → polling 모델) |
-| `tools` | 로컬 | 도구 메타데이터 목록 |
+| | IPC | Batch |
+|---|---|---|
+| Requires running Editor | Yes | No |
+| Latency | ~100ms | 30-120s |
+| Platform | Named Pipe (Win) / UDS (macOS/Linux) | All |
+| Streaming support | Yes (Watch Mode) | No |
+| Write commands | Yes | Limited |
+| CI/CD friendly | No | Yes |

@@ -1,11 +1,9 @@
 # Getting Started with unityctl
 
-See also: [glossary](./glossary.md)
-
 ## Prerequisites
 
-- .NET 10 SDK
-- Unity 2021.3+ (via Unity Hub)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Unity 2021.3+](https://unity.com/download)
 
 ## Installation
 
@@ -19,161 +17,219 @@ dotnet tool install -g unityctl-mcp   # MCP server (optional)
 ### Option B: Build from source
 
 ```bash
-git clone https://github.com/kimjuyoung1127/unityagent.git
-cd unityagent
+git clone https://github.com/kimjuyoung1127/unityctl.git
+cd unityctl
 dotnet build unityctl.slnx
 ```
 
-## Architecture
-
-unityctl is organized into three layers:
-
-```
-Unityctl.Shared   (netstandard2.1)  Protocol, models, transport interfaces
-Unityctl.Core     (net10.0)         Business logic: discovery, transport, retry
-Unityctl.Cli      (net10.0)         Thin CLI shell — delegates to Core
-Unityctl.Plugin   (Unity UPM)       Editor bridge — runs inside Unity
-```
-
-The CLI communicates with Unity via two transport mechanisms:
-1. **Batch transport** — spawns Unity in batchmode (always works, slower)
-2. **IPC transport** — connects to running Unity Editor via named pipe (implemented in Phase 2B)
+> When building from source, replace `unityctl` with `dotnet run --project src/Unityctl.Cli --` in all examples below.
 
 ## Quick Start
 
-### 1. Discover installed Unity Editors
+### 1. Install the plugin into your Unity project
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- editor list
+unityctl init --project /path/to/unity/project
 ```
 
-### 2. Initialize a Unity project
+This adds the `com.unityctl.bridge` UPM package to your project's `Packages/manifest.json`. Open (or restart) the Unity Editor after running this command.
+
+### 2. Verify connectivity
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- init --project "C:/MyGame"
+# List installed Unity editors
+unityctl editor list
+
+# Ping the running Editor (IPC) or fall back to batchmode
+unityctl ping --project /path/to/project --json
+
+# Get editor state
+unityctl status --project /path/to/project --json
 ```
 
-This adds the `com.unityctl.bridge` plugin to your project's `Packages/manifest.json`.
-
-### 3. Check project compilation
+### 3. Check compilation
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- check --project "C:/MyGame"
+unityctl check --project /path/to/project --json
 ```
 
-### 3.5. Verify Editor connectivity
-
-```bash
-dotnet run --project src/Unityctl.Cli -- ping --project "C:/MyGame"
-dotnet run --project src/Unityctl.Cli -- status --project "C:/MyGame" --json
-```
+Works headless — no Editor window required (uses batchmode fallback).
 
 ### 4. Run tests
 
 ```bash
-# Wait for results (default, polls until completion)
-dotnet run --project src/Unityctl.Cli -- test --project "C:/MyGame" --mode edit
+# EditMode tests (waits for completion by default)
+unityctl test --project /path/to/project --mode edit --json
 
-# Fire-and-forget (returns ACCEPTED immediately)
-dotnet run --project src/Unityctl.Cli -- test --project "C:/MyGame" --no-wait
+# Fire-and-forget (returns immediately)
+unityctl test --project /path/to/project --no-wait
 
 # Custom timeout
-dotnet run --project src/Unityctl.Cli -- test --project "C:/MyGame" --timeout 60
+unityctl test --project /path/to/project --timeout 60 --json
 ```
 
 ### 5. Build
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- build --project "C:/MyGame" --target StandaloneWindows64
+# Build for Windows
+unityctl build --project /path/to/project --target StandaloneWindows64 --json
+
+# Preflight validation (no actual build)
+unityctl build --project /path/to/project --dry-run --json
 ```
 
-Note: `build` remains target-driven in this slice. It does not automatically consume the active build profile.
-
-### 5.5. Inspect or switch build profiles / targets
+### 6. Diagnose issues
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- build-profile list --project "C:/MyGame" --json
-dotnet run --project src/Unityctl.Cli -- build-profile get-active --project "C:/MyGame" --json
-dotnet run --project src/Unityctl.Cli -- build-target switch --project "C:/MyGame" --target Android --timeout 60 --json
-dotnet run --project src/Unityctl.Cli -- build-profile set-active --project "C:/MyGame" --profile "platform:StandaloneWindows64" --timeout 60 --json
+unityctl doctor --project /path/to/project --json
 ```
 
-`build-profile set-active` and `build-target switch` are IPC-only. Open the Unity Editor for the target project before using them.
+`doctor` checks IPC connectivity, plugin health, Editor log errors, and build state — useful as a first step when something fails.
 
-These commands persist transition state under `Library/Unityctl/build-state` so polling can recover across temporary IPC disconnects or domain reloads.
+## Common Workflows
 
-### 6. Discover available tools
+### Scene & GameObject
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- tools
-dotnet run --project src/Unityctl.Cli -- tools --json
+# List scene hierarchy
+unityctl scene hierarchy --project /path/to/project --json
+
+# Create a GameObject
+unityctl gameobject create --project /path/to/project --name "Player" --json
+
+# Add a component
+unityctl component add --project /path/to/project --target "Player" --component "Rigidbody" --json
+
+# Save the scene
+unityctl scene save --project /path/to/project --json
 ```
 
-The `--json` variant returns a machine-readable JSON array for AI agent integration. It is close in spirit to MCP `tools/list`, but today it is a reduced discovery format rather than the full MCP tool schema.
+### Assets
+
+```bash
+# Search assets by type
+unityctl asset find --project /path/to/project --filter "t:Material" --json
+
+# Get asset info
+unityctl asset get-info --project /path/to/project --path "Assets/Materials/Ground.mat" --json
+
+# View dependency graph
+unityctl asset reference-graph --project /path/to/project --path "Assets/Prefabs/Player.prefab" --json
+```
+
+### Script Management
+
+```bash
+# Create a new C# script
+unityctl script create --project /path/to/project --name "PlayerController" --json
+
+# List scripts
+unityctl script list --project /path/to/project --folder Assets --json
+
+# Validate compilation after edits
+unityctl script validate --project /path/to/project --json
+```
+
+### Play Mode Control
+
+```bash
+unityctl play start --project /path/to/project --json
+unityctl play pause --project /path/to/project --json
+unityctl play stop  --project /path/to/project --json
+```
+
+### Real-time Monitoring
+
+```bash
+# Stream console logs
+unityctl watch --project /path/to/project --channel console
+
+# Stream hierarchy changes
+unityctl watch --project /path/to/project --channel hierarchy
+```
+
+### Batch Edit with Rollback
+
+```bash
+unityctl batch execute --project /path/to/project --file ./batch.json --json
+```
+
+Executes multiple commands in a single IPC round-trip. If any step fails, all completed steps are rolled back automatically.
+
+### Undo / Redo
+
+```bash
+unityctl undo --project /path/to/project --json
+unityctl redo --project /path/to/project --json
+```
+
+All write commands register with Unity's Undo system.
+
+## Architecture
+
+```
+unityctl.slnx
+├── src/Unityctl.Shared   (netstandard2.1)  Protocol + models + constants
+├── src/Unityctl.Core     (net10.0)         Business logic (transport, discovery, retry)
+├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
+├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
+├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
+└── tests/*                                 538+ xUnit tests
+```
+
+**Dependency direction**: `Shared ← Core ← Cli / Mcp`. Plugin runs inside Unity and shares source files with Shared.
+
+## Transport
+
+unityctl auto-selects the best available transport:
+
+1. **IPC** (Named Pipe on Windows, Unix Domain Socket on macOS/Linux) — connects to a running Editor with the plugin installed. Typical latency ~100ms.
+2. **Batch** — spawns Unity in batchmode when no Editor is running. Takes 30-120s but works headless in CI/CD.
+
+The `CommandExecutor` probes IPC first and falls back to batch automatically.
 
 ## JSON Output
 
 All commands support `--json` for machine-readable output:
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- editor list --json
-dotnet run --project src/Unityctl.Cli -- status --project "C:/MyGame" --json
+unityctl status --project /path/to/project --json
+unityctl asset find --project /path/to/project --filter "t:Prefab" --json
 ```
 
-For transition-heavy workflows, `doctor` is the quickest health check:
+## StatusCode Reference
+
+| Code | Name | Meaning | Action |
+|------|------|---------|--------|
+| 0 | Ready | Success | Done |
+| 100-103 | Transient | Unity is busy (compiling, loading) | Retry automatically |
+| 104 | Accepted | Async operation started | Poll for result |
+| 200 | NotFound | No Unity editor found | Install Unity |
+| 201 | ProjectLocked | Project locked by another process | Close other Editor or use IPC |
+| 203 | PluginNotInstalled | Bridge plugin missing | Run `unityctl init` |
+| 500+ | Error | Internal error | Check `doctor` output and Unity logs |
+
+## Error Recovery
+
+If a command fails:
+
+1. `unityctl editor list` — is Unity installed?
+2. `unityctl init --project <path>` — is the plugin installed?
+3. `unityctl ping --project <path>` — is the Editor reachable?
+4. `unityctl doctor --project <path> --json` — diagnose IPC, plugin, and Editor state
+5. Check the Unity Editor log path shown in error output
+
+## Running Tests (for contributors)
 
 ```bash
-dotnet run --project src/Unityctl.Cli -- doctor --project "C:/MyGame"
-dotnet run --project src/Unityctl.Cli -- doctor --project "C:/MyGame" --json
-```
-
-`doctor` now includes a `buildState` section that reports:
-- the `Library/Unityctl/build-state` directory
-- whether transition state files currently exist
-- how many files are present
-- the age of the oldest file in minutes
-
-## How It Works
-
-### Batch Transport
-
-1. CLI writes a `CommandRequest` JSON to a temp file
-2. CLI spawns Unity in batchmode with `-executeMethod`
-3. Unity plugin reads the request, executes the command, writes a `CommandResponse` JSON
-4. CLI reads the response file and presents results
-
-This avoids the unreliable stdout/exit-code approach of traditional batchmode scripts.
-
-### IPC Transport (Phase 2B)
-
-1. Unity Editor runs an IPC server (named pipe) on startup
-2. CLI connects to the pipe, sends `CommandRequest`, receives `CommandResponse`
-3. In practice, `ping/status/check/test-start` use this path when the Editor is already running
-4. Latency target is best-effort and should not be treated as a hard guarantee
-
-The `CommandExecutor` in Core automatically selects the best available transport.
-
-## Running Tests
-
-```bash
-# All tests (538+)
+# All tests
 dotnet test unityctl.slnx
 
-# Unit tests only (faster, no CLI execution)
+# Unit tests only (no Unity required)
 dotnet test unityctl.slnx --filter "FullyQualifiedName!~Integration"
 
 # Specific project
 dotnet test tests/Unityctl.Core.Tests
 ```
 
-Note: Integration tests require the CLI executable to be runnable. On environments with AppLocker, they will skip gracefully.
-
-Current verification status:
-
-- `ping`, `status`, `check` verified against a running Unity Editor
-- `test` fully verified: polls for completion, returns pass/fail counts (Phase 2C)
-- `test --no-wait` returns `ACCEPTED [104]` immediately
-- `test --mode play` warns about domain reload and forces `--no-wait`
-- `build` reaches the running Editor over IPC; current failures depend on project compile state rather than transport
-- `build-profile list`, `build-profile get-active`, `build-target switch`, and `build-profile set-active` verified on Unity 6000.0.64f1 against `My project`
-- transition state is persisted under `Library/Unityctl/build-state` and reused by polling after IPC reconnects
+Integration tests require a runnable CLI executable and skip gracefully on restricted environments.
