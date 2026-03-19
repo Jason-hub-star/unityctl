@@ -69,7 +69,7 @@ The MCP server currently exposes 12 top-level tools, including `unityctl_query`,
 # Human-readable list
 unityctl tools
 
-# Machine-readable JSON (all 118 commands with parameter schemas)
+# Machine-readable JSON (all 114 commands with parameter schemas)
 unityctl tools --json
 
 # Schema for a specific command
@@ -77,6 +77,7 @@ unityctl schema --command "gameobject create" --json
 ```
 
 AI agents should call `unityctl tools --json` or the MCP `unityctl_schema` tool to dynamically discover available commands and their parameters.
+For UI inspection, prefer `ui find`/`ui get` over generic `gameobject find/get` when you specifically need Canvas ancestry, RectTransform data, or control state. For UI state changes, `ui toggle` and `ui input` set `Toggle.isOn` and `InputField.text` deterministically; they do not emulate clicks or keystrokes yet.
 
 ## Common Workflows
 
@@ -96,6 +97,18 @@ unityctl asset find --project "/path/to/project" --filter "t:Prefab" --json
 
 # Find GameObjects
 unityctl gameobject find --project "/path/to/project" --name "Player" --json
+
+# Find UI controls
+unityctl ui find --project "/path/to/project" --type Button --json
+
+# Read one UI element
+unityctl ui get --project "/path/to/project" --id "<GlobalObjectId>" --json
+
+# Set a Toggle value deterministically
+unityctl ui toggle --project "/path/to/project" --id "<GlobalObjectId>" --value true --mode auto --json
+
+# Set InputField text deterministically
+unityctl ui input --project "/path/to/project" --id "<GlobalObjectId>" --text "Alpha Beta" --mode auto --json
 
 # Get component properties
 unityctl component get --project "/path/to/project" --target "Main Camera" --component "Camera" --json
@@ -135,6 +148,8 @@ unityctl script validate --project "/path/to/project" --json
 # List scripts
 unityctl script list --project "/path/to/project" --folder Assets --json
 ```
+
+`script get-errors`, `script find-refs`, and `script rename-symbol` are best used with a running Editor and IPC ready. If `script get-errors` returns no compile data after Unity reports Ready, run `unityctl script validate --project "/path/to/project" --wait` once and retry.
 
 ### Build and test
 
@@ -205,3 +220,4 @@ If a command fails:
 
 `doctor` now includes the configured plugin source (`file:` vs Git URL), project lock detection, recent failure summaries, active session hints, and recommended next actions.
 When IPC is healthy, a detected lockfile is informational rather than an automatic error by itself.
+For recent script failures, `doctor` also distinguishes compile/reload waiting from script compile-cache issues and recommends either `status --wait` or `script validate --wait` accordingly.

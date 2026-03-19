@@ -47,6 +47,11 @@ app.Add("doctor", (string project, bool json = false) =>
 app.Add("project validate", (string project, bool json = false) =>
     ProjectValidateCommand.Execute(project, json));
 
+app.Add("mesh create-primitive", (string project, string type, string? name = null,
+    string? position = null, string? rotation = null, string? scale = null,
+    string? material = null, string? parent = null, bool json = false) =>
+    MeshCommand.CreatePrimitive(project, type, name, position, rotation, scale, material, parent, json));
+
 app.Add("log", (
         int? last = null,
         bool tail = false,
@@ -304,6 +309,12 @@ app.Add("ui find", (
 
 app.Add("ui get", (string project, string id, bool json = false) =>
     UiCommand.Get(project, id, json));
+
+app.Add("ui toggle", (string project, string id, string value, string mode = "auto", bool json = false) =>
+    UiCommand.Toggle(project, id, value, mode, json));
+
+app.Add("ui input", (string project, string id, string text, string mode = "auto", bool json = false) =>
+    UiCommand.Input(project, id, text, mode, json));
 
 app.Add("undo", (string project, bool json = false) =>
     UndoCommand.Undo(project, json));

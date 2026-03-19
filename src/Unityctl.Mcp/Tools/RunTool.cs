@@ -59,6 +59,8 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.UiCanvasCreate,
         WellKnownCommands.UiElementCreate,
         WellKnownCommands.UiSetRect,
+        WellKnownCommands.UiToggle,
+        WellKnownCommands.UiInput,
         // P0 잔여분: Asset Labels + Build Settings
         WellKnownCommands.AssetSetLabels,
         WellKnownCommands.BuildSettingsSetScenes,
@@ -69,6 +71,8 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.ScriptValidate,
         WellKnownCommands.ScriptPatch,
         WellKnownCommands.ScriptRenameSymbol,
+        // Mesh Primitives
+        WellKnownCommands.MeshCreatePrimitive,
         // Tags & Layers
         WellKnownCommands.TagAdd,
         WellKnownCommands.LayerSet,

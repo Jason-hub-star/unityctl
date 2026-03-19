@@ -71,6 +71,38 @@ public class CommandSyncGuardrailTests
         Assert.Contains(nameof(WellKnownCommands.ScriptRenameSymbol), pluginHandlers);
     }
 
+    [Fact]
+    public void UiReadCommands_AreRegisteredAcrossCliMcpAndPlugin()
+    {
+        var cliCommands = ParseCliCommands();
+        Assert.Contains("ui find", cliCommands);
+        Assert.Contains("ui get", cliCommands);
+
+        var queryAllowlist = ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\QueryTool.cs");
+        Assert.Contains(nameof(WellKnownCommands.UiFind), queryAllowlist);
+        Assert.Contains(nameof(WellKnownCommands.UiGet), queryAllowlist);
+
+        var pluginHandlers = ParsePluginHandlerFieldNames();
+        Assert.Contains(nameof(WellKnownCommands.UiFind), pluginHandlers);
+        Assert.Contains(nameof(WellKnownCommands.UiGet), pluginHandlers);
+    }
+
+    [Fact]
+    public void UiInteractionCommands_AreRegisteredAcrossCliMcpAndPlugin()
+    {
+        var cliCommands = ParseCliCommands();
+        Assert.Contains("ui toggle", cliCommands);
+        Assert.Contains("ui input", cliCommands);
+
+        var runAllowlist = ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\RunTool.cs");
+        Assert.Contains(nameof(WellKnownCommands.UiToggle), runAllowlist);
+        Assert.Contains(nameof(WellKnownCommands.UiInput), runAllowlist);
+
+        var pluginHandlers = ParsePluginHandlerFieldNames();
+        Assert.Contains(nameof(WellKnownCommands.UiToggle), pluginHandlers);
+        Assert.Contains(nameof(WellKnownCommands.UiInput), pluginHandlers);
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar);

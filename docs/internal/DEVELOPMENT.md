@@ -663,6 +663,145 @@ Unity 실측 (fresh published CLI: `artifacts/investigation/cli/unityctl.exe`):
 - 현재 script diagnostics/refactor 계열의 체감 안정성은 `running Editor + IPC ready` 상태에 가장 크게 의존한다.
 - 이번 guardrail은 “새 명령이 한 레이어에만 추가되는 실수”는 줄여주지만, Unity domain reload / IPC readiness / batch fallback 한계까지 해결해 주는 것은 아니다.
 
+### 2026-03-19 script readiness 개선
+
+구현:
+
+- [`src/Unityctl.Cli/Commands/ScriptCommand.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Cli/Commands/ScriptCommand.cs)
+  - `script get-errors` / `script find-refs` / `script rename-symbol`에 script 전용 readiness preflight 추가
+  - 프로젝트 lock이 있는 동안 direct IPC probe를 최대 12회 시도한 뒤, 계속 미준비면 script 전용 `Busy[103]` 응답 반환
+- [`src/Unityctl.Core/Transport/CommandExecutor.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Core/Transport/CommandExecutor.cs)
+  - 실제 execute 단계에서도 script 계열은 일반 Busy 문구 대신 script 전용 추천 액션 반환
+- [`src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs)
+  - recent failure가 `script-get-errors`면 `script validate --wait` 후속 액션 추천
+  - recent failure가 `script-find-refs` / `script-rename-symbol`이면 IPC 우선 / batch 주의 추천
+- [`src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs)
+  - compile cache 없음 상태를 `no-compilation-data` + `recommendedAction`으로 더 명확히 반환
+
+검증:
+
+- `dotnet test tests/Unityctl.Cli.Tests -c Release --filter ScriptCommandTests` → **35 passed**
+- `dotnet test tests/Unityctl.Core.Tests -c Release --filter "DoctorAnalyzerTests|CommandExecutorReadinessTests"` → **9 passed**
+- `dotnet test tests/Unityctl.Cli.Tests -c Release --filter DoctorCommandTests` → **11 passed**
+- `dotnet run --project src/Unityctl.Cli -- script get-errors --project C:\Users\gmdqn\robotapp --json`
+  - 결과: script 전용 `Busy[103]`
+  - `recommendedAction`: `status --wait`
+  - `followUpAction`: `script validate --wait`
+- built CLI로 `script find-refs --project C:\Users\gmdqn\robotapp --symbol Player --limit 5 --json`
+  - 결과: script 전용 `Busy[103]`
+  - `followUpAction`: running Editor + IPC ready, batch fallback 주의
+- built CLI로 `doctor --project C:\Users\gmdqn\robotapp --json`
+  - 결과: `starting-or-reloading`
+  - script 전용 추천 포함:
+    - `script find-refs` / `script rename-symbol`은 IPC ready 권장
+    - batch fallback 주의
+
+메모:
+
+- 중간에 `dotnet build src/Unityctl.Cli/Unityctl.Cli.csproj -c Release`가 한 번 Microsoft Defender 파일 잠금(`CS2012`)에 걸렸지만, 이후 기존 산출물 실행과 테스트로 구현 자체는 확인했다.
+
+### 2026-03-19 UI find/read (UGUI-first)
+
+- 구현 파일:
+  - `src/Unityctl.Shared/Protocol/WellKnownCommands.cs`
+  - `src/Unityctl.Shared/Commands/CommandCatalog.cs`
+  - `src/Unityctl.Cli/Commands/UiCommand.cs`
+  - `src/Unityctl.Cli/Program.cs`
+  - `src/Unityctl.Mcp/Tools/QueryTool.cs`
+  - `src/Unityctl.Plugin/Editor/Utilities/UiReadUtility.cs`
+  - `src/Unityctl.Plugin/Editor/Commands/UiFindHandler.cs`
+  - `src/Unityctl.Plugin/Editor/Commands/UiGetHandler.cs`
+  - `tests/Unityctl.Cli.Tests/UiCommandTests.cs`
+  - `tests/Unityctl.Shared.Tests/CommandCatalogTests.cs`
+  - `tests/Unityctl.Shared.Tests/CommandSyncGuardrailTests.cs`
+- 기능:
+  - `ui find` 추가
+    - 필터: `name`, `text`, `type`, `parent`, `canvas`, `interactable`, `active`, `includeInactive`, `limit`
+    - 결과: `globalObjectId`, `hierarchyPath`, root canvas, primary text, interactable
+  - `ui get` 추가
+    - `RectTransform`
+    - `Canvas`, `Selectable`, `Text`, `Image`, `Button`, `Toggle`, `Slider`, `Dropdown`, `InputField`, `ScrollRect` 상태 요약
+  - MCP `unityctl_query` allowlist에 `ui-find`, `ui-get` 추가
+- 범위 메모:
+  - 현재 저장소 검색 기준 `TextMeshPro` / `TMP_*` 실사용은 없었고, 1차 구현은 `Canvas` + `RectTransform` + `UnityEngine.UI.*` 기준으로 고정
+- 검증:
+  - `dotnet build src/Unityctl.Cli/Unityctl.Cli.csproj -c Release` 통과
+  - `dotnet test tests/Unityctl.Shared.Tests -c Release --filter "CommandCatalogTests|CommandSyncGuardrailTests|CommandSchemaTests"` → **26 passed**
+  - `dotnet test tests/Unityctl.Cli.Tests -c Release --filter "UiCommandTests|GameObjectCommandTests|ComponentCommandTests"` → **72 passed**
+  - `dotnet test tests/Unityctl.Cli.Tests -c Release --filter "UiCommandTests|SchemaCommandTests"` → **14 passed**
+  - `unityctl tools --json` 기준 총 **114**개 명령, `ui-find`, `ui-get` 노출 확인
+- Unity 실측:
+  - `robotapp`
+    - `ui find --type Canvas --json` → `Busy[103]`
+    - 메시지: `Unity Editor is running but IPC is not ready yet. Wait for compilation/domain reload to finish and retry.`
+    - 같은 시점 `doctor --json` → `classification=starting-or-reloading`, `ipc.connected=false`, Editor.log `Registered 106 commands`
+  - repo `tests/Unityctl.Integration/SampleUnityProject`
+    - closed-editor batch fallback `ui find --type Canvas --json` → `Unity exited with code 1 but no response file was written.`
+- 해석:
+  - `ui find/get`는 현재도 **running Editor + IPC ready** 상태에서 가장 신뢰도가 높다.
+  - batch fallback에서 UI read를 일반 지원 수준으로 문서화하기엔 아직 근거가 부족하다.
+
+### 2026-03-19 UI interaction slice 1 (`ui toggle`, `ui input`)
+
+- 구현 파일:
+  - `src/Unityctl.Shared/Protocol/WellKnownCommands.cs`
+  - `src/Unityctl.Plugin/Editor/Shared/WellKnownCommands.cs`
+  - `src/Unityctl.Shared/Commands/CommandCatalog.cs`
+  - `src/Unityctl.Cli/Commands/UiCommand.cs`
+  - `src/Unityctl.Cli/Program.cs`
+  - `src/Unityctl.Core/Transport/CommandExecutor.cs`
+  - `src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs`
+  - `src/Unityctl.Mcp/Tools/RunTool.cs`
+  - `src/Unityctl.Plugin/Editor/Commands/UiGetHandler.cs`
+  - `tests/Unityctl.Cli.Tests/UiCommandTests.cs`
+  - `tests/Unityctl.Core.Tests/Diagnostics/DoctorAnalyzerTests.cs`
+  - `tests/Unityctl.Core.Tests/Transport/CommandExecutorReadinessTests.cs`
+  - `tests/Unityctl.Shared.Tests/CommandCatalogTests.cs`
+  - `tests/Unityctl.Shared.Tests/CommandSyncGuardrailTests.cs`
+- 기능:
+  - `ui toggle`
+    - `--id <GlobalObjectId>`
+    - `--value true|false`
+    - `--mode auto|edit|play`
+    - 반환: `previousValue`, `currentValue`, `modeApplied`, `eventsTriggered`
+  - `ui input`
+    - `--id <GlobalObjectId>`
+    - `--text <value>`
+    - `--mode auto|edit|play`
+    - 반환: `previousText`, `currentText`, `modeApplied`, `eventsTriggered`
+  - 둘 다 `script` 계열과 비슷한 IPC readiness preflight를 타고, `Busy[103]`일 때 `status --wait` 재시도 가이드를 준다.
+  - `doctor` recommendation도 `ui-toggle` / `ui-input` 최근 실패에 대해 deterministic state set / IPC 우선 메시지를 추가했다.
+- 검증:
+  - `dotnet build unityctl.slnx -c Release -m:1 /p:UseSharedCompilation=false` 통과
+  - `dotnet test tests/Unityctl.Shared.Tests -c Release` → **70 passed**
+  - `dotnet test tests/Unityctl.Cli.Tests -c Release --no-build` → **379 passed**
+  - `dotnet test tests/Unityctl.Core.Tests -c Release --no-build` → **121 passed**
+  - `dotnet test tests/Unityctl.Mcp.Tests -c Release --no-build` → **22 passed**
+  - `unityctl tools --json` 기준 총 **117**개 명령, `ui-toggle`, `ui-input` 노출 확인
+  - 중간에 `dotnet build`/`dotnet test`가 한 번 `CS2012` 파일 잠금(Defender/VBCSCompiler)으로 실패했지만, 순차 빌드(`-m:1 /p:UseSharedCompilation=false`)와 재실행으로 코드 오류가 아님을 확인했다.
+- Unity 실측:
+  - `robotapp`
+    - `doctor --json` → `classification=healthy`, `lockSeverity=informational`, `ipc.connected=true`
+    - unsaved scratch scene에서는 새 UI root들이 `GlobalObjectId_V1-0-...-0-0`로 보여 stable targeting이 어려웠다.
+    - 저장된 임시 scene `Assets/CodexUiInteractionValidation_20260319223220.unity`를 만들어 다시 검증:
+      - `ui canvas-create` 후 `ui find`로 stable `canvasId` 확보
+      - `ui element-create --type Toggle/InputField --parent <canvasId>` 성공
+      - 첫 `ui toggle` / `ui input` 시도는 `Unknown command: ui-toggle/ui-input`
+      - `exec "UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation()"` 호출 후 registry reload
+      - 이후:
+        - `ui toggle --mode auto --value true` → `modeApplied=edit`, `currentValue=true`, `eventsTriggered=false`
+        - `ui input --mode auto --text "Alpha Beta"` → `modeApplied=edit`, `currentText="Alpha Beta"`, `eventsTriggered=false`
+        - `ui get` readback으로 `toggle.isOn=true`, `inputField.text="Alpha Beta"` 확인
+    - Play Mode 진입 시 활성 씬이 `Assets/Scenes/Onboarding.unity`로 바뀌어 validation scene이 unload됐다.
+    - 이 프로젝트에선 play-mode용 `Toggle/InputField`를 안정적으로 남겨둘 타깃이 없어 full play-mode success path는 끝까지 재현하지 못했다.
+    - 대신 explicit mode guard는 확인:
+      - Edit Mode에서 `ui toggle --mode play` / `ui input --mode play` → `Mode 'play' requires the Unity Editor to already be in Play Mode.`
+      - Play Mode의 existing scene에서는 `ui element-create` 자체가 `This cannot be used during play mode.`로 막혔다.
+- 해석:
+  - `ui toggle` / `ui input`은 현재 public 문서에서 **deterministic state set**으로 설명하는 게 정확하다.
+  - full runtime interaction을 보장하려면 `ui-click`와 함께 event-dispatch helper, play-mode 전용 smoke scene 전략이 필요하다.
+  - `file:` plugin source를 쓰는 live Editor 세션에서는 새 handler 코드가 있어도 domain reload 전엔 `Unknown command`가 날 수 있다.
+
 ### 2026-03-18 scene / undo / redo 실측
 
 기준 프로젝트:

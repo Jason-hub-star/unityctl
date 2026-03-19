@@ -86,11 +86,13 @@ namespace Unityctl.Plugin.Editor.Shared
         // Write API — Phase C-5: Animation + UI
         public const string AnimationCreateClip = "animation-create-clip";
         public const string AnimationCreateController = "animation-create-controller";
-        public const string UiCanvasCreate = "ui-canvas-create";
-        public const string UiElementCreate = "ui-element-create";
-        public const string UiSetRect = "ui-set-rect";
-        public const string UiFind = "ui-find";
-        public const string UiGet = "ui-get";
+    public const string UiCanvasCreate = "ui-canvas-create";
+    public const string UiElementCreate = "ui-element-create";
+    public const string UiSetRect = "ui-set-rect";
+    public const string UiFind = "ui-find";
+    public const string UiGet = "ui-get";
+    public const string UiToggle = "ui-toggle";
+    public const string UiInput = "ui-input";
 
         // Script Editing v1
         public const string ScriptCreate = "script-create";
@@ -147,6 +149,9 @@ namespace Unityctl.Plugin.Editor.Shared
         public const string NavMeshBake = "navmesh-bake";
         public const string NavMeshClear = "navmesh-clear";
         public const string NavMeshGetSettings = "navmesh-get-settings";
+
+        // Mesh Primitives
+        public const string MeshCreatePrimitive = "mesh-create-primitive";
 
         // Project Validation
         public const string ProjectValidate = "project-validate";

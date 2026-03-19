@@ -102,6 +102,7 @@ unityctl build --project /path/to/project --dry-run   # preflight validation
 If you're working from a cloned `unityctl` repo, you can still point `--source` at a local `src/Unityctl.Plugin` directory instead.
 
 `ping` and `status` are fastest when the Editor is already open and IPC is ready. In batch fallback they can take tens of seconds or fail on a given project, so they are not a reliable "under 1 minute" first-success guarantee yet.
+`script get-errors`, `script find-refs`, and `script rename-symbol` are also most reliable with a running Editor and IPC ready. If `script get-errors` still has no compile data after the Editor is Ready, run `unityctl script validate --project <path> --wait` once first.
 
 ### MCP Setup (AI Agents)
 
@@ -244,7 +245,7 @@ The MCP server currently exposes 12 top-level tools, including `unityctl_query`,
 | `schema` / `tools` | Machine-readable metadata |
 | `package list/add/remove` | Package management |
 | `animation create-clip/create-controller` | Animation assets |
-| `ui canvas-create/element-create/set-rect` | UI creation |
+| `ui canvas-create/element-create/set-rect/find/get/toggle/input` | UGUI creation + read + deterministic state set |
 
 </details>
 

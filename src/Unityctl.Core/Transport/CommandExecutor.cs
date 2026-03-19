@@ -3,6 +3,7 @@ using Unityctl.Core.Platform;
 using Unityctl.Core.Retry;
 using Unityctl.Shared.Protocol;
 using Unityctl.Shared.Transport;
+using System.Text.Json.Nodes;
 
 namespace Unityctl.Core.Transport;
 
@@ -70,14 +71,58 @@ public sealed class CommandExecutor
                 }
             }
 
-            return CommandResponse.Fail(
-                StatusCode.Busy,
-                "Unity Editor is running but IPC is not ready yet. Wait for compilation/domain reload to finish and retry.");
+            return BuildInteractiveBusyResponse(projectPath, request.Command);
         }
 
         // Fallback: batch transport (only when probe fails, NOT on SendAsync failure)
         await using var batch = new BatchTransport(_platform, _discovery, projectPath);
         return await batch.SendAsync(request, ct);
+    }
+
+    internal static CommandResponse BuildInteractiveBusyResponse(string projectPath, string command)
+    {
+        var cliCommand = command switch
+        {
+            WellKnownCommands.ScriptGetErrors => "script get-errors",
+            WellKnownCommands.ScriptFindRefs => "script find-refs",
+            WellKnownCommands.ScriptRenameSymbol => "script rename-symbol",
+            WellKnownCommands.UiToggle => "ui toggle",
+            WellKnownCommands.UiInput => "ui input",
+            _ => command
+        };
+
+        if (command is WellKnownCommands.ScriptGetErrors
+            or WellKnownCommands.ScriptFindRefs
+            or WellKnownCommands.ScriptRenameSymbol
+            or WellKnownCommands.UiToggle
+            or WellKnownCommands.UiInput)
+        {
+            var followUpAction = command switch
+            {
+                WellKnownCommands.ScriptGetErrors => $"If compilation diagnostics are still missing after Ready, run `unityctl script validate --project \"{projectPath}\" --wait` once to populate the latest compile cache.",
+                WellKnownCommands.UiInput => "Keep the Unity Editor open and let IPC reconnect before retrying this UI interaction command. `ui input` sets InputField.text deterministically and does not emulate keystrokes.",
+                WellKnownCommands.UiToggle => "Keep the Unity Editor open and let IPC reconnect before retrying this UI interaction command. `ui toggle` sets Toggle.isOn deterministically and does not emulate a pointer click.",
+                _ => "Keep the Unity Editor open and let IPC reconnect before retrying this script command. Batch fallback is less reliable for script diagnostics/refactors."
+            };
+
+            return new CommandResponse
+            {
+                StatusCode = StatusCode.Busy,
+                Success = false,
+                Message = $"Unity Editor is still compiling or reloading. `{cliCommand}` works best with a running Editor and IPC ready.",
+                Data = new JsonObject
+                {
+                    ["command"] = cliCommand,
+                    ["requiresIpcReady"] = true,
+                    ["recommendedAction"] = $"Run `unityctl status --project \"{projectPath}\" --wait` and retry `{cliCommand}` after the Editor reports Ready.",
+                    ["followUpAction"] = followUpAction
+                }
+            };
+        }
+
+        return CommandResponse.Fail(
+            StatusCode.Busy,
+            "Unity Editor is running but IPC is not ready yet. Wait for compilation/domain reload to finish and retry.");
     }
 
     /// <summary>

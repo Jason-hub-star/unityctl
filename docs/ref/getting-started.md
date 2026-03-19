@@ -127,6 +127,24 @@ unityctl asset get-info --project /path/to/project --path "Assets/Materials/Grou
 unityctl asset reference-graph --project /path/to/project --path "Assets/Prefabs/Player.prefab" --json
 ```
 
+### UI inspection
+
+```bash
+# Find UI buttons on loaded Canvases
+unityctl ui find --project /path/to/project --type Button --limit 10 --json
+
+# Read RectTransform + UI component state for one element
+unityctl ui get --project /path/to/project --id "<GlobalObjectId>" --json
+
+# Set a Toggle state deterministically (not a click simulation)
+unityctl ui toggle --project /path/to/project --id "<GlobalObjectId>" --value true --mode auto --json
+
+# Set an InputField text deterministically (not keystroke simulation)
+unityctl ui input --project /path/to/project --id "<GlobalObjectId>" --text "Alpha Beta" --mode auto --json
+```
+
+`ui find`/`ui get` are currently UGUI-first (`Canvas`, `RectTransform`, `Selectable`, `Text`, `InputField`, `Toggle`, `Slider`, `Dropdown`, `ScrollRect`). `ui toggle` and `ui input` extend that slice with deterministic state changes for `Toggle.isOn` and `InputField.text`. These are not real click or typing simulation yet, and in practice they are most reliable with a running Editor and IPC ready.
+
 ### Script Management
 
 ```bash
@@ -139,6 +157,8 @@ unityctl script list --project /path/to/project --folder Assets --json
 # Validate compilation after edits
 unityctl script validate --project /path/to/project --json
 ```
+
+For `script get-errors`, `script find-refs`, and `script rename-symbol`, prefer a running Editor with IPC ready. If `script get-errors` still has no compile data after Unity reports Ready, run `unityctl script validate --project <path> --wait` once and retry.
 
 ### Play Mode Control
 

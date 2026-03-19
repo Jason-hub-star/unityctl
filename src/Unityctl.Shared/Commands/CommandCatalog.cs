@@ -680,6 +680,26 @@ public static class CommandCatalog
         Parameter("id", "string", "GlobalObjectId of the UI element", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("ui get");
 
+    public static readonly CommandDefinition UiToggleCmd = Define(
+        WellKnownCommands.UiToggle,
+        "Set a Toggle's on/off state deterministically without emulating a click",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("id", "string", "GlobalObjectId of the Toggle GameObject", required: true),
+        Parameter("value", "bool", "New Toggle state", required: true),
+        Parameter("mode", "string", "Interaction mode: auto, edit, play (default: auto)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("ui toggle");
+
+    public static readonly CommandDefinition UiInputCmd = Define(
+        WellKnownCommands.UiInput,
+        "Set an InputField's text deterministically without emulating keystrokes",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("id", "string", "GlobalObjectId of the InputField GameObject", required: true),
+        Parameter("text", "string", "New InputField text value", required: true),
+        Parameter("mode", "string", "Interaction mode: auto, edit, play (default: auto)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("ui input");
+
     // Script Editing v1
     public static readonly CommandDefinition ScriptCreateCmd = Define(
         WellKnownCommands.ScriptCreate,
@@ -761,6 +781,21 @@ public static class CommandCatalog
         Parameter("folder", "string", "Root folder to search (default: Assets)", required: false),
         Parameter("dryRun", "bool", "Preview changes without writing (default: false)", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script rename-symbol");
+
+    // Mesh Primitives
+    public static readonly CommandDefinition MeshCreatePrimitiveCmd = Define(
+        WellKnownCommands.MeshCreatePrimitive,
+        "Create a primitive 3D shape (Cube, Sphere, Plane, Cylinder, Capsule, Quad)",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("type", "string", "Primitive type: Cube, Sphere, Plane, Cylinder, Capsule, Quad", required: true),
+        Parameter("name", "string", "GameObject name (defaults to type name)", required: false),
+        Parameter("position", "string", "Position as JSON [x,y,z]", required: false),
+        Parameter("rotation", "string", "Euler rotation as JSON [x,y,z]", required: false),
+        Parameter("scale", "string", "Scale as JSON [x,y,z]", required: false),
+        Parameter("material", "string", "Material asset path to assign", required: false),
+        Parameter("parent", "string", "Parent GlobalObjectId", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("mesh create-primitive");
 
     // Project Validation
     public static readonly CommandDefinition ProjectValidateCmd = Define(
@@ -1105,6 +1140,8 @@ public static class CommandCatalog
         UiSetRectCmd,
         UiFindCmd,
         UiGetCmd,
+        UiToggleCmd,
+        UiInputCmd,
         // Script Editing v1
         ScriptCreateCmd,
         ScriptEditCmd,
@@ -1154,6 +1191,8 @@ public static class CommandCatalog
         ScriptGetErrorsCmd,
         ScriptFindRefsCmd,
         ScriptRenameSymbolCmd,
+        // Mesh Primitives
+        MeshCreatePrimitiveCmd,
         // Project Validation
         ProjectValidateCmd
     ];

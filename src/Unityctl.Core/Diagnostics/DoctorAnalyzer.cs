@@ -212,16 +212,19 @@ internal static class DoctorAnalyzer
                 recommendations.Add($"Run `unityctl status --project \"{projectPath}\" --wait` and retry when it reports Ready.");
                 recommendations.Add($"Use `unityctl watch --project \"{projectPath}\" --channel compilation` to observe reload/compile completion.");
                 AddScriptSpecificRecommendations(recommendations, projectPath, analysis);
+                AddUiSpecificRecommendations(recommendations, analysis);
                 break;
             case "plugin-mismatch-suspected":
                 recommendations.Add("Reopen the Unity Editor or wait for package import/domain reload so the plugin command registry refreshes.");
                 recommendations.Add($"Verify the configured plugin source in `unityctl doctor --project \"{projectPath}\"` and rerun `unityctl init` if it drifted.");
                 AddScriptSpecificRecommendations(recommendations, projectPath, analysis);
+                AddUiSpecificRecommendations(recommendations, analysis);
                 break;
             case "transport-degraded":
                 recommendations.Add("Prefer a running Unity Editor with IPC ready before retrying commands on this project.");
                 recommendations.Add("Inspect the Unity Editor.log path from doctor output for batchmode startup or response-file failures.");
                 AddScriptSpecificRecommendations(recommendations, projectPath, analysis);
+                AddUiSpecificRecommendations(recommendations, analysis);
                 break;
             default:
                 if (analysis.HasRecentPipeErrors || analysis.RecentFailures.Count > 0)
@@ -263,11 +266,38 @@ internal static class DoctorAnalyzer
         }
     }
 
+    private static void AddUiSpecificRecommendations(List<string> recommendations, DoctorAnalysis analysis)
+    {
+        var lastUiFailure = analysis.RecentFailures
+            .FirstOrDefault(activity => IsUiInteractionCommand(activity.Operation));
+        if (lastUiFailure == null)
+            return;
+
+        if (string.Equals(lastUiFailure.Operation, WellKnownCommands.UiInput, StringComparison.OrdinalIgnoreCase))
+        {
+            recommendations.Add("`ui input` sets InputField.text deterministically and does not emulate keystrokes or focus changes.");
+            recommendations.Add("Prefer a running Unity Editor with IPC ready before relying on `ui input`; batch fallback is not guaranteed for UI interaction commands.");
+            return;
+        }
+
+        if (string.Equals(lastUiFailure.Operation, WellKnownCommands.UiToggle, StringComparison.OrdinalIgnoreCase))
+        {
+            recommendations.Add("`ui toggle` sets Toggle.isOn deterministically and does not emulate a pointer click.");
+            recommendations.Add("Prefer a running Unity Editor with IPC ready before relying on `ui toggle`; batch fallback is not guaranteed for UI interaction commands.");
+        }
+    }
+
     private static bool IsScriptCommand(string? operation)
     {
         return string.Equals(operation, WellKnownCommands.ScriptGetErrors, StringComparison.OrdinalIgnoreCase)
             || string.Equals(operation, WellKnownCommands.ScriptFindRefs, StringComparison.OrdinalIgnoreCase)
             || string.Equals(operation, WellKnownCommands.ScriptRenameSymbol, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsUiInteractionCommand(string? operation)
+    {
+        return string.Equals(operation, WellKnownCommands.UiToggle, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(operation, WellKnownCommands.UiInput, StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsProcessAlive(int pid)

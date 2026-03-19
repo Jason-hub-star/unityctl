@@ -33,8 +33,9 @@
 - **Script Patch v2 (script patch — 줄 단위 부분 편집)**: 완료
 - **Script v2 (script-get-errors, script-find-refs, script-rename-symbol)**: 완료
 - **UI Read Slice 1 (`ui find`, `ui get`, UGUI-first)**: 구현 완료
+- **UI Interaction Slice 1 (`ui toggle`, `ui input`, deterministic state set)**: 구현 완료
 
-**전체 Phase 완료. 총 64개 write allowlist 명령, 114개 CLI 명령, 12개 MCP 도구 (33→12 통합).**
+**전체 Phase 완료. 총 68개 write allowlist 명령, 117개 CLI 명령, 12개 MCP 도구 (33→12 통합).**
 
 ## Project Validate 라이브 검증 (robotapp, Unity 6000.0.64f1)
 
@@ -68,6 +69,40 @@
 
 - `ui find/get`의 첫 성공 경로는 현재도 **running Editor + IPC ready** 기준으로 안내하는 것이 맞다.
 - batch fallback에서 UI read를 일반 보장으로 문서화하긴 아직 이르다.
+
+## UI Interaction Slice 1 라이브 검증 (2026-03-19)
+
+구현 범위:
+
+- `ui toggle` — `Toggle.isOn`을 결정적으로 설정 (`--mode auto|edit|play`)
+- `ui input` — `InputField.text`를 결정적으로 설정 (`--mode auto|edit|play`)
+- MCP `unityctl_run` allowlist에 `ui-toggle`, `ui-input` 추가
+
+자동 검증:
+
+- `dotnet build unityctl.slnx -c Release -m:1 /p:UseSharedCompilation=false` ✅
+- `dotnet test tests/Unityctl.Shared.Tests -c Release` ✅ 70 통과
+- `dotnet test tests/Unityctl.Cli.Tests -c Release --no-build` ✅ 379 통과
+- `dotnet test tests/Unityctl.Core.Tests -c Release --no-build` ✅ 121 통과
+- `dotnet test tests/Unityctl.Mcp.Tests -c Release --no-build` ✅ 22 통과
+- `unityctl tools --json` 기준 총 **117**개 명령, `ui-toggle`, `ui-input` 노출 확인 ✅
+
+실측 메모:
+
+- `robotapp` + IPC ready 상태에서 `doctor --json` → `classification=healthy`, `lockSeverity=informational`
+- unsaved scratch scene에서 새 UI root들은 `GlobalObjectId_V1-0-...-0-0`로 보여 stable targeting이 어려웠고, 저장된 scene asset을 열어야 parent-target UI interaction 실측이 가능했다.
+- 저장된 임시 scene(`Assets/CodexUiInteractionValidation_20260319223220.unity`)에서:
+  - `ui toggle --mode auto` → `modeApplied=edit`, `currentValue=true`
+  - `ui input --mode auto` → `modeApplied=edit`, `currentText="Alpha Beta"`
+  - 이후 `ui get` readback으로 `toggle.isOn=true`, `inputField.text="Alpha Beta"` 확인
+- 첫 시도에서는 `ui-toggle` / `ui-input`가 `Unknown command [501]`였고, `UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation()` 이후 registry reload 뒤 정상 응답했다.
+- `robotapp`는 Play Mode 진입 시 `Assets/Scenes/Onboarding.unity`로 활성 씬이 전환되어, edit-mode 검증용 임시 UI scene이 unload되었다. 이 프로젝트에서는 full play-mode success path를 끝까지 재현하지 못했고, 대신 explicit mode guard(`--mode play`는 실제 Play Mode 필요)는 확인했다.
+
+해석:
+
+- `ui toggle` / `ui input`은 현재 **deterministic state set**으로 문서화하는 게 맞다.
+- real click / user typing simulation은 아직 아니며, 다음 단계 `ui-click` 전용 event-dispatch helper가 필요하다.
+- `file:` plugin source를 쓰는 live Editor 세션에서는 새 handler가 codebase에 있어도 domain reload 전엔 `Unknown command`가 날 수 있다.
 
 ## 라이브 검증 (최신)
 
