@@ -94,6 +94,18 @@ JsonConvert.DeserializeObject<CommandRequest>(json)
 | Mcp.Tests | MCP 도구 등록, 블랙박스 (stdio 프로세스) | xUnit (McpClient) |
 | Integration.Tests | CLI black-box | xUnit (프로세스 스폰) |
 
+### 크로스 플랫폼 경로
+테스트에서 파일 경로를 만들 때 `\`를 직접 쓰지 않는다. Linux/macOS CI에서 깨짐.
+```csharp
+// ❌ Linux에서 리터럴 백슬래시로 처리됨
+ReadRepoFile(@"src\Unityctl.Plugin\Editor\Commands");
+tempProject.Replace('/', '\\');
+
+// ✅ 크로스 플랫폼
+Path.Combine("src", "Unityctl.Plugin", "Editor", "Commands");
+path.Replace('\\', Path.DirectorySeparatorChar);
+```
+
 - Integration.Tests는 AppLocker 감지 + graceful skip.
 - Mcp.Tests의 `McpBlackBoxTests`는 빌드된 `unityctl-mcp` 바이너리를 프로세스로 띄운다. Debug를 Release보다 먼저 탐색한다 (`dotnet test`의 기본이 Debug이므로 stale Release 바이너리 방지).
 - 테스트 필터: `dotnet test --filter "FullyQualifiedName!~Integration"`
