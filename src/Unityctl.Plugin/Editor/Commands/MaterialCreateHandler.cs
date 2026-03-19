@@ -1,6 +1,5 @@
 using Newtonsoft.Json.Linq;
 using Unityctl.Plugin.Editor.Shared;
-
 namespace Unityctl.Plugin.Editor.Commands
 {
     public class MaterialCreateHandler : CommandHandlerBase

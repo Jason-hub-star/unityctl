@@ -63,6 +63,38 @@ dotnet run --project src/Unityctl.Cli -- test --project "/path/to/project" --mod
 dotnet run --project src/Unityctl.Cli -- build --project "/path/to/project" --target StandaloneWindows64 --json
 ```
 
+Note: `build` still uses `--target`. It does not implicitly build with the active build profile.
+
+### Inspect or switch build profiles / targets
+
+```bash
+dotnet run --project src/Unityctl.Cli -- build-profile list --project "/path/to/project" --json
+dotnet run --project src/Unityctl.Cli -- build-profile get-active --project "/path/to/project" --json
+dotnet run --project src/Unityctl.Cli -- build-target switch --project "/path/to/project" --target Android --timeout 60 --json
+dotnet run --project src/Unityctl.Cli -- build-profile set-active --project "/path/to/project" --profile "platform:StandaloneWindows64" --timeout 60 --json
+```
+
+`build-profile set-active` and `build-target switch` require a running Editor with IPC connectivity.
+
+Both commands persist transition state under `Library/Unityctl/build-state`, which lets polling survive temporary IPC disconnects during domain reload or target switch.
+
+### Batch edit with rollback
+
+```bash
+dotnet run --project src/Unityctl.Cli -- batch execute --project "/path/to/project" --file "./batch.json" --json
+```
+
+`batch execute` sends multiple edit commands in one IPC round-trip and rolls back completed steps when a later step fails.
+
+Current v1 constraints:
+
+- IPC-only. It requires a running Editor and does not support closed-editor batch fallback.
+- Rollback is guaranteed for the current transactional safe subset:
+  - Undo-backed: `gameobject-*`, `component-*`, selected `ui-*`, `material-set`, `material-set-shader`, `player-settings`, `project-settings set`, `prefab unpack`
+  - Compensation-backed: `asset-create`, `asset-copy`, `asset-move`
+- Direct `asset create/copy/move` are still non-transactional. Only `batch execute` failure rollback guarantees those asset-file operations.
+- Prefer `--file` for CLI usage. MCP agents can call the same protocol command through `unityctl_run(command="batch-execute", parameters={...})`.
+
 ## Parameters
 
 Commands accept typed parameters via JSON payload. The CLI maps command-line flags to `JsonObject` parameters internally. Key parameter types:
@@ -115,4 +147,5 @@ If a command fails, check:
 1. `editor list` — is Unity installed?
 2. `init --project <path>` — is the plugin installed?
 3. `ping --project <path>` — is the running Editor reachable over IPC?
-4. Check the log file path in the error output for Unity logs.
+4. `doctor --project <path> --json` — inspect `ipc`, `editorLog`, and `buildState` before retrying
+5. Check the log file path in the error output for Unity logs.

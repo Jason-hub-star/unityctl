@@ -158,6 +158,44 @@ public class ProtocolTests
     }
 
     [Fact]
+    public void CommandRequest_RoundTrip_WithCommandArray()
+    {
+        var request = new CommandRequest
+        {
+            Command = "batch-execute",
+            Parameters = new JsonObject
+            {
+                ["rollbackOnFailure"] = true,
+                ["commands"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["command"] = "gameobject-create",
+                        ["parameters"] = new JsonObject { ["name"] = "Cube A" }
+                    },
+                    new JsonObject
+                    {
+                        ["command"] = "gameobject-create",
+                        ["parameters"] = new JsonObject { ["name"] = "Cube B" }
+                    }
+                }
+            }
+        };
+
+        var json = JsonSerializer.Serialize(request, UnityctlJsonContext.Default.CommandRequest);
+        var deserialized = JsonSerializer.Deserialize(json, UnityctlJsonContext.Default.CommandRequest);
+
+        Assert.NotNull(deserialized);
+        Assert.True(deserialized!.GetParam("rollbackOnFailure", false));
+
+        var commands = deserialized.Parameters!["commands"]?.AsArray();
+        Assert.NotNull(commands);
+        Assert.Equal(2, commands!.Count);
+        Assert.Equal("gameobject-create", commands[0]!["command"]?.GetValue<string>());
+        Assert.Equal("Cube B", commands[1]!["parameters"]!["name"]?.GetValue<string>());
+    }
+
+    [Fact]
     public void EventEnvelope_RoundTrip()
     {
         var envelope = new EventEnvelope

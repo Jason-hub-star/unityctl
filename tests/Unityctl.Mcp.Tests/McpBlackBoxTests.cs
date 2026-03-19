@@ -14,17 +14,37 @@ public class McpBlackBoxTests
     [
         "unityctl_build",
         "unityctl_check",
+        "unityctl_component_get",
         "unityctl_exec",
         "unityctl_log",
         "unityctl_ping",
         "unityctl_run",
+        "unityctl_asset_find",
+        "unityctl_asset_get_labels",
+        "unityctl_asset_get_dependencies",
+        "unityctl_asset_get_info",
+        "unityctl_asset_reference_graph",
+        "unityctl_build_settings_get_scenes",
+        "unityctl_gameobject_find",
+        "unityctl_gameobject_get",
+        "unityctl_scene_hierarchy",
         "unityctl_scene_snapshot",
         "unityctl_scene_diff",
         "unityctl_schema",
+        "unityctl_screenshot_capture",
         "unityctl_session_list",
         "unityctl_status",
         "unityctl_test",
-        "unityctl_watch"
+        "unityctl_watch",
+        "unityctl_tag_list",
+        "unityctl_layer_list",
+        "unityctl_console_get_count",
+        "unityctl_define_symbols_get",
+        "unityctl_lighting_get_settings",
+        "unityctl_navmesh_get_settings",
+        "unityctl_physics_get_settings",
+        "unityctl_physics_get_collision_matrix",
+        "unityctl_script_list"
     ];
 
     [Fact]
@@ -194,6 +214,29 @@ public class McpBlackBoxTests
         Assert.DoesNotContain("not in the allowlist", payload);
     }
 
+    [Fact]
+    public async Task RunTool_BatchExecute_AcceptsNestedCommandArray()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+
+        var result = await harness.Client.CallToolAsync(
+            "unityctl_run",
+            arguments: new Dictionary<string, object?>
+            {
+                ["project"] = "/fake/nonexistent/path",
+                ["command"] = "batch-execute",
+                ["parameters"] =
+                    "{\"rollbackOnFailure\":true,\"commands\":[{\"command\":\"gameobject-create\",\"parameters\":{\"name\":\"BatchProbe\"}}]}"
+            },
+            progress: null,
+            options: new RequestOptions(),
+            cancellationToken: CancellationToken.None);
+
+        var payload = GetToolResultText(result);
+        Assert.DoesNotContain("not in the allowlist", payload);
+        Assert.DoesNotContain("Invalid JSON", payload);
+    }
+
     private static async Task AssertMcpToolCallFailsAsync(Func<ValueTask<CallToolResult>> call)
     {
         try
@@ -284,6 +327,8 @@ internal sealed class UnityctlMcpHarness : IAsyncDisposable
     private static string ResolveExecutablePath()
     {
         var fileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "unityctl-mcp.exe" : "unityctl-mcp";
+        // Debug first: dotnet test defaults to Debug, so prefer matching configuration
+        // to avoid stale Release binaries silently breaking tests.
         var candidates = new[]
         {
             Path.Combine(RepoRoot, "src", "Unityctl.Mcp", "bin", "Debug", "net10.0", fileName),

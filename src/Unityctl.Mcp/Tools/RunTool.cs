@@ -27,6 +27,7 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.ComponentAdd,
         WellKnownCommands.ComponentRemove,
         WellKnownCommands.ComponentSetProperty,
+        WellKnownCommands.BatchExecute,
         WellKnownCommands.Undo,
         WellKnownCommands.Redo,
         // Phase C-1: Asset CRUD
@@ -58,11 +59,36 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.UiCanvasCreate,
         WellKnownCommands.UiElementCreate,
         WellKnownCommands.UiSetRect,
+        // P0 잔여분: Asset Labels + Build Settings
+        WellKnownCommands.AssetSetLabels,
+        WellKnownCommands.BuildSettingsSetScenes,
         // Script Editing v1
         WellKnownCommands.ScriptCreate,
         WellKnownCommands.ScriptEdit,
         WellKnownCommands.ScriptDelete,
-        WellKnownCommands.ScriptValidate
+        WellKnownCommands.ScriptValidate,
+        // Tags & Layers
+        WellKnownCommands.TagAdd,
+        WellKnownCommands.LayerSet,
+        WellKnownCommands.GameObjectSetTag,
+        WellKnownCommands.GameObjectSetLayer,
+        // Editor Utility
+        WellKnownCommands.ConsoleClear,
+        WellKnownCommands.DefineSymbolsSet,
+        WellKnownCommands.EditorPause,
+        WellKnownCommands.EditorFocusGameView,
+        WellKnownCommands.EditorFocusSceneView,
+        // Lighting
+        WellKnownCommands.LightingBake,
+        WellKnownCommands.LightingCancel,
+        WellKnownCommands.LightingClear,
+        WellKnownCommands.LightingSetSettings,
+        // NavMesh
+        WellKnownCommands.NavMeshBake,
+        WellKnownCommands.NavMeshClear,
+        // Physics
+        WellKnownCommands.PhysicsSetSettings,
+        WellKnownCommands.PhysicsSetCollisionMatrix
     };
 
     [McpServerTool(Name = "unityctl_run")]

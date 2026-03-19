@@ -1,6 +1,6 @@
 # unityctl 개발 진행 상황
 
-> 최종 업데이트: 2026-03-18
+> 최종 업데이트: 2026-03-19
 
 ## 문서 구조
 
@@ -77,8 +77,16 @@ Plugin은 Unity 내부에서만 컴파일되며, `src/Unityctl.Plugin/Editor/Sha
 | 3C | ✅ 완료 | Watch Mode (Push 스트리밍, ConcurrentQueue, 영구 파이프) |
 | 4B | ✅ 완료 | Scene Diff (SerializedObject, GlobalObjectId, propertyPath diff) |
 | 5 | ✅ 완료 | Agent Layer (Unityctl.Mcp MCP 서버, schema, exec, workflow) |
-| MCP Hybrid | ✅ 완료 | unityctl_run (allowlist 39 write 명령) + schema filter |
-| Write C | ✅ 완료 | 커버리지 확장 (Asset 6 + Prefab 4 + Package/Settings 5 + Material 3 + Animation/UI 5 + Scene 2 + History 2 = 27개) |
+| MCP Hybrid | ✅ 완료 | unityctl_run (allowlist 59 write 명령) + schema filter |
+| Write C | ✅ 완료 | 커버리지 확장 (Asset 6 + Prefab 4 + Package/Settings 5 + Material 4 + Animation/UI 5 + Scene 2 + History 2 = 28개) |
+| Script v1 | ✅ 완료 | script create/edit/delete/validate |
+| Diagnostics | ✅ 완료 | doctor + IPC 자동 진단 |
+| Read API P0 | ✅ 완료 | asset/gameobject/component + hierarchy + build-settings + reference-graph |
+| P3 Screenshot | ✅ 완료 | screenshot capture (Scene/Game View, base64) |
+| Build Profile | ✅ 완료 | build-profile list/get-active/set-active + build-target switch |
+| P2 Batch | ✅ 완료 | batch execute + Undo transaction rollback |
+| Tags & Layers | ✅ 완료 | tag/layer/console/define-symbols 10개 명령 |
+| Lighting & NavMesh | ✅ 완료 | lighting 5개 + navmesh 3개 = 8개 명령, 비동기 bake 폴링 |
 
 ---
 
@@ -512,15 +520,125 @@ CoplayDev 대비 추정 대체율:
 
 ---
 
+## 슬라이스 이력 (CLAUDE.md에서 아카이브)
+
+아래 항목들은 CLAUDE.md "최근 확정 사항"에서 이동한 것입니다.
+
+- Write API 전체 구현 완료 (2026-03-18): Phase A (play, player-settings, asset refresh) + Phase B (gameobject CRUD, scene save) + Phase B.5 (component add/remove/set-property). 351개 dotnet 테스트 통과. Unity 실측 완료.
+- Phase 5 Agent Layer 구현 완료 (2026-03-18): Unityctl.Mcp (MCP 서버, 13개 도구), SchemaCommand, ExecCommand, WorkflowCommand, ExecHandler(Plugin). 356개 dotnet 테스트 통과
+- Phase 4B Scene Diff 구현 완료 (2026-03-18): SceneSnapshotHandler, SceneDiffHandler, SceneCommand, SceneSnapshot/SceneDiffResult 프로토콜.
+- Phase 3C Watch Mode 구현 완료 (2026-03-18): WatchCommand, WatchEventSource, EventEnvelope, IPC Push 스트리밍
+- Phase 4A Ghost Mode 구현 완료 (2026-03-18)
+- Phase 3A Session Layer 구현 완료 (2026-03-18)
+- Phase 3B Flight Recorder 구현 완료 (2026-03-18)
+- Phase 2C Async Commands 구현 완료 (2026-03-18)
+- Phase 2B 후속 검증 종결 (2026-03-18): IPC 도메인 리로드 자동 복구 실측 완료 (20회 연속 ping 무실패), batch worker IPC silent skip 확인, transport latency 측정 (ping median 528ms, MCP resident 100ms).
+- Schema 정합성 + Material Create (2026-03-18): schema에 cliName/cliFlag 필드 추가. material create 명령 추가. allowlist 40개.
+- Write API 확장 구현 완료 (2026-03-18): 28개 신규 write 명령. 총 40개 write/action 명령. MCP 도구 13개 유지. 388개 dotnet 테스트.
+- MCP 하이브리드 전략 구현 완료 (2026-03-18): unityctl_run (allowlist 12개 write 명령), unityctl_schema(command=...) 온디맨드 필터. MCP 도구 12→13개. 356개 dotnet 테스트 통과.
+- Script Editing v1 + Doctor 명령 (2026-03-19): script create/edit/delete/validate 4개 명령 구현. unityctl doctor 진단 명령 추가.
+- P0 잔여분 완료 (2026-03-19): asset get-labels, asset set-labels, build-settings set-scenes 3개 명령 추가. MCP 도구 24개.
+- Lighting & NavMesh (2026-03-19): lighting bake(비동기)/cancel/clear/get-settings/set-settings + navmesh bake/clear/get-settings 8개 명령. 비동기 bake는 IpcOnlyAsyncCommandRunner + Lightmapping.isRunning 폴링. MCP 도구 30개. 491개 dotnet 테스트 통과.
+
+---
+
+## 라이브 검증 아카이브
+
+아래 검증 기록은 PROJECT-STATUS.md에서 이동한 것입니다. 최신 검증은 PROJECT-STATUS.md를 참조하세요.
+
+### 기본 기능 (robotapp2, Unity 6000.0.64f1)
+
+| 기능 | 상태 | 비고 |
+|------|------|------|
+| `ping` | ✅ | IPC + batch 모두 동작 |
+| `status` | ✅ | isCompiling, isPlaying, platform 정상 |
+| `check` | ✅ | 44 assemblies, scriptCompilationFailed 정상 |
+| `build --dry-run` | ✅ | 19개 preflight 항목 검증 |
+| `build` (실제) | ✅ | 프로젝트 에러 정확히 캡처 |
+| `test --mode edit` | ✅ | 410개 실행, 403 pass / 7 fail |
+| `exec --code` | ✅ | IPC로 C# 식 실행 |
+| `schema --format json` | ✅ | 전체 커맨드 스키마 JSON 출력 |
+| `session list` | ✅ | 세션 추적 + 기록 정상 |
+| `log --stats` | ✅ | NDJSON 로그 기록/쿼리 정상 |
+| `scene snapshot` | ✅ | 동작 확인 |
+| `watch --channel console` | ✅ | IPC 스트리밍 동작, heartbeat 수신 확인 |
+| `editor list` | ✅ | 설치된 에디터 자동 탐색 |
+| `init` | ✅ | manifest.json 플러그인 설치 |
+
+### Write API (My project, Unity 6000.0.64f1)
+
+| 기능 | 상태 | 비고 |
+|------|------|------|
+| `play start/pause/stop` | ✅ | isPlaying/isPaused 정상 |
+| `player-settings get/set` | ✅ | productName, companyName read/write |
+| `asset refresh` | ✅ | scheduled 응답 + IPC 재연결 확인 |
+| `gameobject create/rename/move/delete` | ✅ | GlobalObjectId, Undo, PrefabGuard |
+| `gameobject activate/deactivate` | ✅ | alias 기반 |
+| `component add/set-property/remove` | ✅ | vector/scalar, serialized path 기준 |
+| `scene save/save --all` | ✅ | dirty scene 저장 |
+| `scene create/open` | ✅ | dirty scene 보호 + --force |
+| `undo/redo` | ✅ | scene snapshot으로 제거/복원 확인 |
+| `PrefabGuard` | ✅ | structured rejection 확인 |
+| `batch execute` 성공 | ✅ | 1회 IPC 왕복 + undo 1회 함께 제거 |
+| `batch execute` 실패 rollback | ✅ | rolledBack=true, 후속 find 0건 |
+
+### Read API (My project, Unity 6000.0.64f1)
+
+| 기능 | 상태 | 비고 |
+|------|------|------|
+| `scene snapshot --include-inactive` | ✅ | 기본 6개, includeInactive 7개 |
+| `gameobject find/get` | ✅ | componentTypes[], summary 반환 |
+| `component get` | ✅ | serialized properties, NotFound error |
+| `asset find` | ✅ | t:Scene 6건, t:Material 83건 |
+| `asset get-info/get-dependencies` | ✅ | guid/type/labels, recursive |
+| `scene hierarchy` | ✅ | nested tree, includeInactive |
+| `build-settings get-scenes` | ✅ | SampleScene.unity, enabled/order |
+| `asset reference-graph` | ✅ | direct/transitive 확인 |
+
+### Screenshot (My project, Unity 6000.0.64f1)
+
+| 기능 | 상태 | 비고 |
+|------|------|------|
+| `screenshot capture --view scene/game` | ✅ | PNG/JPG base64, 커스텀 해상도 |
+| `screenshot capture --output` | ✅ | 345KB PNG 파일 생성 |
+
+### 경쟁 분석 / CoplayDev 대비 대체율
+
+| 관점 | 추정 대체율 | 비고 |
+|------|-----------|------|
+| AI 에이전트 일상 작업 | **high-80s%** | GO/Component/Asset/Prefab/Material/Scene/Play/Test/Build 커버 |
+| CoplayDev 기능 패리티 | **~60%** | CoplayDev 39개 도구 중 ~60% 대응 |
+| unityctl 독점 기능 포함 | **+25%p** | build/dry-run, flight recorder, session, watch, scene diff, headless batch |
+
+### unityctl 독점 기능 (CoplayDev 대체율 0%)
+
+| 기능 | 가치 |
+|------|------|
+| Headless Batch Mode | CI/CD에서 Editor 없이 status/check/test/build |
+| Ghost Mode (dry-run) | 빌드 전 3단계 preflight 검증 |
+| Flight Recorder | 전 커맨드 NDJSON 감사 로그 |
+| Session Layer | 6개 상태머신 기반 실행 추적 |
+| Watch Streaming | IPC Push 기반 실시간 이벤트 |
+| Scene Diff | SerializedObject propertyPath diff |
+| 토큰 효율 | 스키마 크기 ~8.3x 절감 |
+| Undo 내부 통합 | UndoScope 기반 + undo/redo CLI 노출 |
+
+### Plugin 호환성 수정 (Unity 6)
+
+- `WatchEventSource`: `CompilationFinishedHandler` → `Action<object>` (Unity 6 API 변경)
+- `WatchEventSource`: `EditorApplication.CallbackFunction` → `Action`
+- `WatchEventSource.Subscribe`: 메인 스레드로 이동 (`EditorApplication.delayCall`)
+- `IpcServer`: `Environment.TickCount64` → `(long)Environment.TickCount` (Mono 호환)
+- `IpcServer.WatchWriterLoop`: 즉시 heartbeat 전송 (연결 안정성)
+
+---
+
 ## 다음 단계
 
-1. Phase 2B 후속 보강
-   - domain reload 후 자동 IPC 복구 검증 강화
-   - batch worker IPC 미기동 로그 검증
-   - pure transport-only latency 측정
-2. Phase 1C 잔여
-   - `release.yml`
-   - README 정비
+1. macOS / Linux 실제 테스트
+2. `dotnet tool` NuGet 패키지 배포
+3. write API property alias 개선 (`mass` → `m_Mass`)
+4. Phase 1C 잔여 — `release.yml`, README 정비
 
 ---
 

@@ -26,7 +26,9 @@ public class ToolAnnotationTests
         typeof(SessionTool),
         typeof(SchemaTool),
         typeof(ExecTool),
-        typeof(RunTool)
+        typeof(ExploreTool),
+        typeof(RunTool),
+        typeof(ScreenshotTool)
     ];
 
     [Fact]
@@ -117,13 +119,13 @@ public class ToolAnnotationTests
     }
 
     [Fact]
-    public void TotalRegisteredTools_AtLeastThirteen()
+    public void TotalRegisteredTools_AtLeastTwentyThree()
     {
         var toolCount = ToolTypes
             .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
             .Count(m => m.GetCustomAttribute<McpServerToolAttribute>() != null);
 
-        Assert.True(toolCount >= 13, $"Expected at least 13 registered tools, found {toolCount}");
+        Assert.True(toolCount >= 33, $"Expected at least 33 registered tools, found {toolCount}");
     }
 
     [Fact]

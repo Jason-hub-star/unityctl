@@ -111,6 +111,26 @@ public static class ScriptCommand
         return CommandRunner.GetExitCode(response);
     }
 
+    public static void List(string project, string? folder = null, string? filter = null, int? limit = null, bool json = false)
+    {
+        var request = CreateListRequest(folder, filter, limit);
+        CommandRunner.Execute(project, request, json);
+    }
+
+    internal static CommandRequest CreateListRequest(string? folder = null, string? filter = null, int? limit = null)
+    {
+        var parameters = new JsonObject();
+        if (!string.IsNullOrWhiteSpace(folder)) parameters["folder"] = folder;
+        if (!string.IsNullOrWhiteSpace(filter)) parameters["filter"] = filter;
+        if (limit.HasValue) parameters["limit"] = limit.Value;
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.ScriptList,
+            Parameters = parameters
+        };
+    }
+
     internal static CommandRequest CreateCreateRequest(string path, string className, string? ns, string baseType)
     {
         if (string.IsNullOrWhiteSpace(path))

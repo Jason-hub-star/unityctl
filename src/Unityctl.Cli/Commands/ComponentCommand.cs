@@ -6,6 +6,12 @@ namespace Unityctl.Cli.Commands;
 
 public static class ComponentCommand
 {
+    public static void Get(string project, string componentId, string? property = null, bool json = false)
+    {
+        var request = CreateGetRequest(componentId, property);
+        CommandRunner.Execute(project, request, json);
+    }
+
     public static void Add(string project, string id, string type, bool json = false)
     {
         var request = CreateAddRequest(id, type);
@@ -22,6 +28,26 @@ public static class ComponentCommand
     {
         var request = CreateSetPropertyRequest(componentId, property, value);
         CommandRunner.Execute(project, request, json);
+    }
+
+    internal static CommandRequest CreateGetRequest(string componentId, string? property)
+    {
+        if (string.IsNullOrWhiteSpace(componentId))
+            throw new ArgumentException("componentId must not be empty", nameof(componentId));
+
+        var parameters = new JsonObject
+        {
+            ["componentId"] = componentId
+        };
+
+        if (!string.IsNullOrWhiteSpace(property))
+            parameters["property"] = property;
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.ComponentGet,
+            Parameters = parameters
+        };
     }
 
     internal static CommandRequest CreateAddRequest(string id, string type)

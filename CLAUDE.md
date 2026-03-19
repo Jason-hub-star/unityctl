@@ -32,22 +32,18 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - Write API 확장 (Scene open/create, Undo/Redo, Phase C): Done
 - Script Editing v1 (create/edit/delete/validate): Done
 - Diagnostics (doctor + IPC 실패 자동 진단): Done
+- P0 (Read API): Done (asset find/get-info/get-dependencies/reference-graph/get-labels/set-labels, gameobject find/get, component get, scene hierarchy, build-settings get-scenes/set-scenes)
+- P3 (Screenshot/Visual Feedback): Done
+- Tags & Layers + Editor Utility (tag/layer/console/define-symbols 10개 명령): Done
+- Lighting & NavMesh (lighting bake/cancel/clear/get-settings/set-settings, navmesh bake/clear/get-settings 8개 명령): Done
+- Physics Settings (physics get-settings/set-settings/get-collision-matrix/set-collision-matrix 4개 명령): Done
+- Editor Utility 확장 (editor pause/focus-gameview/focus-sceneview 3개 명령): Done
+- Script List (script list 1개 명령): Done
 
-최근 확정 사항:
-- Script Editing v1 + Doctor 명령 (2026-03-19): script create/edit/delete/validate 4개 명령 구현. `unityctl doctor` 진단 명령 추가. IPC 실패 시 Editor.log 자동 진단. allowlist 44개. 377개 dotnet 테스트 (Core +12 진단 테스트). Unity 실측 완료.
-- Phase 2B 후속 검증 종결 (2026-03-18): IPC 도메인 리로드 자동 복구 실측 완료 (20회 연속 ping 무실패), batch worker IPC silent skip 확인, transport latency 측정 (ping median 528ms, MCP resident 100ms).
-- Schema 정합성 + Material Create (2026-03-18): schema에 `cliName`/`cliFlag` 필드 추가 (CLI 호출명 ↔ IPC 프로토콜명 불일치 근본 해결). `material create` 명령 추가. allowlist 40개. Phase C Unity 실측 완료 (asset/prefab/package/project-settings/animation/ui/material 전부 검증).
-- Write API 확장 구현 완료 (2026-03-18): 28개 신규 write 명령 (Asset CRUD 6 + Prefab 4 + Package/Settings 5 + Material 4 + Animation/UI 5 + Scene open/create 2 + Undo/Redo 2). 총 40개 write/action 명령. MCP 도구 13개 유지 (unityctl_run allowlist 40개). 388개 dotnet 테스트 (Integration 2개 환경 의존 실패 가능).
-- MCP 하이브리드 전략 구현 완료 (2026-03-18): `unityctl_run` (allowlist 12개 write 명령), `unityctl_schema(command=...)` 온디맨드 필터. MCP 도구 12→13개. 356개 dotnet 테스트 통과. Unity 실측 완료.
-- Write API 전체 구현 완료 (2026-03-18): Phase A (play, player-settings, asset refresh) + Phase B (gameobject CRUD, scene save) + Phase B.5 (component add/remove/set-property). 351개 dotnet 테스트 통과. Unity 실측 완료.
-- Phase 5 Agent Layer 구현 완료 (2026-03-18): Unityctl.Mcp (MCP 서버, 13개 도구), SchemaCommand, ExecCommand, WorkflowCommand, ExecHandler(Plugin). 356개 dotnet 테스트 통과
-- Phase 4B Scene Diff 구현 완료 (2026-03-18): SceneSnapshotHandler, SceneDiffHandler, SceneCommand, SceneSnapshot/SceneDiffResult 프로토콜.
-- Phase 3C Watch Mode 구현 완료 (2026-03-18): WatchCommand, WatchEventSource, EventEnvelope, IPC Push 스트리밍
-- Phase 4A Ghost Mode 구현 완료 (2026-03-18)
-- Phase 3A Session Layer 구현 완료 (2026-03-18)
-- Phase 3B Flight Recorder 구현 완료 (2026-03-18)
-- Phase 2C Async Commands 구현 완료 (2026-03-18)
-- Phase 2B IPC Transport 구현 완료 (2026-03-17)
+최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/DEVELOPMENT.md` "슬라이스 이력" 참조):
+- Editor Utility 확장 + Script List (2026-03-19): editor pause/focus-gameview/focus-sceneview + script list = 4개 명령. 515개 dotnet 테스트 통과. Unity 실측 8/8 통과.
+- Physics Settings (2026-03-19): physics 4개 명령. DynamicsManager iterator + 32×32 collision matrix. 500개 dotnet 테스트 통과. Unity 실측 9/9 통과.
+- Lighting & NavMesh (2026-03-19): lighting 5개 + navmesh 3개 = 8개 명령. 비동기 bake 폴링, SerializedObject settings. 491개 dotnet 테스트 통과.
 
 ## 실행 규칙 (MUST)
 1. 기존 코드/타입/유틸 우선 재사용, 중복 구현 금지
@@ -63,7 +59,7 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 
 ```bash
 dotnet build unityctl.slnx                                          # 빌드
-dotnet test unityctl.slnx                                           # 전체 테스트 (400개)
+dotnet test unityctl.slnx                                           # 전체 테스트 (491+개)
 dotnet test unityctl.slnx --filter "FullyQualifiedName!~Integration" # 유닛만
 dotnet run --project src/Unityctl.Cli -- <command> [options]         # CLI 실행
 ```
@@ -76,7 +72,7 @@ unityctl.slnx
 ├── src/Unityctl.Core      (net10.0)         비즈니스 로직 (transport, discovery, retry)
 ├── src/Unityctl.Cli       (net10.0)         얇은 CLI 셸 → Core에 위임
 ├── src/Unityctl.Plugin    (Unity UPM)       Editor 브릿지 (솔루션 빌드에 미포함)
-├── tests/*Tests           xUnit 테스트 (400개)
+├── tests/*Tests           xUnit 테스트 (491+개)
 └── docs/                  ref/ + status/ + daily/ + weekly/
 ```
 
@@ -123,10 +119,17 @@ unityctl.slnx
 | **Write A** | ✅ 완료 | **PlayMode, PlayerSettings, AssetRefresh** (IPC write path) |
 | **Write B** | ✅ 완료 | **GameObject CRUD + Scene Save** (GlobalObjectId, Undo, PrefabGuard) |
 | **Write B.5** | ✅ 완료 | **Component CRUD** (add/remove/set-property, SerializedObject) |
-| **MCP Hybrid** | ✅ 완료 | **unityctl_run** (allowlist 44 명령) + **schema filter** (command 파라미터) |
+| **MCP Hybrid** | ✅ 완료 | **unityctl_run** (allowlist — `RunTool.cs` 참조) + **schema filter** (command 파라미터) |
 | **Write C** | ✅ 완료 | **커버리지 확장** (Asset 6 + Prefab 4 + Package/Settings 5 + Material 4 + Animation/UI 5 + Scene 2 + History 2 = 28개) |
 | **Script v1** | ✅ 완료 | **script create/edit/delete/validate** (템플릿 생성, whole-file replace, 비동기 컴파일 검증) |
 | **Diagnostics** | ✅ 완료 | **doctor** (IPC/Plugin/Editor 상태 진단) + IPC 실패 시 Editor.log 자동 진단 |
+| **P0 Read API** | ✅ 완료 | **asset find/get-info/get-deps/ref-graph/get-labels/set-labels** + gameobject find/get + component get + scene hierarchy + build-settings get/set-scenes |
+| **P3 Screenshot** | ✅ 완료 | **screenshot capture** (Scene/Game View, base64, PNG/JPG, MCP 전용 도구) |
+| **Tags & Layers + Editor Utility** | ✅ 완료 | **tag list/add, layer list/set, gameobject set-tag/set-layer, console clear/get-count, define-symbols get/set** (10개 명령) |
+| **Lighting & NavMesh** | ✅ 완료 | **lighting bake/cancel/clear/get-settings/set-settings + navmesh bake/clear/get-settings** (8개 명령) |
+| **Physics Settings** | ✅ 완료 | **physics get-settings/set-settings/get-collision-matrix/set-collision-matrix** (4개 명령) |
+| **Editor Utility 확장** | ✅ 완료 | **editor pause/focus-gameview/focus-sceneview** (3개 명령) |
+| **Script List** | ✅ 완료 | **script list** (MonoScript 탐색, folder/filter/limit) |
 
 ## Source of Truth 문서
 - 탐색 인덱스: `AGENTS.md`
@@ -151,24 +154,8 @@ unityctl.slnx
 7. 개발 진행 상세 이력: `docs/DEVELOPMENT.md`
 
 ## 테스트 표준
-- 총 400개 (Shared 60 + Core 108 + Cli 193 + Mcp 16 + Integration 23)
-- `dotnet test unityctl.slnx` green 필수
+- `dotnet test unityctl.slnx` green 필수 (현재 수치는 `docs/status/PROJECT-STATUS.md` 참조)
 - Integration.Tests는 AppLocker 감지 + graceful skip
 
-## 다음 개발 로드맵 (경쟁 분석 기반)
-
-| 우선순위 | 영역 | 설명 | 참고 |
-|---------|------|------|------|
-| **P0** | 읽기/탐색 API 확장 | hierarchy 조회, gameobject find, component 값 조회, find by component, reference graph, asset dependency 분석. 수정 전 상태 파악 필수 | unity-editor-mcp |
-| **P1** | 멀티 인스턴스 라우팅 | 여러 Unity Editor 동시 제어, 에이전트가 특정 에디터에 작업 고정하는 UX | CoplayDev/unity-mcp |
-| **P2** | 배치 편집/트랜잭션 | batch_execute, 부분 실패 롤백, 호출 수 감소로 에이전트 완수율 향상 | CoplayDev/unity-mcp |
-| **P3** | 스크린샷/시각 피드백 | Game View/Scene View 캡처, before/after 비교, UI 레이아웃 검증 | unity-editor-mcp, Coplay |
-| **P4** | Graphics/Camera | URP/HDRP, Volume, renderer features, light baking, camera/Cinemachine | CoplayDev/unity-mcp |
-| **P5** | 고급 UI 자동화 | UI 찾기, 상태 읽기, 클릭, 값 입력, 입력 시퀀스 재생 | unity-editor-mcp |
-| **P6** | 스크립트 편집 v2 | text edits, symbol-aware patch, find refs, diff preview, compile error 자동 수정 루프 | 기존 Script v1 확장 |
-| **P7** | 전문화 도메인 | texture import, shader/shader graph, scriptable object 관리, vfx, audio, terrain, probuilder | CoplayDev/unity-mcp |
-
-### 병행 과제
-- macOS / Linux 실제 테스트
-- `dotnet tool` NuGet 패키지 배포
-- write API property alias 개선 (`mass` → `m_Mass`)
+## 다음 개발 로드맵
+`docs/ref/phase-roadmap.md` "다음 개발 로드맵" 섹션 참조.

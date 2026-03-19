@@ -122,10 +122,16 @@ public static class SceneCommand
         };
     }
 
-    public static void Snapshot(string project, string? scenePath = null, bool json = false)
+    public static void Snapshot(string project, string? scenePath = null, bool includeInactive = false, bool json = false)
     {
-        var exitCode = SnapshotAsync(project, scenePath, json).GetAwaiter().GetResult();
+        var exitCode = SnapshotAsync(project, scenePath, includeInactive, json).GetAwaiter().GetResult();
         Environment.Exit(exitCode);
+    }
+
+    public static void Hierarchy(string project, string? scenePath = null, bool includeInactive = false, bool json = false)
+    {
+        var request = CreateHierarchyRequest(scenePath, includeInactive);
+        CommandRunner.Execute(project, request, json);
     }
 
     public static void Diff(
@@ -153,9 +159,9 @@ public static class SceneCommand
         }
     }
 
-    private static async Task<int> SnapshotAsync(string project, string? scenePath, bool json)
+    private static async Task<int> SnapshotAsync(string project, string? scenePath, bool includeInactive, bool json)
     {
-        var request = CreateSnapshotRequest(scenePath);
+        var request = CreateSnapshotRequest(scenePath, includeInactive);
         var platform = PlatformFactory.Create();
         var discovery = new UnityEditorDiscovery(platform);
         var executor = new CommandExecutor(platform, discovery);
@@ -570,15 +576,32 @@ public static class SceneCommand
     }
 
     /// <summary>Creates a scene-snapshot CommandRequest. Exposed for testing.</summary>
-    internal static CommandRequest CreateSnapshotRequest(string? scenePath)
+    internal static CommandRequest CreateSnapshotRequest(string? scenePath, bool includeInactive = false)
     {
         var parameters = new JsonObject();
         if (!string.IsNullOrEmpty(scenePath))
             parameters["scenePath"] = scenePath;
+        if (includeInactive)
+            parameters["includeInactive"] = true;
 
         return new CommandRequest
         {
             Command = WellKnownCommands.SceneSnapshot,
+            Parameters = parameters
+        };
+    }
+
+    internal static CommandRequest CreateHierarchyRequest(string? scenePath, bool includeInactive = false)
+    {
+        var parameters = new JsonObject();
+        if (!string.IsNullOrEmpty(scenePath))
+            parameters["scenePath"] = scenePath;
+        if (includeInactive)
+            parameters["includeInactive"] = true;
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.SceneHierarchy,
             Parameters = parameters
         };
     }

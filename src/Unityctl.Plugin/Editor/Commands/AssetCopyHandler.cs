@@ -1,6 +1,5 @@
 using Newtonsoft.Json.Linq;
 using Unityctl.Plugin.Editor.Shared;
-
 namespace Unityctl.Plugin.Editor.Commands
 {
     public class AssetCopyHandler : CommandHandlerBase
@@ -30,6 +29,7 @@ namespace Unityctl.Plugin.Editor.Commands
 
             return Ok($"Copied '{source}' to '{destination}'", new JObject
             {
+                ["sourcePath"] = source,
                 ["path"] = destination,
                 ["guid"] = guid
             });

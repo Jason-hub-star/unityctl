@@ -78,6 +78,21 @@ dotnet run --project src/Unityctl.Cli -- test --project "C:/MyGame" --timeout 60
 dotnet run --project src/Unityctl.Cli -- build --project "C:/MyGame" --target StandaloneWindows64
 ```
 
+Note: `build` remains target-driven in this slice. It does not automatically consume the active build profile.
+
+### 5.5. Inspect or switch build profiles / targets
+
+```bash
+dotnet run --project src/Unityctl.Cli -- build-profile list --project "C:/MyGame" --json
+dotnet run --project src/Unityctl.Cli -- build-profile get-active --project "C:/MyGame" --json
+dotnet run --project src/Unityctl.Cli -- build-target switch --project "C:/MyGame" --target Android --timeout 60 --json
+dotnet run --project src/Unityctl.Cli -- build-profile set-active --project "C:/MyGame" --profile "platform:StandaloneWindows64" --timeout 60 --json
+```
+
+`build-profile set-active` and `build-target switch` are IPC-only. Open the Unity Editor for the target project before using them.
+
+These commands persist transition state under `Library/Unityctl/build-state` so polling can recover across temporary IPC disconnects or domain reloads.
+
 ### 6. Discover available tools
 
 ```bash
@@ -95,6 +110,19 @@ All commands support `--json` for machine-readable output:
 dotnet run --project src/Unityctl.Cli -- editor list --json
 dotnet run --project src/Unityctl.Cli -- status --project "C:/MyGame" --json
 ```
+
+For transition-heavy workflows, `doctor` is the quickest health check:
+
+```bash
+dotnet run --project src/Unityctl.Cli -- doctor --project "C:/MyGame"
+dotnet run --project src/Unityctl.Cli -- doctor --project "C:/MyGame" --json
+```
+
+`doctor` now includes a `buildState` section that reports:
+- the `Library/Unityctl/build-state` directory
+- whether transition state files currently exist
+- how many files are present
+- the age of the oldest file in minutes
 
 ## How It Works
 
@@ -138,3 +166,5 @@ Current verification status:
 - `test --no-wait` returns `ACCEPTED [104]` immediately
 - `test --mode play` warns about domain reload and forces `--no-wait`
 - `build` reaches the running Editor over IPC; current failures depend on project compile state rather than transport
+- `build-profile list`, `build-profile get-active`, `build-target switch`, and `build-profile set-active` verified on Unity 6000.0.64f1 against `My project`
+- transition state is persisted under `Library/Unityctl/build-state` and reused by polling after IPC reconnects

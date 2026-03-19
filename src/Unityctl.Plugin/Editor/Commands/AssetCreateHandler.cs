@@ -18,9 +18,7 @@ namespace Unityctl.Plugin.Editor.Commands
             if (string.IsNullOrEmpty(type))
                 return InvalidParameters("Parameter 'type' is required.");
 
-            var assetType = System.Type.GetType(type)
-                ?? System.Type.GetType($"UnityEngine.{type}, UnityEngine")
-                ?? System.Type.GetType($"UnityEditor.{type}, UnityEditor");
+            var assetType = ResolveAssetType(type);
 
             if (assetType == null)
                 return Fail(StatusCode.InvalidParameters, $"Unknown type: {type}");
@@ -52,5 +50,43 @@ namespace Unityctl.Plugin.Editor.Commands
             return NotInEditor();
 #endif
         }
+
+#if UNITY_EDITOR
+        private static System.Type ResolveAssetType(string type)
+        {
+            var resolved = System.Type.GetType(type)
+                ?? System.Type.GetType($"UnityEngine.{type}, UnityEngine")
+                ?? System.Type.GetType($"UnityEditor.{type}, UnityEditor");
+
+            if (resolved != null)
+                return resolved;
+
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                resolved = assembly.GetType(type, throwOnError: false, ignoreCase: false);
+                if (resolved != null)
+                    return resolved;
+
+                System.Type[] types;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (System.Reflection.ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types;
+                }
+
+                foreach (var candidate in types)
+                {
+                    if (candidate == null) continue;
+                    if (string.Equals(candidate.Name, type, System.StringComparison.Ordinal))
+                        return candidate;
+                }
+            }
+
+            return null;
+        }
+#endif
     }
 }

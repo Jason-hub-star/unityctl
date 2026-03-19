@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Unityctl.Cli.Output;
+using Unityctl.Cli.Commands;
 using Unityctl.Core.Diagnostics;
 using Unityctl.Core.Discovery;
 using Unityctl.Core.FlightRecorder;
@@ -59,11 +60,11 @@ public static class CommandRunner
 
         RecordEntry(project, request, response, sw.ElapsedMilliseconds, sessionId);
 
-        PrintResponse(response, json);
+        PrintResponse(project, response, json);
         return GetExitCode(response);
     }
 
-    internal static void PrintResponse(CommandResponse response, bool json)
+    internal static void PrintResponse(string project, CommandResponse response, bool json)
     {
         if (json)
         {
@@ -75,9 +76,13 @@ public static class CommandRunner
         if (!response.Success)
         {
             PrintEditorLogDiagnostics(response.StatusCode);
+            PrintDoctorDiagnostics(project, response);
             ConsoleOutput.PrintRecovery(response.StatusCode);
         }
     }
+
+    internal static void PrintResponse(CommandResponse response, bool json)
+        => PrintResponse(string.Empty, response, json);
 
     internal static int GetExitCode(CommandResponse response)
         => response.Success ? 0 : 1;
@@ -94,6 +99,17 @@ public static class CommandRunner
         var diagnostics = EditorLogDiagnostics.GetRecentDiagnostics();
         if (diagnostics != null)
             Console.Error.WriteLine(diagnostics);
+    }
+
+    private static void PrintDoctorDiagnostics(string project, CommandResponse response)
+    {
+        if (string.IsNullOrWhiteSpace(project))
+            return;
+
+        if (!DoctorCommand.ShouldAutoDiagnose(response))
+            return;
+
+        Console.Error.WriteLine(DoctorCommand.RenderAutoDiagnosis(project));
     }
 
     private static void RecordEntry(

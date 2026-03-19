@@ -10,6 +10,7 @@
 - `getting-started.md` — 사용자 시작 가이드
 - `ai-quickstart.md` — AI 에이전트 빠른 시작
 - `glossary.md` — 용어 사전
+- `phase-history.md` — 완료된 Phase 상세 설계/검증 아카이브
 
 ## 규칙
 - 이 폴더는 정식(canonical) 참조 문서만 보관.

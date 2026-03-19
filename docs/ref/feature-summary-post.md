@@ -12,6 +12,9 @@
 
 - 게임오브젝트 생성 / 삭제 / 이동 / 이름변경 / 활성화·비활성화
 - 컴포넌트 추가 / 제거 / 속성 변경 (SerializedProperty)
+- 게임오브젝트 검색 / 단건 조회 (`gameobject find`, `gameobject get`)
+- 컴포넌트 단건 조회 / 단일 property 조회 (`component get`)
+- lightweight 씬 계층 조회 (`scene hierarchy`)
 - 씬 열기 / 저장 / 생성 (single / additive 모드)
 
 ## 3. 씬 Diff
@@ -23,6 +26,9 @@
 ## 4. 에셋 & 프리팹 관리
 
 - 에셋 생성 / 복사 / 이동 / 삭제 / 강제 리임포트
+- 에셋 검색 / 단건 메타 조회 / 의존성 조회 (`asset find`, `asset get-info`, `asset get-dependencies`)
+- 에셋 역참조 그래프 조회 (`asset reference-graph`)
+- Build Settings 씬 목록 조회 (`build-settings get-scenes`)
 - 폴더 생성 / AssetDatabase 새로고침
 - 프리팹 생성 / 적용(Apply) / 언팩(Unpack) / 내부 편집(Edit)
 
@@ -56,13 +62,15 @@
 - 명령 이력 자동 기록 (Flight Recorder, NDJSON)
 - 로그 조회 / 필터 / 보존 정책 / 통계
 - 세션 관리 (목록 / 중지 / 정리)
+- `doctor` 진단 명령 + 연결/리로드 계열 실패 시 자동 doctor 요약
 
 ## 9. AI 연동 (MCP)
 
 - MCP 서버 내장
 - AI가 Unity를 직접 조작 가능
-- 13개 MCP 도구
-- 39개 write 명령 allowlist
+- 23개 MCP 도구
+- 44개 write 명령 allowlist
+- 10개 read query MCP 도구 (`asset/gameobject/component/scene/build-settings/reference/screenshot`)
 
 ## 10. 인프라
 
@@ -73,4 +81,4 @@
 
 ---
 
-**총 62개 CLI 명령 · 13개 MCP 도구 · 388개 테스트**
+**총 74개 CLI 명령 · 23개 MCP 도구 · 448개 테스트**

@@ -6,6 +6,42 @@ namespace Unityctl.Cli.Tests;
 
 public class ComponentCommandTests
 {
+    // === Get ===
+
+    [CliTestFact]
+    public void Get_SetsCommandName()
+    {
+        var request = ComponentCommand.CreateGetRequest("comp-gid", null);
+        Assert.Equal(WellKnownCommands.ComponentGet, request.Command);
+    }
+
+    [CliTestFact]
+    public void Get_SetsComponentId()
+    {
+        var request = ComponentCommand.CreateGetRequest("comp-gid-123", null);
+        Assert.Equal("comp-gid-123", request.Parameters!["componentId"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void Get_IncludesPropertyWhenProvided()
+    {
+        var request = ComponentCommand.CreateGetRequest("comp-gid-123", "m_LocalPosition");
+        Assert.Equal("m_LocalPosition", request.Parameters!["property"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void Get_OmitsPropertyWhenNull()
+    {
+        var request = ComponentCommand.CreateGetRequest("comp-gid-123", null);
+        Assert.False(request.Parameters!.ContainsKey("property"));
+    }
+
+    [CliTestFact]
+    public void Get_EmptyComponentId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => ComponentCommand.CreateGetRequest("", null));
+    }
+
     // === Add ===
 
     [CliTestFact]
@@ -104,6 +140,13 @@ public class ComponentCommandTests
     public void SetProperty_HasRequestId()
     {
         var request = ComponentCommand.CreateSetPropertyRequest("gid", "prop", "val");
+        Assert.False(string.IsNullOrEmpty(request.RequestId));
+    }
+
+    [CliTestFact]
+    public void Get_HasRequestId()
+    {
+        var request = ComponentCommand.CreateGetRequest("gid", null);
         Assert.False(string.IsNullOrEmpty(request.RequestId));
     }
 }

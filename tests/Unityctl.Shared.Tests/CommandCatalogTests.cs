@@ -11,11 +11,15 @@ public class CommandCatalogTests
         var names = CommandCatalog.All.Select(command => command.Name).ToArray();
 
         Assert.Equal(
-            ["init", "editor list", "ping", "status", "build", "test", "check", "tools", "doctor", "log",
+            ["init", "editor list", "ping", "status", "build",
+             "build-profile-list", "build-profile-get-active", "build-profile-set-active", "build-target-switch",
+             "test", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",
-             "scene snapshot", "scene diff",
-             "schema", "exec", "workflow",
+             "scene snapshot", "scene-hierarchy", "scene diff",
+             "schema", "exec", "workflow", "batch-execute",
              "play-mode", "player-settings-get", "player-settings-set", "asset-refresh",
+             "asset-find", "asset-get-info", "asset-get-dependencies", "asset-reference-graph",
+              "build-settings-get-scenes", "gameobject-find", "gameobject-get", "component-get",
               "gameobject-create", "gameobject-delete", "gameobject-set-active",
               "gameobject-move", "gameobject-rename", "scene-save", "scene-open", "scene-create",
               "component-add", "component-remove", "component-set-property", "undo", "redo",
@@ -31,7 +35,29 @@ public class CommandCatalogTests
              "animation-create-clip", "animation-create-controller",
              "ui-canvas-create", "ui-element-create", "ui-set-rect",
              // Script Editing v1
-             "script-create", "script-edit", "script-delete", "script-validate"],
+             "script-create", "script-edit", "script-delete", "script-validate",
+             // P0 잔여분: Asset Labels + Build Settings
+             "asset-get-labels", "asset-set-labels", "build-settings-set-scenes",
+             // Screenshot / Visual Feedback — P3
+             "screenshot",
+             // Tags & Layers
+             "tag-list", "tag-add", "layer-list", "layer-set",
+             "gameobject-set-tag", "gameobject-set-layer",
+             // Editor Utility
+             "console-clear", "console-get-count",
+             "define-symbols-get", "define-symbols-set",
+             // Lighting
+             "lighting-bake", "lighting-cancel", "lighting-clear",
+             "lighting-get-settings", "lighting-set-settings",
+             // NavMesh
+             "navmesh-bake", "navmesh-clear", "navmesh-get-settings",
+             // Editor Utility 확장
+             "editor-pause", "editor-focus-gameview", "editor-focus-sceneview",
+             // Script 확장
+             "script-list",
+             // Physics
+             "physics-get-settings", "physics-set-settings",
+             "physics-get-collision-matrix", "physics-set-collision-matrix"],
             names);
     }
 
@@ -70,6 +96,27 @@ public class CommandCatalogTests
 
         Assert.Contains(sceneSnapshot.Parameters, p => p.Name == "project" && p.Required);
         Assert.Contains(sceneSnapshot.Parameters, p => p.Name == "scenePath" && !p.Required);
+        Assert.Contains(sceneSnapshot.Parameters, p => p.Name == "includeInactive" && !p.Required);
+    }
+
+    [Fact]
+    public void SceneHierarchy_HasScenePathAndIncludeInactive_AsOptional()
+    {
+        var sceneHierarchy = CommandCatalog.All.Single(command => command.Name == "scene-hierarchy");
+
+        Assert.Contains(sceneHierarchy.Parameters, p => p.Name == "project" && p.Required);
+        Assert.Contains(sceneHierarchy.Parameters, p => p.Name == "scenePath" && !p.Required);
+        Assert.Contains(sceneHierarchy.Parameters, p => p.Name == "includeInactive" && !p.Required);
+    }
+
+    [Fact]
+    public void AssetReferenceGraph_HasPathParameter_AsRequired()
+    {
+        var assetReferenceGraph = CommandCatalog.All.Single(command => command.Name == "asset-reference-graph");
+
+        Assert.Contains(assetReferenceGraph.Parameters, p => p.Name == "project" && p.Required);
+        Assert.Contains(assetReferenceGraph.Parameters, p => p.Name == "path" && p.Required);
+        Assert.DoesNotContain(assetReferenceGraph.Parameters, p => p.Name == "json" && p.Required);
     }
 
     [Fact]
@@ -88,5 +135,16 @@ public class CommandCatalogTests
 
         Assert.Contains(sceneDiff.Parameters, p => p.Name == "live");
         Assert.DoesNotContain(sceneDiff.Parameters, p => p.Name == "live" && p.Required);
+    }
+
+    [Fact]
+    public void BatchExecute_HasCommandsOrFile_WithOptionalRollback()
+    {
+        var batchExecute = CommandCatalog.All.Single(command => command.Name == "batch-execute");
+
+        Assert.Contains(batchExecute.Parameters, p => p.Name == "project" && p.Required);
+        Assert.Contains(batchExecute.Parameters, p => p.Name == "commands" && !p.Required);
+        Assert.Contains(batchExecute.Parameters, p => p.Name == "file" && !p.Required);
+        Assert.Contains(batchExecute.Parameters, p => p.Name == "rollbackOnFailure" && !p.Required);
     }
 }

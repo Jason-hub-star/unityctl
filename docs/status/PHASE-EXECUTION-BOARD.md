@@ -21,10 +21,21 @@
 | Phase 5 | Agent Layer (Unityctl.Mcp 네이티브 서버, schema, exec) | P2 | Done | docs/ref/phase-roadmap.md | 2026-03-18 |
 | MCP Hybrid | unityctl_run (allowlist write) + schema filter | P1 | Done | docs/ref/phase-roadmap.md | 2026-03-18 |
 | Write C | 커버리지 확장 (Asset/Prefab/Package/Material/Animation/UI) | P1 | Done | docs/ref/phase-roadmap.md | 2026-03-18 |
+| Script v1 | script create/edit/delete/validate | P1 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Diagnostics | doctor + IPC 자동 진단 | P1 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Read API P0 | asset/gameobject/component query + hierarchy + build-settings | P0 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| P2 Batch Execute | batch execute + Undo transaction rollback (IPC-only v1) | P2 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| P3 Screenshot | screenshot capture (Scene/Game View, base64, MCP 전용 도구) | P2 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| P0 잔여분 | asset get-labels/set-labels + build-settings set-scenes | P0 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Tags & Layers + Editor Utility | tag list/add, layer list/set, gameobject set-tag/set-layer, console clear/get-count, define-symbols get/set | P0 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Lighting & NavMesh | lighting bake/cancel/clear/get-settings/set-settings + navmesh bake/clear/get-settings (8개 명령) | P4 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Physics Settings | physics get-settings/set-settings/get-collision-matrix/set-collision-matrix (4개 명령) | P4 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Editor Utility 확장 + Script List | editor pause/focus-gameview/focus-sceneview + script list (4개 명령) | P0 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
+| Editor Utility 확장 + Script List | editor pause/focus-gameview/focus-sceneview + script list (4개 명령) | P0 | Done | docs/ref/phase-roadmap.md | 2026-03-19 |
 
 ## Zero-Drift 규칙
 1. `src/` 구조를 코드 모듈 Source of Truth로 간주한다.
 2. 보드의 phase/module 상태와 `docs/status/PROJECT-STATUS.md`는 동기화한다.
 3. Phase 완료 시 `CLAUDE.md`의 Phase Status 테이블도 갱신한다.
 4. Transport 설계 변경은 `docs/ref/phase-2b-plan.md` (또는 해당 phase 문서) 에 반영한다.
-5. 테스트 수 변경 시 `PROJECT-STATUS.md`와 `CLAUDE.md` 양쪽 갱신한다.
+5. 테스트 수는 `PROJECT-STATUS.md`에서만 관리한다. CLAUDE.md에는 하드코딩하지 않는다.

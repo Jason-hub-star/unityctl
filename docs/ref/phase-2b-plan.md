@@ -162,6 +162,13 @@ dotnet test unityctl.slnx
 
 이전 세션에서 domain reload 직후 IPC가 `ProjectLocked` / `all pipe instances are busy` 상태로 흔들린 사례가 있었고, 이후 `IpcServer`에 `maxServerInstances=4`와 `ERROR_PIPE_BUSY` backoff를 넣었습니다. 다만 현재는 Unity 재시작 후 회복만 확실히 확인됐고, reload만으로 자동 회복된다는 점은 더 강한 재현이 필요합니다.
 
+2026-03-19 추가 메모:
+
+- listener가 요청 전체를 inline 처리하던 구조를 worker handoff 구조로 바꿨다.
+- 현재는 accepted pipe를 worker thread에 넘기고, listener는 즉시 다음 `NamedPipeServerStream` 인스턴스를 다시 대기시킨다.
+- `My project`에서 intentionally held pipe connection 1개를 유지한 상태에서도 후속 `ping` / `status`가 계속 IPC로 성공함을 실측했다.
+- 남은 검증 포인트는 domain reload 직후와 장시간 import 중에도 같은 특성이 유지되는지다.
+
 ### 2. build 성공 여부는 transport와 프로젝트 상태를 분리해서 봐야 함
 
 열린 Editor `build` 요청은 실제 `BuildHandler`까지 도달합니다. 현재 `robotapp`에서는 `Assets\\Scripts\\Visualization\\TargetMarkerVisual.cs`의 `AssetDatabase` 사용으로 컴파일 에러가 있어 build 자체가 실패합니다. 따라서 현재 blocker는 transport가 아니라 프로젝트 상태입니다.

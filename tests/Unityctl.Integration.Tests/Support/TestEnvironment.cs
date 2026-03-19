@@ -9,12 +9,15 @@ internal static class TestEnvironment
     private static readonly Lazy<string> RepoRootLazy = new(ResolveRepoRoot);
     private static readonly Lazy<string> CliExePathLazy = new(ResolveCliExePath);
     private static readonly Lazy<string> SampleProjectRootLazy = new(ResolveSampleProjectRoot);
+    private static readonly Lazy<string> SampleBuildProfilesDirectoryLazy = new(ResolveSampleBuildProfilesDirectory);
 
     public static string RepoRoot => RepoRootLazy.Value;
 
     public static string CliExePath => CliExePathLazy.Value;
 
     public static string SampleUnityProjectRoot => SampleProjectRootLazy.Value;
+
+    public static string SampleBuildProfilesDirectory => SampleBuildProfilesDirectoryLazy.Value;
 
     public static void EnsureCliCanRun()
     {
@@ -59,6 +62,30 @@ internal static class TestEnvironment
         {
             throw SkipException.ForSkip(
                 $"SKIPPED: sample Unity project is incomplete. Missing: {string.Join(", ", missing)}");
+        }
+    }
+
+    public static void EnsureBuildProfileFixtureReady()
+    {
+        EnsureSampleProjectReady();
+
+        var requiredFiles = new[]
+        {
+            Path.Combine(SampleBuildProfilesDirectory, "SharedProfile.asset")
+        };
+
+        var platformProfiles = Directory.Exists(SampleBuildProfilesDirectory)
+            ? Directory.GetFiles(SampleBuildProfilesDirectory, "PlatformProfile.*.asset")
+            : Array.Empty<string>();
+
+        var missing = requiredFiles.Where(path => !File.Exists(path)).ToList();
+        if (platformProfiles.Length == 0)
+            missing.Add(Path.Combine(SampleBuildProfilesDirectory, "PlatformProfile.*.asset"));
+
+        if (missing.Count > 0)
+        {
+            throw SkipException.ForSkip(
+                $"SKIPPED: build profile fixture is incomplete. Missing: {string.Join(", ", missing)}");
         }
     }
 
@@ -145,5 +172,10 @@ internal static class TestEnvironment
             return Path.GetFullPath(overridePath);
 
         return Path.Combine(RepoRoot, "tests", "Unityctl.Integration", "SampleUnityProject");
+    }
+
+    private static string ResolveSampleBuildProfilesDirectory()
+    {
+        return Path.Combine(SampleUnityProjectRoot, "Library", "BuildProfiles");
     }
 }

@@ -16,7 +16,8 @@ namespace Unityctl.Plugin.Editor.Ipc
 {
     /// <summary>
     /// Named Pipe IPC server for Unity Editor.
-    /// Listens on a background thread; dispatches commands on the main thread via EditorApplication.update.
+    /// Accepts client connections on a background listener thread and handles each connection independently,
+    /// while dispatching command execution back to the Unity main thread via EditorApplication.update.
     /// Singleton — use IpcServer.Instance.
     /// </summary>
     public sealed class IpcServer
@@ -38,9 +39,12 @@ namespace Unityctl.Plugin.Editor.Ipc
         private volatile bool _stopping;
         private string _pipeName;
         private string _projectPath;
-        private NamedPipeServerStream _currentPipe;
+        private NamedPipeServerStream _listenPipe;
         private readonly object _lock = new object();
         private TaskCompletionSource<bool> _shutdownCompletion = CreateShutdownCompletion();
+        private readonly ConcurrentDictionary<int, NamedPipeServerStream> _activePipes =
+            new ConcurrentDictionary<int, NamedPipeServerStream>();
+        private int _nextPipeId;
 
         private readonly ConcurrentQueue<PendingWork> _mainThreadQueue = new ConcurrentQueue<PendingWork>();
 
@@ -133,7 +137,12 @@ namespace Unityctl.Plugin.Editor.Ipc
             }
 
             // Dispose current pipe to unblock WaitForConnection
-            try { _currentPipe?.Dispose(); } catch { }
+            try { _listenPipe?.Dispose(); } catch { }
+
+            foreach (var activePipe in _activePipes.Values)
+            {
+                try { activePipe.Dispose(); } catch { }
+            }
 
             if (_listenThread != null && _listenThread.IsAlive)
                 _listenThread.Join(3000);
@@ -177,15 +186,15 @@ namespace Unityctl.Plugin.Editor.Ipc
         }
 
         /// <summary>
-        /// Background thread: accepts one connection at a time, reads request, queues for main thread.
-        /// Watch commands get their own writer thread; all others use request-response.
+        /// Background thread: accepts client connections and hands each connected pipe to a worker.
+        /// This keeps at least one server instance listening even while another client is waiting on the main thread.
         /// </summary>
         private void ListenLoop()
         {
             while (!_stopping)
             {
                 NamedPipeServerStream pipe = null;
-                bool watchSessionStarted = false;
+                bool pipeHandedOff = false;
                 try
                 {
                     pipe = new NamedPipeServerStream(
@@ -195,64 +204,17 @@ namespace Unityctl.Plugin.Editor.Ipc
                         PipeTransmissionMode.Byte,
                         PipeOptions.None);
 
-                    _currentPipe = pipe;
+                    _listenPipe = pipe;
                     pipe.WaitForConnection();
+                    _listenPipe = null;
 
                     if (_stopping) break;
 
-                    // Read request
-                    var requestJson = MessageFraming.ReadMessage(pipe);
-                    var request = JsonConvert.DeserializeObject<CommandRequest>(requestJson);
+                    var pipeId = Interlocked.Increment(ref _nextPipeId);
+                    _activePipes[pipeId] = pipe;
+                    pipeHandedOff = true;
 
-                    if (request == null)
-                    {
-                        var errorResponse = CommandResponse.Fail(StatusCode.InvalidParameters, "Failed to deserialize request");
-                        var errorJson = JsonConvert.SerializeObject(errorResponse);
-                        MessageFraming.WriteMessage(pipe, errorJson);
-                        continue;
-                    }
-
-                    // Watch command: streaming path (pipe ownership passes to WatchWriterLoop thread)
-                    if (string.Equals(request.command, WellKnownCommands.Watch, StringComparison.OrdinalIgnoreCase))
-                    {
-                        watchSessionStarted = StartWatchSession(pipe, request);
-                        continue;
-                    }
-
-                    // Standard request-response path
-                    var workItem = new WorkItem();
-                    _mainThreadQueue.Enqueue(new PendingWork(request, pipe, workItem));
-
-                    // Wait for main thread to process, shutdown, or safety timeout.
-                    var completedTask = Task.WhenAny(
-                        workItem.Completion,
-                        _shutdownCompletion.Task,
-                        Task.Delay(TimeSpan.FromMinutes(10)))
-                        .GetAwaiter()
-                        .GetResult();
-
-                    if (completedTask != workItem.Completion)
-                    {
-                        if (completedTask == _shutdownCompletion.Task)
-                            workItem.Cancel();
-                        else
-                            workItem.Cancel("IPC request timed out waiting for Unity main thread.");
-                    }
-
-                    var response = workItem.Completion.GetAwaiter().GetResult();
-                    if (response != null)
-                    {
-                        var responseJson = JsonConvert.SerializeObject(response);
-                        try
-                        {
-                            if (pipe.IsConnected)
-                                MessageFraming.WriteMessage(pipe, responseJson);
-                        }
-                        catch (IOException)
-                        {
-                            // Client disconnected before response — acceptable
-                        }
-                    }
+                    ThreadPool.QueueUserWorkItem(_ => HandleClientConnection(pipe, pipeId));
                 }
                 catch (ObjectDisposedException)
                 {
@@ -277,12 +239,91 @@ namespace Unityctl.Plugin.Editor.Ipc
                 }
                 finally
                 {
-                    // Pipe ownership passed to WatchWriterLoop — don't dispose here
-                    if (!watchSessionStarted)
+                    if (!pipeHandedOff)
                     {
                         try { pipe?.Dispose(); } catch { }
-                        _currentPipe = null;
+                        _listenPipe = null;
                     }
+                }
+            }
+        }
+
+        private void HandleClientConnection(NamedPipeServerStream pipe, int pipeId)
+        {
+            bool watchSessionStarted = false;
+            try
+            {
+                var requestJson = MessageFraming.ReadMessage(pipe);
+                var request = JsonConvert.DeserializeObject<CommandRequest>(requestJson);
+
+                if (request == null)
+                {
+                    var errorResponse = CommandResponse.Fail(StatusCode.InvalidParameters, "Failed to deserialize request");
+                    var errorJson = JsonConvert.SerializeObject(errorResponse);
+                    MessageFraming.WriteMessage(pipe, errorJson);
+                    return;
+                }
+
+                if (string.Equals(request.command, WellKnownCommands.Watch, StringComparison.OrdinalIgnoreCase))
+                {
+                    watchSessionStarted = StartWatchSession(pipe, request);
+                    return;
+                }
+
+                var workItem = new WorkItem();
+                _mainThreadQueue.Enqueue(new PendingWork(request, pipe, workItem));
+
+                var completedTask = Task.WhenAny(
+                    workItem.Completion,
+                    _shutdownCompletion.Task,
+                    Task.Delay(TimeSpan.FromMinutes(10)))
+                    .GetAwaiter()
+                    .GetResult();
+
+                if (completedTask != workItem.Completion)
+                {
+                    if (completedTask == _shutdownCompletion.Task)
+                        workItem.Cancel();
+                    else
+                        workItem.Cancel("IPC request timed out waiting for Unity main thread.");
+                }
+
+                var response = workItem.Completion.GetAwaiter().GetResult();
+                if (response != null)
+                {
+                    var responseJson = JsonConvert.SerializeObject(response);
+                    try
+                    {
+                        if (pipe.IsConnected)
+                            MessageFraming.WriteMessage(pipe, responseJson);
+                    }
+                    catch (IOException)
+                    {
+                        // Client disconnected before response — acceptable
+                    }
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Normal shutdown path
+            }
+            catch (IOException ex)
+            {
+                if (!_stopping)
+                    Debug.LogWarning($"[unityctl] IPC connection error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                if (!_stopping)
+                    Debug.LogError($"[unityctl] IPC server error: {ex}");
+            }
+            finally
+            {
+                _activePipes.TryRemove(pipeId, out _);
+
+                if (!watchSessionStarted)
+                {
+                    try { pipe.Dispose(); } catch { }
                 }
             }
         }

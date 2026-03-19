@@ -36,6 +36,51 @@ public sealed class SceneCommandTests
     }
 
     [CliTestFact]
+    public void CreateSnapshotRequest_IncludeInactiveFalse_OmitsParameter()
+    {
+        var request = SceneCommand.CreateSnapshotRequest(null, includeInactive: false);
+
+        Assert.NotNull(request.Parameters);
+        Assert.Null(request.Parameters!["includeInactive"]);
+    }
+
+    [CliTestFact]
+    public void CreateSnapshotRequest_IncludeInactiveTrue_IncludesParameter()
+    {
+        var request = SceneCommand.CreateSnapshotRequest(null, includeInactive: true);
+
+        Assert.NotNull(request.Parameters);
+        Assert.True(request.Parameters!["includeInactive"]?.GetValue<bool>());
+    }
+
+    [CliTestFact]
+    public void CreateHierarchyRequest_Default_HasCorrectCommand()
+    {
+        var request = SceneCommand.CreateHierarchyRequest(null);
+
+        Assert.Equal(WellKnownCommands.SceneHierarchy, request.Command);
+    }
+
+    [CliTestFact]
+    public void CreateHierarchyRequest_WithScenePath_IncludesParameter()
+    {
+        var request = SceneCommand.CreateHierarchyRequest("Assets/Scenes/Main.unity");
+
+        Assert.NotNull(request.Parameters);
+        Assert.Equal("Assets/Scenes/Main.unity",
+            request.Parameters!["scenePath"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void CreateHierarchyRequest_IncludeInactiveTrue_IncludesParameter()
+    {
+        var request = SceneCommand.CreateHierarchyRequest(null, includeInactive: true);
+
+        Assert.NotNull(request.Parameters);
+        Assert.True(request.Parameters!["includeInactive"]?.GetValue<bool>());
+    }
+
+    [CliTestFact]
     public void CreateOpenRequest_HasCorrectCommandAndPath()
     {
         var request = SceneCommand.CreateOpenRequest("Assets/Scenes/Main.unity", mode: "additive");

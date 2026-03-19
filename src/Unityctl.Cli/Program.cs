@@ -20,6 +20,18 @@ app.Add("status", (string project, bool wait = false, bool json = false) =>
 app.Add("build", (string project, string target = "StandaloneWindows64", string? output = null, bool dryRun = false, bool json = false) =>
     BuildCommand.Execute(project, target, output, dryRun, json));
 
+app.Add("build-profile list", (string project, bool json = false) =>
+    BuildProfileCommand.List(project, json));
+
+app.Add("build-profile get-active", (string project, bool json = false) =>
+    BuildProfileCommand.GetActive(project, json));
+
+app.Add("build-profile set-active", (string project, string profile, int timeout = 900, bool json = false) =>
+    BuildProfileCommand.SetActive(project, profile, timeout, json));
+
+app.Add("build-target switch", (string project, string target, int timeout = 900, bool json = false) =>
+    BuildTargetCommand.Switch(project, target, timeout, json));
+
 app.Add("test", (string project, string mode = "edit", string? filter = null, bool noWait = false, int timeout = 300, bool json = false) =>
     TestCommand.Execute(project, mode, filter, !noWait, timeout, json));
 
@@ -55,8 +67,11 @@ app.Add("session clean", () =>
 app.Add("watch", (string project, string channel = "all", string format = "text", bool noColor = false) =>
     WatchCommand.Execute(project, channel, format, noColor));
 
-app.Add("scene snapshot", (string project, string? scenePath = null, bool json = false) =>
-    SceneCommand.Snapshot(project, scenePath, json));
+app.Add("scene snapshot", (string project, string? scenePath = null, bool includeInactive = false, bool json = false) =>
+    SceneCommand.Snapshot(project, scenePath, includeInactive, json));
+
+app.Add("scene hierarchy", (string project, string? scenePath = null, bool includeInactive = false, bool json = false) =>
+    SceneCommand.Hierarchy(project, scenePath, includeInactive, json));
 
 app.Add("scene diff", (
         string snap1 = "",
@@ -76,6 +91,9 @@ app.Add("exec", (string project, string? code = null, string? file = null, bool 
 app.Add("workflow run", (string file, string? project = null, bool json = false) =>
     WorkflowCommand.Run(file, project, json));
 
+app.Add("batch execute", (string project, string? commands = null, string? file = null, bool rollbackOnFailure = true, bool json = false) =>
+    BatchCommand.Execute(project, commands, file, rollbackOnFailure, json));
+
 app.Add("play start", (string project, bool json = false) =>
     PlayModeCommand.Execute(project, "start", json));
 
@@ -93,6 +111,45 @@ app.Add("player-settings set", (string project, string key, string value, bool j
 
 app.Add("asset refresh", (string project, bool noWait = false, bool json = false) =>
     AssetCommand.Refresh(project, noWait, json));
+
+app.Add("asset find", (string project, string filter, string? folder = null, int? limit = null, bool json = false) =>
+    AssetCommand.Find(project, filter, folder, limit, json));
+
+app.Add("asset get-info", (string project, string path, bool json = false) =>
+    AssetCommand.GetInfo(project, path, json));
+
+app.Add("asset get-dependencies", (string project, string path, string recursive = "true", bool json = false) =>
+    AssetCommand.GetDependencies(project, path, recursive, json));
+
+app.Add("asset reference-graph", (string project, string path, bool json = false) =>
+    AssetCommand.ReferenceGraph(project, path, json));
+
+app.Add("asset get-labels", (string project, string path, bool json = false) =>
+    AssetCommand.GetLabels(project, path, json));
+
+app.Add("asset set-labels", (string project, string path, string labels, bool json = false) =>
+    AssetCommand.SetLabels(project, path, labels, json));
+
+app.Add("build-settings get-scenes", (string project, bool json = false) =>
+    BuildSettingsCommand.GetScenes(project, json));
+
+app.Add("build-settings set-scenes", (string project, string scenes, bool json = false) =>
+    BuildSettingsCommand.SetScenes(project, scenes, json));
+
+app.Add("gameobject find", (
+        string project,
+        string? name = null,
+        string? tag = null,
+        string? layer = null,
+        string? component = null,
+        string? scene = null,
+        bool includeInactive = false,
+        int? limit = null,
+        bool json = false) =>
+    GameObjectCommand.Find(project, name, tag, layer, component, scene, includeInactive, limit, json));
+
+app.Add("gameobject get", (string project, string id, bool json = false) =>
+    GameObjectCommand.Get(project, id, json));
 
 app.Add("gameobject create", (string project, string name, string? parent = null, string? scene = null, bool json = false) =>
     GameObjectCommand.Create(project, name, parent, scene, json));
@@ -139,6 +196,9 @@ app.Add("scene create", (
 
 app.Add("component add", (string project, string id, string type, bool json = false) =>
     ComponentCommand.Add(project, id, type, json));
+
+app.Add("component get", (string project, string componentId, string? property = null, bool json = false) =>
+    ComponentCommand.Get(project, componentId, property, json));
 
 app.Add("component remove", (string project, string componentId, bool json = false) =>
     ComponentCommand.Remove(project, componentId, json));
@@ -231,6 +291,10 @@ app.Add("undo", (string project, bool json = false) =>
 app.Add("redo", (string project, bool json = false) =>
     UndoCommand.Redo(project, json));
 
+// Script 확장
+app.Add("script list", (string project, string? folder = null, string? filter = null, int? limit = null, bool json = false) =>
+    ScriptCommand.List(project, folder, filter, limit, json));
+
 // Script Editing v1
 app.Add("script create", (string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", bool json = false) =>
     ScriptCommand.Create(project, path, className, ns, baseType, json));
@@ -243,5 +307,98 @@ app.Add("script delete", (string project, string path, bool json = false) =>
 
 app.Add("script validate", (string project, string? path = null, bool wait = true, int timeout = 300, bool json = false) =>
     ScriptCommand.Validate(project, path, wait, timeout, json));
+
+// Tags & Layers
+app.Add("tag list", (string project, bool json = false) =>
+    TagCommand.List(project, json));
+
+app.Add("tag add", (string project, string name, bool json = false) =>
+    TagCommand.Add(project, name, json));
+
+app.Add("layer list", (string project, bool json = false) =>
+    LayerCommand.List(project, json));
+
+app.Add("layer set", (string project, int index, string name, bool json = false) =>
+    LayerCommand.Set(project, index, name, json));
+
+app.Add("gameobject set-tag", (string project, string id, string tag, bool json = false) =>
+    GameObjectCommand.SetTag(project, id, tag, json));
+
+app.Add("gameobject set-layer", (string project, string id, string layer, bool json = false) =>
+    GameObjectCommand.SetLayer(project, id, layer, json));
+
+// Editor Utility 확장
+app.Add("editor pause", (string project, string action = "toggle", bool json = false) =>
+    EditorCommand.Pause(project, action, json));
+
+app.Add("editor focus-gameview", (string project, bool json = false) =>
+    EditorCommand.FocusGameView(project, json));
+
+app.Add("editor focus-sceneview", (string project, bool json = false) =>
+    EditorCommand.FocusSceneView(project, json));
+
+// Editor Utility
+app.Add("console clear", (string project, bool json = false) =>
+    ConsoleCommand.Clear(project, json));
+
+app.Add("console get-count", (string project, bool json = false) =>
+    ConsoleCommand.GetCount(project, json));
+
+app.Add("define-symbols get", (string project, string? target = null, bool json = false) =>
+    DefineSymbolsCommand.Get(project, target, json));
+
+app.Add("define-symbols set", (string project, string symbols, string? target = null, bool json = false) =>
+    DefineSymbolsCommand.Set(project, symbols, target, json));
+
+// Lighting
+app.Add("lighting bake", (string project, int timeout = 3600, bool json = false) =>
+    LightingCommand.Bake(project, timeout, json));
+
+app.Add("lighting cancel", (string project, bool json = false) =>
+    LightingCommand.Cancel(project, json));
+
+app.Add("lighting clear", (string project, bool json = false) =>
+    LightingCommand.Clear(project, json));
+
+app.Add("lighting get-settings", (string project, bool json = false) =>
+    LightingCommand.GetSettings(project, json));
+
+app.Add("lighting set-settings", (string project, string property, string value, bool json = false) =>
+    LightingCommand.SetSettings(project, property, value, json));
+
+// NavMesh
+app.Add("navmesh bake", (string project, bool json = false) =>
+    NavMeshCommand.Bake(project, json));
+
+app.Add("navmesh clear", (string project, bool json = false) =>
+    NavMeshCommand.Clear(project, json));
+
+app.Add("navmesh get-settings", (string project, bool json = false) =>
+    NavMeshCommand.GetSettings(project, json));
+
+// Physics
+app.Add("physics get-settings", (string project, bool json = false) =>
+    PhysicsCommand.GetSettings(project, json));
+
+app.Add("physics set-settings", (string project, string property, string value, bool json = false) =>
+    PhysicsCommand.SetSettings(project, property, value, json));
+
+app.Add("physics get-collision-matrix", (string project, bool json = false) =>
+    PhysicsCommand.GetCollisionMatrix(project, json));
+
+app.Add("physics set-collision-matrix", (string project, string layer1, string layer2, string ignore, bool json = false) =>
+    PhysicsCommand.SetCollisionMatrix(project, layer1, layer2, ignore, json));
+
+// Screenshot / Visual Feedback — P3
+app.Add("screenshot capture", (
+        string project,
+        string view = "scene",
+        int width = 1920,
+        int height = 1080,
+        string format = "png",
+        int quality = 75,
+        string? output = null,
+        bool json = false) =>
+    ScreenshotCommand.Capture(project, view, width, height, format, quality, output, json));
 
 app.Run(args);

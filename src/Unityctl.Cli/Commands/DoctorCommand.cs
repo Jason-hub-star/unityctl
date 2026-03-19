@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO.Pipes;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -5,6 +6,7 @@ using Unityctl.Core.Diagnostics;
 using Unityctl.Core.Discovery;
 using Unityctl.Core.Platform;
 using Unityctl.Shared;
+using Unityctl.Shared.Protocol;
 
 namespace Unityctl.Cli.Commands;
 
@@ -12,59 +14,32 @@ public static class DoctorCommand
 {
     public static void Execute(string project, bool json = false)
     {
-        var pipeName = Constants.GetPipeName(project);
-
-        // 1. Editor discovery
-        var platform = PlatformFactory.Create();
-        var discovery = new UnityEditorDiscovery(platform);
-        var editors = discovery.FindEditors();
-        var editorFound = editors.Count > 0;
-        var editorVersion = editors.FirstOrDefault()?.Version ?? "not found";
-
-        // 2. Plugin check
-        var manifestPath = Path.Combine(project, "Packages", "manifest.json");
-        var pluginInstalled = false;
-        if (File.Exists(manifestPath))
-        {
-            var manifest = File.ReadAllText(manifestPath);
-            pluginInstalled = manifest.Contains(Constants.PluginPackageName);
-        }
-
-        // 3. IPC probe (1 second timeout)
-        var ipcConnected = false;
-        try
-        {
-            using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            pipe.Connect(1000);
-            ipcConnected = true;
-        }
-        catch
-        {
-            // Connection failed — expected when Unity is not running
-        }
-
-        // 4. Editor.log diagnostics
-        var logPath = EditorLogDiagnostics.GetEditorLogPath();
-        var structured = EditorLogDiagnostics.GetStructuredDiagnostics();
-        var humanDiag = EditorLogDiagnostics.GetRecentDiagnostics();
+        var result = Diagnose(project);
 
         if (json)
         {
             var results = new JsonObject
             {
-                ["editor"] = new JsonObject { ["found"] = editorFound, ["version"] = editorVersion },
-                ["plugin"] = new JsonObject { ["installed"] = pluginInstalled },
-                ["ipc"] = new JsonObject { ["connected"] = ipcConnected, ["pipeName"] = pipeName }
+                ["editor"] = new JsonObject { ["found"] = result.EditorFound, ["version"] = result.EditorVersion },
+                ["plugin"] = new JsonObject { ["installed"] = result.PluginInstalled },
+                ["ipc"] = new JsonObject { ["connected"] = result.IpcConnected, ["pipeName"] = result.PipeName },
+                ["buildState"] = new JsonObject
+                {
+                    ["directory"] = result.BuildStateDirectory,
+                    ["exists"] = result.BuildStateExists,
+                    ["count"] = result.BuildStateCount,
+                    ["oldestAgeMinutes"] = result.BuildStateOldestAgeMinutes
+                }
             };
 
-            if (structured != null)
+            if (result.StructuredDiagnostics != null)
             {
                 var errArr = new JsonArray();
-                foreach (var e in structured.Value.Errors)
+                foreach (var e in result.StructuredDiagnostics.Value.Errors)
                     errArr.Add(e);
 
                 var uArr = new JsonArray();
-                foreach (var u in structured.Value.UnityctlLines)
+                foreach (var u in result.StructuredDiagnostics.Value.UnityctlLines)
                     uArr.Add(u);
 
                 results["editorLog"] = new JsonObject { ["errors"] = errArr, ["unityctl"] = uArr };
@@ -74,7 +49,7 @@ public static class DoctorCommand
                 results["editorLog"] = new JsonObject { ["errors"] = new JsonArray(), ["unityctl"] = new JsonArray() };
             }
 
-            results["logPath"] = logPath;
+            results["logPath"] = result.LogPath;
 
             Console.WriteLine(JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true }));
         }
@@ -82,34 +57,194 @@ public static class DoctorCommand
         {
             Console.WriteLine($"unityctl doctor — project: {project}");
             Console.WriteLine();
-            Console.WriteLine(editorFound
-                ? $"  \u2713 Unity Editor found: {editorVersion}"
+            Console.WriteLine(result.EditorFound
+                ? $"  \u2713 Unity Editor found: {result.EditorVersion}"
                 : "  \u2717 Unity Editor not found");
-            Console.WriteLine(pluginInstalled
+            Console.WriteLine(result.PluginInstalled
                 ? $"  \u2713 Plugin installed: {Constants.PluginPackageName}"
                 : "  \u2717 Plugin not installed (run: unityctl init)");
-            Console.WriteLine(ipcConnected
-                ? $"  \u2713 IPC connected (pipe: {pipeName})"
-                : $"  \u2717 IPC probe failed (pipe: {pipeName})");
+            Console.WriteLine(result.IpcConnected
+                ? $"  \u2713 IPC connected (pipe: {result.PipeName})"
+                : $"  \u2717 IPC probe failed (pipe: {result.PipeName})");
+            Console.WriteLine(result.BuildStateExists
+                ? $"  \u2713 Build transition state: {result.BuildStateCount} file(s), oldest {result.BuildStateOldestAgeMinutes:n1} min"
+                : $"  \u2713 Build transition state: none ({result.BuildStateDirectory})");
 
-            if (humanDiag != null)
+            if (result.HumanDiagnostics != null)
             {
                 Console.WriteLine();
-                Console.Write(humanDiag);
+                Console.Write(result.HumanDiagnostics);
             }
-            else if (!ipcConnected)
+            else if (!result.IpcConnected)
             {
                 Console.WriteLine();
                 Console.WriteLine("  No compilation errors in Editor.log");
                 Console.WriteLine("  Possible causes: Unity not running, domain reload in progress, or Editor not focused");
             }
 
-            if (logPath != null && humanDiag == null)
+            if (result.LogPath != null && result.HumanDiagnostics == null)
             {
-                Console.WriteLine($"  Log: {logPath}");
+                Console.WriteLine($"  Log: {result.LogPath}");
             }
         }
 
-        Environment.ExitCode = ipcConnected ? 0 : 1;
+        Environment.ExitCode = result.IpcConnected ? 0 : 1;
     }
+
+    internal static DoctorResult Diagnose(string project)
+    {
+        var pipeName = Constants.GetPipeName(project);
+
+        var platform = PlatformFactory.Create();
+        var discovery = new UnityEditorDiscovery(platform);
+        var editors = discovery.FindEditors();
+        var editorFound = editors.Count > 0;
+        var editorVersion = editors.FirstOrDefault()?.Version ?? "not found";
+
+        var manifestPath = Path.Combine(project, "Packages", "manifest.json");
+        var pluginInstalled = false;
+        if (File.Exists(manifestPath))
+        {
+            var manifest = File.ReadAllText(manifestPath);
+            pluginInstalled = manifest.Contains(Constants.PluginPackageName);
+        }
+
+        var ipcConnected = false;
+        try
+        {
+            using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+            pipe.Connect(1000);
+            ipcConnected = true;
+        }
+        catch
+        {
+            // Expected when editor is not reachable.
+        }
+
+        var buildState = GetBuildStateInfo(project);
+
+        return new DoctorResult
+        {
+            PipeName = pipeName,
+            EditorFound = editorFound,
+            EditorVersion = editorVersion,
+            PluginInstalled = pluginInstalled,
+            IpcConnected = ipcConnected,
+            BuildStateDirectory = GetBuildStateDirectory(project),
+            BuildStateExists = buildState.exists,
+            BuildStateCount = buildState.count,
+            BuildStateOldestAgeMinutes = buildState.oldestAgeMinutes,
+            LogPath = EditorLogDiagnostics.GetEditorLogPath(),
+            StructuredDiagnostics = EditorLogDiagnostics.GetStructuredDiagnostics(),
+            HumanDiagnostics = EditorLogDiagnostics.GetRecentDiagnostics()
+        };
+    }
+
+    private static (bool exists, int count, double oldestAgeMinutes) GetBuildStateInfo(string project)
+    {
+        var directory = GetBuildStateDirectory(project);
+        if (!Directory.Exists(directory))
+            return (false, 0, 0);
+
+        var files = Directory.GetFiles(directory, "*.json");
+        if (files.Length == 0)
+            return (false, 0, 0);
+
+        var oldestWriteTimeUtc = files
+            .Select(File.GetLastWriteTimeUtc)
+            .OrderBy(ts => ts)
+            .FirstOrDefault();
+
+        var oldestAgeMinutes = (DateTime.UtcNow - oldestWriteTimeUtc).TotalMinutes;
+        return (true, files.Length, Math.Max(0, oldestAgeMinutes));
+    }
+
+    private static string GetBuildStateDirectory(string project)
+    {
+        return Path.Combine(Path.GetFullPath(project), "Library", "Unityctl", "build-state");
+    }
+
+    internal static bool ShouldAutoDiagnose(CommandResponse response)
+    {
+        if (response.Success)
+            return false;
+
+        return response.StatusCode switch
+        {
+            StatusCode.ProjectLocked => true,
+            StatusCode.Busy => true,
+            StatusCode.PluginNotInstalled => true,
+            StatusCode.CommandNotFound => true,
+            StatusCode.UnknownError => LooksTransportOrReloadRelated(response.Message),
+            _ => false
+        };
+    }
+
+    internal static string RenderAutoDiagnosis(string project)
+    {
+        var result = Diagnose(project);
+        var lines = new List<string>
+        {
+            "  Doctor summary:",
+            result.EditorFound
+                ? $"    \u2713 Unity Editor found: {result.EditorVersion}"
+                : "    \u2717 Unity Editor not found",
+            result.PluginInstalled
+                ? $"    \u2713 Plugin installed: {Constants.PluginPackageName}"
+                : "    \u2717 Plugin not installed",
+            result.IpcConnected
+                ? $"    \u2713 IPC connected ({result.PipeName})"
+                : $"    \u2717 IPC probe failed ({result.PipeName})"
+        };
+
+        if (result.HumanDiagnostics != null)
+        {
+            lines.Add(string.Empty);
+            lines.Add(result.HumanDiagnostics.TrimEnd());
+        }
+        else if (result.LogPath != null)
+        {
+            lines.Add($"  Log: {result.LogPath}");
+        }
+
+        return string.Join(Environment.NewLine, lines);
+    }
+
+    private static bool LooksTransportOrReloadRelated(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return false;
+
+        return message.Contains("IPC", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("pipe", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("reload", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("domain", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+internal sealed class DoctorResult
+{
+    public string PipeName { get; set; } = string.Empty;
+
+    public bool EditorFound { get; set; }
+
+    public string EditorVersion { get; set; } = "not found";
+
+    public bool PluginInstalled { get; set; }
+
+    public bool IpcConnected { get; set; }
+
+    public string? LogPath { get; set; }
+
+    public string BuildStateDirectory { get; set; } = string.Empty;
+
+    public bool BuildStateExists { get; set; }
+
+    public int BuildStateCount { get; set; }
+
+    public double BuildStateOldestAgeMinutes { get; set; }
+
+    public (List<string> Errors, List<string> UnityctlLines)? StructuredDiagnostics { get; set; }
+
+    public string? HumanDiagnostics { get; set; }
 }

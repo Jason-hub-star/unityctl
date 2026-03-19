@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Unityctl.Plugin.Editor.Shared;
+using Unityctl.Plugin.Editor.Utilities;
 
 namespace Unityctl.Plugin.Editor.Commands
 {
@@ -17,16 +18,15 @@ namespace Unityctl.Plugin.Editor.Commands
             var outputPath = request.GetParam("outputPath", null);
             var dryRun = request.GetParam<bool>("dryRun");
 
-            var buildTarget = ParseBuildTarget(target);
-            if (buildTarget == null)
+            if (!BuildProfileUtility.TryParseBuildTarget(target, out var buildTarget, out var canonicalTarget))
             {
                 return InvalidParameters(
-                    $"Unknown build target: {target}. Valid targets: StandaloneWindows64, StandaloneOSX, StandaloneLinux64, Android, iOS, WebGL");
+                    $"Unknown build target: {target}. Valid targets: {BuildProfileUtility.SupportedTargetList}");
             }
 
             if (dryRun)
             {
-                var checks = RunPreflight(target, buildTarget.Value, outputPath);
+                var checks = RunPreflight(canonicalTarget, buildTarget, outputPath);
                 var data = new JObject
                 {
                     ["checks"] = JArray.FromObject(checks)
@@ -39,7 +39,7 @@ namespace Unityctl.Plugin.Editor.Commands
 
             if (string.IsNullOrEmpty(outputPath))
             {
-                outputPath = Path.Combine("Builds", target, GetDefaultExecutableName(buildTarget.Value));
+                outputPath = Path.Combine("Builds", canonicalTarget, GetDefaultExecutableName(buildTarget));
             }
 
             var scenes = UnityEditor.EditorBuildSettings.scenes
@@ -61,11 +61,11 @@ namespace Unityctl.Plugin.Editor.Commands
             {
                 scenes = scenes,
                 locationPathName = outputPath,
-                target = buildTarget.Value,
+                target = buildTarget,
                 options = UnityEditor.BuildOptions.None
             };
 
-            UnityEngine.Debug.Log($"[unityctl] Building {target} → {outputPath} ({scenes.Length} scenes)");
+            UnityEngine.Debug.Log($"[unityctl] Building {canonicalTarget} → {outputPath} ({scenes.Length} scenes)");
 
             var report = UnityEditor.BuildPipeline.BuildPlayer(options);
             var summary = report.summary;
@@ -295,21 +295,6 @@ namespace Unityctl.Plugin.Editor.Commands
                 return true;
 
             return Directory.Exists(grandParent);
-        }
-
-        private static UnityEditor.BuildTarget? ParseBuildTarget(string target)
-        {
-            return target?.ToLowerInvariant() switch
-            {
-                "standalonewindows64" or "win64" => UnityEditor.BuildTarget.StandaloneWindows64,
-                "standalonewindows" or "win32" => UnityEditor.BuildTarget.StandaloneWindows,
-                "standaloneosx" or "macos" => UnityEditor.BuildTarget.StandaloneOSX,
-                "standalonelinux64" or "linux64" => UnityEditor.BuildTarget.StandaloneLinux64,
-                "android" => UnityEditor.BuildTarget.Android,
-                "ios" => UnityEditor.BuildTarget.iOS,
-                "webgl" => UnityEditor.BuildTarget.WebGL,
-                _ => null
-            };
         }
 
         private static string GetDefaultExecutableName(UnityEditor.BuildTarget target)

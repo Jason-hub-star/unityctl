@@ -16,14 +16,37 @@ internal sealed class SceneTool(CommandExecutor executor)
     public async Task<string> SceneSnapshotAsync(
         [Description("Path to the Unity project directory")] string project,
         [Description("Filter to a specific scene path (optional)")] string? scenePath = null,
+        [Description("Include inactive GameObjects in the snapshot")] bool includeInactive = false,
         CancellationToken cancellationToken = default)
     {
         var parameters = new JsonObject();
         if (!string.IsNullOrEmpty(scenePath)) parameters["scenePath"] = scenePath;
+        if (includeInactive) parameters["includeInactive"] = true;
 
         var request = new CommandRequest
         {
             Command = WellKnownCommands.SceneSnapshot,
+            Parameters = parameters
+        };
+        var response = await executor.ExecuteAsync(project, request, ct: cancellationToken);
+        return JsonSerializer.Serialize(response, UnityctlJsonContext.Default.CommandResponse);
+    }
+
+    [McpServerTool(Name = "unityctl_scene_hierarchy")]
+    [Description("Capture a lightweight nested hierarchy tree for loaded scenes")]
+    public async Task<string> SceneHierarchyAsync(
+        [Description("Path to the Unity project directory")] string project,
+        [Description("Filter to a specific scene path (optional)")] string? scenePath = null,
+        [Description("Include inactive GameObjects in the hierarchy")] bool includeInactive = false,
+        CancellationToken cancellationToken = default)
+    {
+        var parameters = new JsonObject();
+        if (!string.IsNullOrEmpty(scenePath)) parameters["scenePath"] = scenePath;
+        if (includeInactive) parameters["includeInactive"] = true;
+
+        var request = new CommandRequest
+        {
+            Command = WellKnownCommands.SceneHierarchy,
             Parameters = parameters
         };
         var response = await executor.ExecuteAsync(project, request, ct: cancellationToken);

@@ -30,6 +30,7 @@ namespace Unityctl.Plugin.Editor.Commands
 
             return Ok($"Moved '{source}' to '{destination}'", new JObject
             {
+                ["sourcePath"] = source,
                 ["path"] = destination,
                 ["guid"] = guid
             });

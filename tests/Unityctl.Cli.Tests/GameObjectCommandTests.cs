@@ -6,6 +6,72 @@ namespace Unityctl.Cli.Tests;
 
 public class GameObjectCommandTests
 {
+    // === Find ===
+
+    [CliTestFact]
+    public void Find_SetsCommandName()
+    {
+        var request = GameObjectCommand.CreateFindRequest("Camera", null, null, null, null, false, null);
+        Assert.Equal(WellKnownCommands.GameObjectFind, request.Command);
+    }
+
+    [CliTestFact]
+    public void Find_SetsProvidedParameters()
+    {
+        var request = GameObjectCommand.CreateFindRequest(
+            "Camera",
+            "MainCamera",
+            "0",
+            "UnityEngine.Camera",
+            "Assets/Scenes/Main.unity",
+            includeInactive: true,
+            limit: 5);
+
+        Assert.Equal("Camera", request.Parameters!["name"]?.GetValue<string>());
+        Assert.Equal("MainCamera", request.Parameters["tag"]?.GetValue<string>());
+        Assert.Equal("0", request.Parameters["layer"]?.GetValue<string>());
+        Assert.Equal("UnityEngine.Camera", request.Parameters["component"]?.GetValue<string>());
+        Assert.Equal("Assets/Scenes/Main.unity", request.Parameters["scene"]?.GetValue<string>());
+        Assert.True(request.Parameters["includeInactive"]?.GetValue<bool>());
+        Assert.Equal(5, request.Parameters["limit"]?.GetValue<int>());
+    }
+
+    [CliTestFact]
+    public void Find_OmitsUnsetParameters()
+    {
+        var request = GameObjectCommand.CreateFindRequest(null, null, null, null, null, false, null);
+
+        Assert.False(request.Parameters!.ContainsKey("name"));
+        Assert.False(request.Parameters.ContainsKey("tag"));
+        Assert.False(request.Parameters.ContainsKey("layer"));
+        Assert.False(request.Parameters.ContainsKey("component"));
+        Assert.False(request.Parameters.ContainsKey("scene"));
+        Assert.False(request.Parameters.ContainsKey("includeInactive"));
+        Assert.False(request.Parameters.ContainsKey("limit"));
+    }
+
+    // === Get ===
+
+    [CliTestFact]
+    public void Get_SetsCommandName()
+    {
+        var request = GameObjectCommand.CreateGetRequest("gid-123");
+        Assert.Equal(WellKnownCommands.GameObjectGet, request.Command);
+    }
+
+    [CliTestFact]
+    public void Get_SetsIdParameter()
+    {
+        var request = GameObjectCommand.CreateGetRequest("gid-123");
+        Assert.Equal("gid-123", request.Parameters!["id"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void Get_EmptyId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => GameObjectCommand.CreateGetRequest(""));
+    }
+
     // === Create ===
 
     [CliTestFact]
@@ -189,6 +255,64 @@ public class GameObjectCommandTests
         Assert.Throws<ArgumentException>(() => GameObjectCommand.CreateRenameRequest("gid", ""));
     }
 
+    // === SetTag ===
+
+    [CliTestFact]
+    public void SetTag_SetsCommandName()
+    {
+        var request = GameObjectCommand.CreateSetTagRequest("gid", "Player");
+        Assert.Equal(WellKnownCommands.GameObjectSetTag, request.Command);
+    }
+
+    [CliTestFact]
+    public void SetTag_SetsIdAndTag()
+    {
+        var request = GameObjectCommand.CreateSetTagRequest("gid-123", "Enemy");
+        Assert.Equal("gid-123", request.Parameters!["id"]?.GetValue<string>());
+        Assert.Equal("Enemy", request.Parameters!["tag"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void SetTag_EmptyId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => GameObjectCommand.CreateSetTagRequest("", "Tag"));
+    }
+
+    [CliTestFact]
+    public void SetTag_EmptyTag_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => GameObjectCommand.CreateSetTagRequest("gid", ""));
+    }
+
+    // === SetLayer ===
+
+    [CliTestFact]
+    public void SetLayer_SetsCommandName()
+    {
+        var request = GameObjectCommand.CreateSetLayerRequest("gid", "Water");
+        Assert.Equal(WellKnownCommands.GameObjectSetLayer, request.Command);
+    }
+
+    [CliTestFact]
+    public void SetLayer_SetsIdAndLayer()
+    {
+        var request = GameObjectCommand.CreateSetLayerRequest("gid-123", "8");
+        Assert.Equal("gid-123", request.Parameters!["id"]?.GetValue<string>());
+        Assert.Equal("8", request.Parameters!["layer"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void SetLayer_EmptyId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => GameObjectCommand.CreateSetLayerRequest("", "Water"));
+    }
+
+    [CliTestFact]
+    public void SetLayer_EmptyLayer_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => GameObjectCommand.CreateSetLayerRequest("gid", ""));
+    }
+
     // === SceneSave ===
 
     [CliTestFact]
@@ -225,11 +349,15 @@ public class GameObjectCommandTests
     [CliTestFact]
     public void AllRequests_HaveRequestId()
     {
+        Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateFindRequest(null, null, null, null, null, false, null).RequestId));
+        Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateGetRequest("x").RequestId));
         Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateCreateRequest("x", null, null).RequestId));
         Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateDeleteRequest("x").RequestId));
         Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateSetActiveRequest("x", true).RequestId));
         Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateMoveRequest("x", "y").RequestId));
         Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateRenameRequest("x", "y").RequestId));
+        Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateSetTagRequest("x", "y").RequestId));
+        Assert.False(string.IsNullOrEmpty(GameObjectCommand.CreateSetLayerRequest("x", "y").RequestId));
         Assert.False(string.IsNullOrEmpty(SceneCommand.CreateSaveRequest(null, false).RequestId));
     }
 }

@@ -6,6 +6,14 @@
     <AssemblyName>unityctl-mcp</AssemblyName>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>unityctl-mcp</ToolCommandName>
+    <PackageId>unityctl-mcp</PackageId>
+    <Version>0.2.0</Version>
+    <Description>MCP server for unityctl — native .NET Model Context Protocol bridge to Unity Editor</Description>
+    <Authors>kimjuyoung1127</Authors>
+    <PackageProjectUrl>https://github.com/kimjuyoung1127/unityctl</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kimjuyoung1127/unityctl</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>unity;mcp;ai;gamedev;editor</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

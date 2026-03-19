@@ -12,6 +12,9 @@ namespace Unityctl.Core.Transport;
 /// </summary>
 public sealed class CommandExecutor
 {
+    private const int LockedProjectProbeRetries = 6;
+    private static readonly TimeSpan LockedProjectProbeDelay = TimeSpan.FromSeconds(2);
+
     private readonly IPlatformServices _platform;
     private readonly UnityEditorDiscovery _discovery;
     private readonly RetryPolicy _retryPolicy;
@@ -54,6 +57,22 @@ public sealed class CommandExecutor
         if (await ipc.ProbeAsync(ct))
         {
             return await ipc.SendAsync(request, ct);
+        }
+
+        if (_platform.IsProjectLocked(projectPath))
+        {
+            for (var attempt = 0; attempt < LockedProjectProbeRetries; attempt++)
+            {
+                await Task.Delay(LockedProjectProbeDelay, ct);
+                if (await ipc.ProbeAsync(ct))
+                {
+                    return await ipc.SendAsync(request, ct);
+                }
+            }
+
+            return CommandResponse.Fail(
+                StatusCode.Busy,
+                "Unity Editor is running but IPC is not ready yet. Wait for compilation/domain reload to finish and retry.");
         }
 
         // Fallback: batch transport (only when probe fails, NOT on SendAsync failure)

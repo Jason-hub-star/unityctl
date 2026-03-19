@@ -43,6 +43,38 @@ public static class CommandCatalog
         Parameter("dryRun", "bool", "Validate without building (preflight check)", required: false),
         Parameter("json", "bool", "Output as JSON", required: false));
 
+    public static readonly CommandDefinition BuildProfileList = Define(
+        WellKnownCommands.BuildProfileList,
+        "List custom BuildProfile assets and synthesized platform profile rows",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("build-profile list");
+
+    public static readonly CommandDefinition BuildProfileGetActive = Define(
+        WellKnownCommands.BuildProfileGetActive,
+        "Get the currently active build profile or active platform profile",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("build-profile get-active");
+
+    public static readonly CommandDefinition BuildProfileSetActive = Define(
+        WellKnownCommands.BuildProfileSetActive,
+        "Set the active build profile and wait until the editor stabilizes",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("profile", "string", "Profile ref returned by build-profile list (asset path or platform:<target>)", required: true),
+        Parameter("timeout", "int", "Timeout in seconds while waiting for stabilization (default: 900)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("build-profile set-active");
+
+    public static readonly CommandDefinition BuildTargetSwitch = Define(
+        WellKnownCommands.BuildTargetSwitch,
+        "Switch the active build target and wait until the editor stabilizes",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("target", "string", "Target platform: StandaloneWindows64, StandaloneWindows, StandaloneOSX, StandaloneLinux64, Android, iOS, WebGL", required: true),
+        Parameter("timeout", "int", "Timeout in seconds while waiting for stabilization (default: 900)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("build-target switch");
+
     public static readonly CommandDefinition Test = Define(
         WellKnownCommands.Test,
         "Start Unity tests (EditMode or PlayMode)",
@@ -121,7 +153,17 @@ public static class CommandCatalog
         "query",
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("scenePath", "string", "Filter to a specific scene path", required: false),
+        Parameter("includeInactive", "bool", "Include inactive GameObjects in the snapshot", required: false),
         Parameter("json", "bool", "Output as JSON", required: false));
+
+    public static readonly CommandDefinition SceneHierarchy = Define(
+        WellKnownCommands.SceneHierarchy,
+        "Capture a lightweight nested hierarchy tree for loaded scenes",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("scenePath", "string", "Filter to a specific scene path", required: false),
+        Parameter("includeInactive", "bool", "Include inactive GameObjects in the hierarchy", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene hierarchy");
 
     public static readonly CommandDefinition SceneDiff = Define(
         "scene diff",
@@ -157,6 +199,16 @@ public static class CommandCatalog
         Parameter("project", "string", "Default project path for steps that omit it", required: false),
         Parameter("json", "bool", "Output results as JSON", required: false)).WithCli("workflow run");
 
+    public static readonly CommandDefinition BatchExecute = Define(
+        WellKnownCommands.BatchExecute,
+        "Execute multiple undo-backed edit commands in one IPC round-trip with rollback on partial failure",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("commands", "json-array", "Array of command objects: [{\"command\":\"gameobject-create\",\"parameters\":{...}}]", required: false),
+        Parameter("file", "string", "Path to a JSON file containing the commands array", required: false),
+        Parameter("rollbackOnFailure", "bool", "Rollback completed commands if any step fails (default: true)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("batch execute");
+
     public static readonly CommandDefinition PlayMode = Define(
         WellKnownCommands.PlayMode,
         "Control Unity play mode (start, stop, pause)",
@@ -189,6 +241,79 @@ public static class CommandCatalog
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("noWait", "bool", "Return immediately after Accepted (do not poll)", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset refresh");
+
+    public static readonly CommandDefinition AssetFind = Define(
+        WellKnownCommands.AssetFind,
+        "Find assets using Unity AssetDatabase.FindAssets filter syntax",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("filter", "string", "AssetDatabase.FindAssets filter (for example: t:Scene, l:tag)", required: true),
+        Parameter("folder", "string", "Optional root folder to search under", required: false),
+        Parameter("limit", "int", "Maximum number of results to return", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset find");
+
+    public static readonly CommandDefinition AssetGetInfo = Define(
+        WellKnownCommands.AssetGetInfo,
+        "Get summary information for a single asset path",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path (for example: Assets/Scenes/Main.unity)", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset get-info");
+
+    public static readonly CommandDefinition AssetGetDependencies = Define(
+        WellKnownCommands.AssetGetDependencies,
+        "Get asset dependency paths using Unity AssetDatabase.GetDependencies",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path (for example: Assets/Scenes/Main.unity)", required: true),
+        Parameter("recursive", "bool", "Include indirect dependencies (default: true)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset get-dependencies");
+
+    public static readonly CommandDefinition AssetReferenceGraph = Define(
+        WellKnownCommands.AssetReferenceGraph,
+        "Find reverse references to an asset by scanning candidate assets and their dependencies",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Target asset path (for example: Assets/Materials/My.mat)", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset reference-graph");
+
+    public static readonly CommandDefinition BuildSettingsGetScenes = Define(
+        WellKnownCommands.BuildSettingsGetScenes,
+        "Get the current Build Settings scene list from EditorBuildSettings.scenes",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("build-settings get-scenes");
+
+    public static readonly CommandDefinition GameObjectFind = Define(
+        WellKnownCommands.GameObjectFind,
+        "Find GameObjects in loaded scenes using narrow query filters",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("name", "string", "Case-insensitive partial match on GameObject name", required: false),
+        Parameter("tag", "string", "Exact match on GameObject tag", required: false),
+        Parameter("layer", "string", "Exact match on layer name or numeric layer index", required: false),
+        Parameter("component", "string", "Exact match on component type name or full type name", required: false),
+        Parameter("scene", "string", "Scene asset path filter", required: false),
+        Parameter("includeInactive", "bool", "Include inactive GameObjects in the search", required: false),
+        Parameter("limit", "int", "Maximum number of results to return", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("gameobject find");
+
+    public static readonly CommandDefinition GameObjectGet = Define(
+        WellKnownCommands.GameObjectGet,
+        "Get summary details for a single GameObject by GlobalObjectId",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("id", "string", "GlobalObjectId of the GameObject", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("gameobject get");
+
+    public static readonly CommandDefinition ComponentGet = Define(
+        WellKnownCommands.ComponentGet,
+        "Get summary or serialized property details for a single component",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("componentId", "string", "GlobalObjectId of the component", required: true),
+        Parameter("property", "string", "SerializedProperty path to read (optional, returns all if omitted)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("component get");
 
     public static readonly CommandDefinition GameObjectCreate = Define(
         WellKnownCommands.GameObjectCreate,
@@ -571,6 +696,258 @@ public static class CommandCatalog
         Parameter("timeout", "int", "Timeout in seconds (default: 300)", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script validate");
 
+    // P0 잔여분: Asset Labels
+    public static readonly CommandDefinition AssetGetLabels = Define(
+        WellKnownCommands.AssetGetLabels,
+        "Get all labels attached to an asset",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset get-labels");
+
+    public static readonly CommandDefinition AssetSetLabels = Define(
+        WellKnownCommands.AssetSetLabels,
+        "Set labels on an asset (replaces all existing labels)",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Asset path", required: true),
+        Parameter("labels", "string", "Comma-separated labels (replaces all existing labels)", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("asset set-labels");
+
+    // P0 잔여분: Build Settings Set Scenes
+    public static readonly CommandDefinition BuildSettingsSetScenes = Define(
+        WellKnownCommands.BuildSettingsSetScenes,
+        "Set the Build Settings scene list",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("scenes", "string", "Comma-separated scene paths (e.g. Assets/Scenes/Main.unity,Assets/Scenes/Menu.unity)", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("build-settings set-scenes");
+
+    // Screenshot / Visual Feedback — P3
+    public static readonly CommandDefinition ScreenshotCapture = Define(
+        WellKnownCommands.Screenshot,
+        "Capture a screenshot of the Unity Scene View or Game View camera",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("view", "string", "View to capture: scene or game (default: scene)", required: false),
+        Parameter("width", "int", "Image width in pixels (default: 1920)", required: false),
+        Parameter("height", "int", "Image height in pixels (default: 1080)", required: false),
+        Parameter("format", "string", "Image format: png or jpg (default: png)", required: false),
+        Parameter("quality", "int", "JPG quality 1-100 (default: 75, ignored for png)", required: false),
+        Parameter("output", "string", "File path to save the image (optional, base64-only by default)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("screenshot capture");
+
+    // Tags & Layers
+    public static readonly CommandDefinition TagList = Define(
+        WellKnownCommands.TagList,
+        "List all tags defined in the project",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("tag list");
+
+    public static readonly CommandDefinition TagAdd = Define(
+        WellKnownCommands.TagAdd,
+        "Add a new tag to the project TagManager",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("name", "string", "Tag name to add", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("tag add");
+
+    public static readonly CommandDefinition LayerListDef = Define(
+        WellKnownCommands.LayerList,
+        "List all 32 layer slots with names and built-in flags",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("layer list");
+
+    public static readonly CommandDefinition LayerSetDef = Define(
+        WellKnownCommands.LayerSet,
+        "Set a user layer name (index 8-31)",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("index", "int", "Layer index (8-31)", required: true),
+        Parameter("name", "string", "Layer name to set", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("layer set");
+
+    public static readonly CommandDefinition GameObjectSetTag = Define(
+        WellKnownCommands.GameObjectSetTag,
+        "Set the tag on a GameObject",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("id", "string", "GlobalObjectId of the GameObject", required: true),
+        Parameter("tag", "string", "Tag to assign", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("gameobject set-tag");
+
+    public static readonly CommandDefinition GameObjectSetLayer = Define(
+        WellKnownCommands.GameObjectSetLayer,
+        "Set the layer on a GameObject",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("id", "string", "GlobalObjectId of the GameObject", required: true),
+        Parameter("layer", "string", "Layer name or index to assign", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("gameobject set-layer");
+
+    // Editor Utility
+    public static readonly CommandDefinition ConsoleClear = Define(
+        WellKnownCommands.ConsoleClear,
+        "Clear the Unity Editor console log",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("console clear");
+
+    public static readonly CommandDefinition ConsoleGetCount = Define(
+        WellKnownCommands.ConsoleGetCount,
+        "Get the count of log messages, warnings, and errors in the Unity console",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("console get-count");
+
+    public static readonly CommandDefinition DefineSymbolsGetDef = Define(
+        WellKnownCommands.DefineSymbolsGet,
+        "Get scripting define symbols for the active build target",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("target", "string", "Named build target (optional, defaults to active)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("define-symbols get");
+
+    public static readonly CommandDefinition DefineSymbolsSetDef = Define(
+        WellKnownCommands.DefineSymbolsSet,
+        "Set scripting define symbols for the active build target",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("symbols", "string", "Semicolon-separated define symbols", required: true),
+        Parameter("target", "string", "Named build target (optional, defaults to active)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("define-symbols set");
+
+    // Lighting
+    public static readonly CommandDefinition LightingBake = Define(
+        WellKnownCommands.LightingBake,
+        "Start an asynchronous lightmap bake",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("timeout", "int", "Timeout in seconds while waiting for bake completion (default: 3600)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("lighting bake");
+
+    public static readonly CommandDefinition LightingCancel = Define(
+        WellKnownCommands.LightingCancel,
+        "Cancel a running lightmap bake",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("lighting cancel");
+
+    public static readonly CommandDefinition LightingClear = Define(
+        WellKnownCommands.LightingClear,
+        "Clear baked lightmap data from the scene",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("lighting clear");
+
+    public static readonly CommandDefinition LightingGetSettings = Define(
+        WellKnownCommands.LightingGetSettings,
+        "Get the current scene lighting settings",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("lighting get-settings");
+
+    public static readonly CommandDefinition LightingSetSettings = Define(
+        WellKnownCommands.LightingSetSettings,
+        "Set a lighting settings property value",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("property", "string", "LightingSettings property path (e.g. m_LightmapResolution)", required: true),
+        Parameter("value", "string", "New value", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("lighting set-settings");
+
+    // NavMesh
+    public static readonly CommandDefinition NavMeshBakeDef = Define(
+        WellKnownCommands.NavMeshBake,
+        "Build the NavMesh for the current scene",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("navmesh bake");
+
+    public static readonly CommandDefinition NavMeshClearDef = Define(
+        WellKnownCommands.NavMeshClear,
+        "Clear all NavMesh data",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("navmesh clear");
+
+    public static readonly CommandDefinition NavMeshGetSettingsDef = Define(
+        WellKnownCommands.NavMeshGetSettings,
+        "Get NavMesh build settings for all agent types",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("navmesh get-settings");
+
+    // Editor Utility 확장
+    public static readonly CommandDefinition EditorPauseDef = Define(
+        WellKnownCommands.EditorPause,
+        "Toggle or set the Unity Editor pause state",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("action", "string", "Pause action: toggle, pause, or unpause (default: toggle)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("editor pause");
+
+    public static readonly CommandDefinition EditorFocusGameViewDef = Define(
+        WellKnownCommands.EditorFocusGameView,
+        "Focus the Game View window in the Unity Editor",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("editor focus-gameview");
+
+    public static readonly CommandDefinition EditorFocusSceneViewDef = Define(
+        WellKnownCommands.EditorFocusSceneView,
+        "Focus the Scene View window in the Unity Editor",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("editor focus-sceneview");
+
+    // Script 확장
+    public static readonly CommandDefinition ScriptListCmdDef = Define(
+        WellKnownCommands.ScriptList,
+        "List MonoScript assets in the project",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("folder", "string", "Root folder to search (default: Assets)", required: false),
+        Parameter("filter", "string", "Case-insensitive name filter", required: false),
+        Parameter("limit", "int", "Maximum number of results", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script list");
+
+    // Physics
+    public static readonly CommandDefinition PhysicsGetSettings = Define(
+        WellKnownCommands.PhysicsGetSettings,
+        "Get all physics settings from DynamicsManager",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("physics get-settings");
+
+    public static readonly CommandDefinition PhysicsSetSettings = Define(
+        WellKnownCommands.PhysicsSetSettings,
+        "Set a physics settings property value in DynamicsManager",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("property", "string", "DynamicsManager property path (e.g. m_Gravity, m_DefaultSolverIterations)", required: true),
+        Parameter("value", "string", "New value", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("physics set-settings");
+
+    public static readonly CommandDefinition PhysicsGetCollisionMatrix = Define(
+        WellKnownCommands.PhysicsGetCollisionMatrix,
+        "Get the 32x32 layer collision matrix showing which layers collide",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("physics get-collision-matrix");
+
+    public static readonly CommandDefinition PhysicsSetCollisionMatrix = Define(
+        WellKnownCommands.PhysicsSetCollisionMatrix,
+        "Set collision between two layers (no Undo support — runtime API)",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("layer1", "string", "First layer (name or index 0-31)", required: true),
+        Parameter("layer2", "string", "Second layer (name or index 0-31)", required: true),
+        Parameter("ignore", "bool", "true to disable collision, false to enable", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("physics set-collision-matrix");
+
     public static CommandDefinition[] All { get; } =
     [
         Init,
@@ -578,6 +955,10 @@ public static class CommandCatalog
         Ping,
         Status,
         Build,
+        BuildProfileList,
+        BuildProfileGetActive,
+        BuildProfileSetActive,
+        BuildTargetSwitch,
         Test,
         Check,
         Tools,
@@ -588,14 +969,24 @@ public static class CommandCatalog
         SessionClean,
         Watch,
         SceneSnapshot,
+        SceneHierarchy,
         SceneDiff,
         Schema,
         Exec,
         Workflow,
+        BatchExecute,
         PlayMode,
         PlayerSettingsGet,
         PlayerSettingsSet,
         AssetRefresh,
+        AssetFind,
+        AssetGetInfo,
+        AssetGetDependencies,
+        AssetReferenceGraph,
+        BuildSettingsGetScenes,
+        GameObjectFind,
+        GameObjectGet,
+        ComponentGet,
         GameObjectCreate,
         GameObjectDelete,
         GameObjectSetActive,
@@ -642,7 +1033,46 @@ public static class CommandCatalog
         ScriptCreateCmd,
         ScriptEditCmd,
         ScriptDeleteCmd,
-        ScriptValidateCmd
+        ScriptValidateCmd,
+        // P0 잔여분: Asset Labels + Build Settings
+        AssetGetLabels,
+        AssetSetLabels,
+        BuildSettingsSetScenes,
+        // Screenshot / Visual Feedback — P3
+        ScreenshotCapture,
+        // Tags & Layers
+        TagList,
+        TagAdd,
+        LayerListDef,
+        LayerSetDef,
+        GameObjectSetTag,
+        GameObjectSetLayer,
+        // Editor Utility
+        ConsoleClear,
+        ConsoleGetCount,
+        DefineSymbolsGetDef,
+        DefineSymbolsSetDef,
+        // Lighting
+        LightingBake,
+        LightingCancel,
+        LightingClear,
+        LightingGetSettings,
+        LightingSetSettings,
+        // NavMesh
+        NavMeshBakeDef,
+        NavMeshClearDef,
+        NavMeshGetSettingsDef,
+        // Editor Utility 확장
+        EditorPauseDef,
+        EditorFocusGameViewDef,
+        EditorFocusSceneViewDef,
+        // Script 확장
+        ScriptListCmdDef,
+        // Physics
+        PhysicsGetSettings,
+        PhysicsSetSettings,
+        PhysicsGetCollisionMatrix,
+        PhysicsSetCollisionMatrix
     ];
 
     private static CommandDefinition Define(

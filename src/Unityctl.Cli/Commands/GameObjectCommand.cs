@@ -6,6 +6,27 @@ namespace Unityctl.Cli.Commands;
 
 public static class GameObjectCommand
 {
+    public static void Find(
+        string project,
+        string? name = null,
+        string? tag = null,
+        string? layer = null,
+        string? component = null,
+        string? scene = null,
+        bool includeInactive = false,
+        int? limit = null,
+        bool json = false)
+    {
+        var request = CreateFindRequest(name, tag, layer, component, scene, includeInactive, limit);
+        CommandRunner.Execute(project, request, json);
+    }
+
+    public static void Get(string project, string id, bool json = false)
+    {
+        var request = CreateGetRequest(id);
+        CommandRunner.Execute(project, request, json);
+    }
+
     public static void Create(string project, string name, string? parent = null, string? scene = null, bool json = false)
     {
         var request = CreateCreateRequest(name, parent, scene);
@@ -48,6 +69,18 @@ public static class GameObjectCommand
         CommandRunner.Execute(project, request, json);
     }
 
+    public static void SetTag(string project, string id, string tag, bool json = false)
+    {
+        var request = CreateSetTagRequest(id, tag);
+        CommandRunner.Execute(project, request, json);
+    }
+
+    public static void SetLayer(string project, string id, string layer, bool json = false)
+    {
+        var request = CreateSetLayerRequest(id, layer);
+        CommandRunner.Execute(project, request, json);
+    }
+
     internal static CommandRequest CreateCreateRequest(string name, string? parent, string? scene)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -61,6 +94,43 @@ public static class GameObjectCommand
         {
             Command = WellKnownCommands.GameObjectCreate,
             Parameters = parameters
+        };
+    }
+
+    internal static CommandRequest CreateFindRequest(
+        string? name,
+        string? tag,
+        string? layer,
+        string? component,
+        string? scene,
+        bool includeInactive,
+        int? limit)
+    {
+        var parameters = new JsonObject();
+        if (!string.IsNullOrWhiteSpace(name)) parameters["name"] = name;
+        if (!string.IsNullOrWhiteSpace(tag)) parameters["tag"] = tag;
+        if (!string.IsNullOrWhiteSpace(layer)) parameters["layer"] = layer;
+        if (!string.IsNullOrWhiteSpace(component)) parameters["component"] = component;
+        if (!string.IsNullOrWhiteSpace(scene)) parameters["scene"] = scene;
+        if (includeInactive) parameters["includeInactive"] = true;
+        if (limit.HasValue) parameters["limit"] = limit.Value;
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.GameObjectFind,
+            Parameters = parameters
+        };
+    }
+
+    internal static CommandRequest CreateGetRequest(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id must not be empty", nameof(id));
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.GameObjectGet,
+            Parameters = new JsonObject { ["id"] = id }
         };
     }
 
@@ -151,6 +221,42 @@ public static class GameObjectCommand
             {
                 ["id"] = id,
                 ["name"] = name
+            }
+        };
+    }
+
+    internal static CommandRequest CreateSetTagRequest(string id, string tag)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id must not be empty", nameof(id));
+        if (string.IsNullOrWhiteSpace(tag))
+            throw new ArgumentException("tag must not be empty", nameof(tag));
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.GameObjectSetTag,
+            Parameters = new JsonObject
+            {
+                ["id"] = id,
+                ["tag"] = tag
+            }
+        };
+    }
+
+    internal static CommandRequest CreateSetLayerRequest(string id, string layer)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("id must not be empty", nameof(id));
+        if (string.IsNullOrWhiteSpace(layer))
+            throw new ArgumentException("layer must not be empty", nameof(layer));
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.GameObjectSetLayer,
+            Parameters = new JsonObject
+            {
+                ["id"] = id,
+                ["layer"] = layer
             }
         };
     }

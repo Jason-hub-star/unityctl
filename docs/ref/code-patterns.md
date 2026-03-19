@@ -91,9 +91,11 @@ JsonConvert.DeserializeObject<CommandRequest>(json)
 | Shared.Tests | 프로토콜 roundtrip, accessor | xUnit |
 | Core.Tests | PipeName, RetryPolicy, IPC | xUnit |
 | Cli.Tests | PlatformFactory, Discovery, AsyncCommandRunner | xUnit (Cli 참조) |
+| Mcp.Tests | MCP 도구 등록, 블랙박스 (stdio 프로세스) | xUnit (McpClient) |
 | Integration.Tests | CLI black-box | xUnit (프로세스 스폰) |
 
 - Integration.Tests는 AppLocker 감지 + graceful skip.
+- Mcp.Tests의 `McpBlackBoxTests`는 빌드된 `unityctl-mcp` 바이너리를 프로세스로 띄운다. Debug를 Release보다 먼저 탐색한다 (`dotnet test`의 기본이 Debug이므로 stale Release 바이너리 방지).
 - 테스트 필터: `dotnet test --filter "FullyQualifiedName!~Integration"`
 
 ## §8. 파일 위치 규칙
@@ -111,6 +113,7 @@ JsonConvert.DeserializeObject<CommandRequest>(json)
 IPC 실패(statusCode 201) 시 디버깅 절차:
 
 1. `unityctl doctor --project <path>` 실행 — IPC/Plugin/Editor 상태 한 방 확인
+   연결/리로드 계열 실패 (`ProjectLocked`, `Busy`, `PluginNotInstalled`, `CommandNotFound`, IPC/pipe/reload/domain 포함 `UnknownError`)에서는 CLI가 doctor summary를 자동 출력한다.
 2. Editor.log 직접 확인: `grep "error CS" "$LOCALAPPDATA/Unity/Editor/Editor.log" | tail -10`
 3. **추측 수정 최대 1회**, 그래도 안 되면 Editor.log 에러 메시지 기반으로 수정
 
