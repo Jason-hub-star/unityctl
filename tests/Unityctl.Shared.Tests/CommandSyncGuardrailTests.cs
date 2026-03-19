@@ -73,7 +73,8 @@ public class CommandSyncGuardrailTests
 
     private static string ReadRepoFile(string relativePath)
     {
-        var path = Path.Combine(GetRepoRoot(), relativePath);
+        var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar);
+        var path = Path.Combine(GetRepoRoot(), normalized);
         return File.ReadAllText(path);
     }
 
@@ -106,7 +107,7 @@ public class CommandSyncGuardrailTests
 
     private static HashSet<string> ParsePluginHandlerFieldNames()
     {
-        var commandsDir = Path.Combine(GetRepoRoot(), @"src\Unityctl.Plugin\Editor\Commands");
+        var commandsDir = Path.Combine(GetRepoRoot(), "src", "Unityctl.Plugin", "Editor", "Commands");
         var files = Directory.GetFiles(commandsDir, "*Handler.cs", SearchOption.TopDirectoryOnly);
 
         return files
