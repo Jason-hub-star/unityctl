@@ -96,7 +96,10 @@ public sealed class DoctorAnalyzerTests
         try
         {
             var normalized = Unityctl.Shared.Constants.NormalizeProjectPath(tempProject);
-            var raw = tempProject.Replace('/', '\\');
+            // On Windows, raw uses backslashes; on Unix, raw is the same as tempProject
+            var raw = OperatingSystem.IsWindows()
+                ? tempProject.Replace('/', '\\')
+                : tempProject;
             var snapshot = CreateSnapshot(ipcConnected: false, projectLocked: false);
             var entries = new[]
             {
