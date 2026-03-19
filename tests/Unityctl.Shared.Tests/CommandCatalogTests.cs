@@ -36,6 +36,7 @@ public class CommandCatalogTests
              "ui-canvas-create", "ui-element-create", "ui-set-rect",
              // Script Editing v1
              "script-create", "script-edit", "script-delete", "script-validate",
+             "script-patch",
              // P0 잔여분: Asset Labels + Build Settings
              "asset-get-labels", "asset-set-labels", "build-settings-set-scenes",
              // Screenshot / Visual Feedback — P3
