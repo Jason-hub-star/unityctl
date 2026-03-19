@@ -1,14 +1,41 @@
 # unityctl
 
-CLI tool for controlling Unity Editor — built for AI agents and CI/CD pipelines.
+[![NuGet](https://img.shields.io/nuget/v/unityctl?label=unityctl)](https://www.nuget.org/packages/unityctl)
+[![NuGet](https://img.shields.io/nuget/v/unityctl-mcp?label=unityctl-mcp)](https://www.nuget.org/packages/unityctl-mcp)
+[![CI](https://github.com/kimjuyoung1127/unityagent/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityagent/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**9x smaller schema** than existing Unity MCP solutions. Headless CI/CD without open Editor.
+A deterministic control plane for Unity Editor — built for AI agents and CI/CD pipelines.
+
+**9x smaller schema** than existing Unity MCP solutions. **118 CLI commands**, **33 MCP tools**, **538 tests**.
+
+## Install
 
 ```bash
-# Install plugin + run a build preflight check in 3 commands
-dotnet build unityctl.slnx
-dotnet run --project src/Unityctl.Cli -- init --project /path/to/unity/project
-dotnet run --project src/Unityctl.Cli -- build --dry-run --project /path/to/unity/project --json
+# CLI tool
+dotnet tool install -g unityctl
+
+# MCP server (for Claude Code, Cursor, VS Code)
+dotnet tool install -g unityctl-mcp
+```
+
+## Quick Start
+
+```bash
+# Install plugin into Unity project
+unityctl init --project /path/to/unity/project
+
+# Ping Unity (IPC if Editor open, batch fallback otherwise)
+unityctl ping --project /path/to/project --json
+
+# Check compilation (works headless, no Editor required)
+unityctl check --project /path/to/project --json
+
+# Build preflight validation
+unityctl build --project /path/to/project --dry-run --json
+
+# MCP server (stdio transport)
+unityctl-mcp
 ```
 
 ## Terminal Output
@@ -29,118 +56,112 @@ dotnet run --project src/Unityctl.Cli -- build --dry-run --project /path/to/unit
 
 | Feature | unityctl | Existing Unity MCP |
 |---------|----------|--------------------|
-| Headless CI/CD | ✅ `check` / EditMode `test` verified without open Editor | ❌ Editor must be open |
-| Token Efficiency | ✅ 5,024 B schema (9.1x smaller) | 45,705 B schema |
-| Editor Discovery | ✅ auto-detect installed versions | ❌ manual path config |
-| Transport Fallback | ✅ IPC → batch auto-fallback | ❌ single path |
+| Headless CI/CD | ✅ `check` / `test` / `build --dry-run` without Editor | ❌ Editor must be open |
+| Token Efficiency | ✅ 5 KB schema (9x smaller) | 45 KB schema |
+| Commands | ✅ 118 CLI commands, 70 write actions | ~39 tools |
 | Native .NET MCP | ✅ C# SDK, no Python/TS bridge | Python/TS bridge |
+| Transport Fallback | ✅ IPC → batch auto-fallback | ❌ single path |
 | Preflight Validation | ✅ `--dry-run` with 19 checks | ❌ |
-| Flight Recorder | ✅ NDJSON command logging | ❌ |
+| Flight Recorder | ✅ NDJSON command audit log | ❌ |
 | Session Tracking | ✅ state machine + stale detection | ❌ |
 | Real-time Streaming | ✅ `watch` console/hierarchy/compilation | ❌ |
 | Scene Diff | ✅ property-level diff with epsilon | ❌ |
+| Batch Execute | ✅ transaction rollback on failure | ❌ |
+| Undo/Redo | ✅ CLI undo/redo support | ❌ |
 
 ## Benchmarks
 
-| Metric | unityctl (Mcp) | CoplayDev MCP |
+| Metric | unityctl (MCP) | CoplayDev MCP |
 |--------|---------------|---------------|
 | Schema size | **5,024 B** | 45,705 B |
 | `ping` latency | 100 ms | 1 ms |
 | `editor_state` | 100 ms | 100 ms |
 | `active_scene` | 99 ms | 100 ms |
 
-- [Response-time benchmark](docs/benchmark/benchmark-results.md)
-- [Token-efficiency benchmark](docs/benchmark/token-comparison.md)
-- [Headless batch validation](docs/benchmark/headless-batch-validation.md)
+## Commands (118)
 
-## Write API
+### Core
+| Command | Description |
+|---------|-------------|
+| `editor list` | List installed Unity editors |
+| `init` | Install plugin to Unity project |
+| `ping` | Check Unity connectivity |
+| `status` | Get editor state |
+| `check` | Verify script compilation |
+| `test` | Run EditMode/PlayMode tests |
+| `build` | Build player (with `--dry-run` preflight) |
+| `doctor` | Diagnose connectivity and plugin health |
 
-Phase A and Phase B typed write commands are now live-tested against a real Unity project.
+### Scene & GameObject
+| Command | Description |
+|---------|-------------|
+| `scene snapshot/hierarchy/diff/save/open/create` | Scene management |
+| `gameobject create/delete/rename/move/find/get` | GameObject CRUD |
+| `gameobject set-active/set-tag/set-layer` | GameObject properties |
+| `component add/remove/get/set-property` | Component CRUD |
 
-Verified commands:
+### Assets
+| Command | Description |
+|---------|-------------|
+| `asset find/get-info/get-dependencies/reference-graph` | Asset queries |
+| `asset create/copy/move/delete/import/refresh` | Asset CRUD |
+| `asset get-labels/set-labels` | Asset labels |
+| `material create/get/set/set-shader` | Material management |
+| `prefab create/unpack/apply/edit` | Prefab management |
 
-- `unityctl play start|stop|pause --project <path> --json`
-- `unityctl player-settings get --project <path> --key productName --json`
-- `unityctl player-settings set --project <path> --key companyName --value "TestCo" --json`
-- `unityctl asset refresh --project <path> --json`
-- `unityctl gameobject create|rename|move|delete --project <path> ... --json`
-- `unityctl gameobject activate|deactivate --project <path> --id <globalObjectId> --json`
-- `unityctl component add|remove|set-property --project <path> ... --json`
-- `unityctl scene save --project <path> [--all] --json`
+### Editor Control
+| Command | Description |
+|---------|-------------|
+| `play start/stop/pause` | Play mode control |
+| `editor pause` | Toggle/set editor pause state |
+| `editor focus-gameview/focus-sceneview` | Focus editor windows |
+| `player-settings get/set` | PlayerSettings read/write |
+| `project-settings get/set` | Project settings (editor, physics, graphics, quality) |
+| `console clear/get-count` | Console management |
+| `define-symbols get/set` | Scripting define symbols |
+| `undo/redo` | Undo/redo operations |
 
-Observed behavior:
+### Build & Deployment
+| Command | Description |
+|---------|-------------|
+| `build-profile list/get-active/set-active` | Build profile management |
+| `build-target switch` | Switch build platform |
+| `build-settings get-scenes/set-scenes` | Build scene list |
 
-- `play start`, `play stop`, and `play pause` all work over IPC
-- `player-settings set` updates `companyName` and returns an `undoGroupName`
-- `asset refresh` returns a structured `"Asset refresh scheduled"` response, then IPC reconnects after refresh/reload settles
-- `gameobject create` returns a `globalObjectId`, `sceneDirty`, and `undoGroupName`
-- `component add` returns a `componentGlobalObjectId`, and `component set-property` works with Unity serialized property paths like `m_LocalPosition` and `m_Mass`
-- `PrefabGuard` rejects prefab-instance writes with a structured v1 limitation message
+### Physics & Lighting
+| Command | Description |
+|---------|-------------|
+| `physics get-settings/set-settings` | DynamicsManager settings |
+| `physics get-collision-matrix/set-collision-matrix` | 32×32 layer collision matrix |
+| `lighting bake/cancel/clear/get-settings/set-settings` | Lightmap baking |
+| `navmesh bake/clear/get-settings` | NavMesh baking |
 
-## Quick Start
+### Tags & Layers
+| Command | Description |
+|---------|-------------|
+| `tag list/add` | Tag management |
+| `layer list/set` | Layer management |
 
-### Prerequisites
+### Scripting
+| Command | Description |
+|---------|-------------|
+| `script create/edit/delete/validate` | C# script management |
+| `script list` | List MonoScript assets |
+| `exec` | Execute C# expression in Unity |
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Unity 2021.3+](https://unity.com/download) via Unity Hub
-
-### Build
-
-```bash
-git clone https://github.com/kimjuyoung1127/unityctl.git
-cd unityctl
-dotnet build unityctl.slnx
-```
-
-### Install Plugin
-
-```bash
-dotnet run --project src/Unityctl.Cli -- init --project /path/to/unity/project
-```
-
-This adds `com.unityctl.bridge` to your Unity project's `Packages/manifest.json`.
-
-### Basic Commands
-
-```bash
-# List installed Unity editors
-unityctl editor list
-
-# Ping Unity (IPC if Editor open, batch otherwise)
-unityctl ping --project /path/to/project
-
-# Check compilation
-unityctl check --project /path/to/project --json
-
-# Run EditMode tests (with polling)
-unityctl test --project /path/to/project --mode edit --json
-
-# Build preflight validation
-unityctl build --project /path/to/project --target StandaloneWindows64 --dry-run --json
-
-# Execute C# expression in Unity
-unityctl exec --project /path/to/project --code "Application.version"
-
-# Stream Unity events in real-time
-unityctl watch --project /path/to/project --channel console
-
-# Phase A typed writes
-unityctl play start --project /path/to/project --json
-unityctl player-settings get --project /path/to/project --key productName --json
-unityctl asset refresh --project /path/to/project --json
-
-# Phase B typed writes
-unityctl gameobject create --project /path/to/project --name "Cube" --json
-unityctl gameobject rename --project /path/to/project --id <globalObjectId> --name "NewName" --json
-unityctl gameobject move --project /path/to/project --id <childId> --parent <parentId> --json
-unityctl gameobject deactivate --project /path/to/project --id <globalObjectId> --json
-unityctl component add --project /path/to/project --id <globalObjectId> --type "UnityEngine.Rigidbody" --json
-unityctl component set-property --project /path/to/project --component-id <componentGlobalObjectId> --property "m_Mass" --value "5" --json
-unityctl scene save --project /path/to/project --json
-
-# Machine-readable schema for AI agents
-unityctl schema --format json
-```
+### Automation
+| Command | Description |
+|---------|-------------|
+| `batch execute` | Transaction with rollback |
+| `workflow run` | JSON workflow execution |
+| `watch` | Real-time event streaming |
+| `log` | Query flight recorder |
+| `session list/stop/clean` | Session management |
+| `screenshot capture` | Scene/Game View capture |
+| `schema/tools` | Machine-readable metadata |
+| `package list/add/remove` | Package management |
+| `animation create-clip/create-controller` | Animation assets |
+| `ui canvas-create/element-create/set-rect` | UI creation |
 
 ## Architecture
 
@@ -148,82 +169,34 @@ unityctl schema --format json
 unityctl.slnx
 ├── src/Unityctl.Shared   (netstandard2.1)  Protocol + models
 ├── src/Unityctl.Core     (net10.0)         Business logic (transport, discovery, retry)
-├── src/Unityctl.Cli      (net10.0)         Thin CLI shell
-├── src/Unityctl.Mcp      (net10.0)         MCP server (Claude/Cursor/VS Code)
-├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge
-└── tests/*                                 400 xUnit tests
+├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
+├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
+├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
+└── tests/*                                 538 xUnit tests
 ```
 
 ### Transport
 
 unityctl auto-selects the best transport:
 
-1. **IPC** (Named Pipe / Unix Domain Socket) — if Unity Editor is running with plugin → ~100ms
+1. **IPC** (Named Pipe / Unix Domain Socket) — Editor running with plugin → ~100ms
 2. **Batch** — spawns Unity in batchmode → 30-120s
 
 ### MCP Server
 
 ```bash
-# Run as MCP server (stdio transport)
-dotnet run --project src/Unityctl.Mcp
+unityctl-mcp
 ```
 
+33 MCP tools: `unityctl_run` (70 write commands), `unityctl_schema`, `unityctl_asset_find`, `unityctl_gameobject_find`, `unityctl_script_list`, `unityctl_physics_get_settings`, and more.
+
 Compatible with Claude Code, Cursor, VS Code, and any MCP client.
-
-13 MCP tool names available across 12 classes: `ping`, `status`, `build`, `test`, `check`, `exec`, `log`, `session`, `schema`, `watch`, `scene snapshot`, `scene diff`, `unityctl_run`.
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `editor list` | List installed Unity editors |
-| `init` | Install plugin to Unity project |
-| `ping` | Check Unity connectivity |
-| `status` | Get editor state (compiling, playing, etc.) |
-| `check` | Verify script compilation |
-| `test` | Run EditMode/PlayMode tests |
-| `build` | Build player (with `--dry-run` preflight) |
-| `play` | Control Unity play mode (`start`, `stop`, `pause`) |
-| `player-settings` | Read or update selected `PlayerSettings` values |
-| `asset` | Create, copy, move, delete, import assets and folders |
-| `gameobject` | Create, rename, move, delete, activate, deactivate GameObjects |
-| `component` | Add, remove, and edit Component properties with serialized paths |
-| `exec` | Execute C# expression in Unity |
-| `log` | Query flight recorder |
-| `session` | Manage execution sessions |
-| `watch` | Stream Unity events in real-time |
-| `material` | Create materials, get/set properties, change shaders |
-| `prefab` | Create, unpack, apply, and edit prefab assets |
-| `package` | List, add, and remove Unity packages |
-| `project-settings` | Get/set editor, physics, graphics, quality settings |
-| `animation` | Create AnimationClip and AnimatorController assets |
-| `ui` | Create Canvas, UI elements, set RectTransform |
-| `script` | Create, edit, delete C# scripts and validate compilation |
-| `undo` / `redo` | Undo/redo Unity editor operations |
-| `scene` | Snapshot, diff, save, open, and create scenes |
-| `schema` | Output machine-readable command schema (with `cliName`/`cliFlag`) |
-| `workflow` | Run JSON workflow files |
-| `doctor` | Diagnose Unity connectivity, plugin health, and Editor.log errors |
-| `tools` | List available commands with metadata |
-
-## Status Codes
-
-| Code | Name | Meaning |
-|------|------|---------|
-| 0 | Ready | Success |
-| 100-103 | Transient | Unity is busy (auto-retry) |
-| 104 | Accepted | Async operation started |
-| 200 | NotFound | Unity not installed |
-| 201 | ProjectLocked | Editor has project open (batch) |
-| 203 | PluginNotInstalled | Run `init` first |
-| 500+ | Error | Check logs |
 
 ## Testing
 
 ```bash
-dotnet test unityctl.slnx                                            # All 400 tests
+dotnet test unityctl.slnx                                            # All 538 tests
 dotnet test unityctl.slnx --filter "FullyQualifiedName!~Integration" # Unit only
-
 ```
 
 ## Platforms
@@ -233,6 +206,11 @@ dotnet test unityctl.slnx --filter "FullyQualifiedName!~Integration" # Unit only
 | Windows | ✅ | Named Pipe | ✅ | ✅ |
 | macOS | ✅ | Unix Domain Socket | ✅ | ✅ |
 | Linux | ✅ | Unix Domain Socket | ✅ | ✅ |
+
+## Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [Unity 2021.3+](https://unity.com/download)
 
 ## License
 
