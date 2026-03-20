@@ -193,6 +193,18 @@ unityctl mesh create-primitive --project /path/to/project --type Cube --name "De
 
 `mesh create-primitive` currently targets Unity's built-in primitive set (`Cube`, `Sphere`, `Plane`, `Cylinder`, `Capsule`, `Quad`). Like other scene write commands, it is most reliable with a running Editor and IPC ready.
 
+### Prefab instantiate
+
+```bash
+# Place a prefab into the scene with position and name
+unityctl prefab instantiate --project /path/to/project --path "Assets/Prefabs/Enemy.prefab" --name "Enemy_1" --position "[5,0,3]" --json
+
+# Place under a parent GameObject
+unityctl prefab instantiate --project /path/to/project --path "Assets/Prefabs/Prop.prefab" --parent "<GlobalObjectId>" --json
+```
+
+`prefab instantiate` places a prefab asset into the active scene as a prefab instance (maintaining the prefab link). Supports position, rotation, scale, and parent. Undo-backed.
+
 ### Camera
 
 ```bash

@@ -199,6 +199,20 @@ unityctl scene save --project "/path/to/project" --json
 
 For quick blockouts or test geometry, `mesh create-primitive` creates Unity built-in primitives (`Cube`, `Sphere`, `Plane`, `Cylinder`, `Capsule`, `Quad`) and returns the created scene object metadata. This is a deterministic scene edit, not a mesh modeling workflow.
 
+### Prefab instantiate
+
+```bash
+# Place a prefab into the scene
+unityctl prefab instantiate --project "/path/to/project" --path "Assets/Prefabs/Enemy.prefab" --name "Enemy_1" --position "[5,0,3]" --json
+
+# Place under a parent
+unityctl prefab instantiate --project "/path/to/project" --path "Assets/Prefabs/Prop.prefab" --parent "<GlobalObjectId>" --json
+```
+
+For asset-backed scene dressing, `prefab instantiate` places prefab assets into the scene as proper prefab instances (maintaining the prefab link). Supports position, rotation, scale, and parent binding. Undo-backed. Replaces the previous `exec` workaround.
+
+`asset copy` now also accepts external absolute paths (outside the Unity project), enabling staged asset import workflows without shell copy workarounds.
+
 ### Script management
 
 ```bash

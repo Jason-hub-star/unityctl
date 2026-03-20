@@ -47,7 +47,10 @@
 - **Phase E: Cinemachine (cinemachine-list/get/set-property — 3개 명령, capability gating)**: 구현 완료
 - **Phase I-2: UI Toolkit (uitk-find/get/set-value — 3개 명령, runtime capability check)**: 구현 완료
 
-**전체 Phase 완료. 총 83개 write allowlist 명령, 155개 CLI 명령, 12개 MCP 도구 (33→12 통합).**
+- **MCP Prompts (create_game_scene, debug_game, iterate_gameplay, setup_project — 4개 AI 워크플로우 프롬프트)**: 구현 완료
+- **CLI Feedback Fixes (CLI-012 prefab-instantiate, CLI-014 asset copy 외부 경로, CLI-000 IPC 30초 메시지 타임아웃)**: 구현 완료. Unity 6 라이브 테스트 통과.
+
+**전체 Phase 완료. 총 84개 write allowlist 명령, 156개 CLI 명령, 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트.**
 
 ## Visual Verification v2 Phase 1 라이브 검증 (My project, Unity 6000.0.64f1)
 

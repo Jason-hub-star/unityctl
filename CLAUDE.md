@@ -57,11 +57,13 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - Phase D: Volume/PostProcessing (`volume-list/get/set-override/get-overrides`, `renderer-feature-list` — 5개 명령, Reflection capability gating): Done
 - Phase E: Cinemachine (`cinemachine-list/get/set-property` — 3개 명령, 2.x/3.x 런타임 감지): Done
 - Phase I-2: UI Toolkit (`uitk-find/get/set-value` — 3개 명령, runtime UIDocument 체크): Done
+- MCP Prompts (`create_game_scene/debug_game/iterate_gameplay/setup_project` — AI 워크플로우 가이드 4개): Done
+- CLI Feedback Fixes (CLI-012 `prefab instantiate`, CLI-014 `asset copy` 외부 경로, CLI-000 IPC 30초 메시지 타임아웃): Done
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
-- Next-Gen Extension Phases (2026-03-20): Phase G/H/C/I-1/D/E/I-2 — 24개 신규 명령, 82+ 신규 테스트 (726 total). Unity 6 라이브 테스트 통과.
-- Production Domain Expansion (2026-03-20): `camera-list/get`, `texture-get/set-import-settings`, `scriptableobject-find/get/set-property`, `shader-find/get-properties` (9개 명령, 4개 슬라이스). 45개 신규 테스트.
-- Visual Verification v2 Phase 1.5 (2026-03-20): `playSmoke` + play settle + console evidence + game-camera capture.
+- CLI Feedback Fixes (2026-03-20): prefab instantiate, asset copy 외부 경로, IPC 메시지 타임아웃. Unity 6 라이브 테스트 통과.
+- MCP Prompts (2026-03-20): 4개 워크플로우 프롬프트 추가 (create_game_scene, debug_game, iterate_gameplay, setup_project).
+- Next-Gen Extension Phases (2026-03-20): Phase G/H/C/I-1/D/E/I-2 — 24개 신규 명령, 82+ 신규 테스트. Unity 6 라이브 테스트 통과.
 
 ## 실행 규칙 (MUST)
 1. 기존 코드/타입/유틸 우선 재사용, 중복 구현 금지
@@ -166,6 +168,8 @@ unityctl.slnx
 | **Phase D: Volume/PostProcessing** | ✅ 완료 | **volume-list/get/set-override/get-overrides** + **renderer-feature-list** (5개 명령, Reflection capability gating) |
 | **Phase E: Cinemachine** | ✅ 완료 | **cinemachine-list/get/set-property** (3개 명령, 2.x/3.x 런타임 감지) |
 | **Phase I-2: UI Toolkit** | ✅ 완료 | **uitk-find/get/set-value** (3개 명령, runtime UIDocument 체크) |
+| **MCP Prompts** | ✅ 완료 | **create_game_scene/debug_game/iterate_gameplay/setup_project** (4개 AI 워크플로우 프롬프트) |
+| **CLI Feedback Fixes** | ✅ 완료 | **prefab-instantiate** + **asset copy 외부 경로** + **IPC 30초 메시지 타임아웃** (CLI-012/014/000) |
 
 ## Source of Truth 문서
 - 탐색 인덱스: `AGENTS.md`
