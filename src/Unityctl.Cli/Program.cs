@@ -255,6 +255,9 @@ app.Add("prefab unpack", (string project, string id, string mode = "outermost", 
 app.Add("prefab apply", (string project, string id, bool json = false) =>
     PrefabCommand.Apply(project, id, json));
 
+app.Add("prefab instantiate", (string project, string path, string? name = null, string? parent = null, string? position = null, string? rotation = null, string? scale = null, bool json = false) =>
+    PrefabCommand.Instantiate(project, path, name, parent, position, rotation, scale, json));
+
 app.Add("prefab edit", (string project, string path, string property, string value, string? childPath = null, bool json = false) =>
     PrefabCommand.Edit(project, path, property, value, childPath, json));
 

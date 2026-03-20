@@ -42,6 +42,7 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.PrefabUnpack,
         WellKnownCommands.PrefabApply,
         WellKnownCommands.PrefabEdit,
+        WellKnownCommands.PrefabInstantiate,
         // Phase C-3: Package Manager + Project Settings
         WellKnownCommands.PackageList,
         WellKnownCommands.PackageAdd,

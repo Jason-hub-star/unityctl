@@ -12,6 +12,7 @@ public static class Constants
     public const int PingTimeoutMs = 10_000;
     public const int BatchModeTimeoutMs = 600_000;
     public const int IpcConnectTimeoutMs = 5_000;
+    public const int IpcMessageTimeoutMs = 30_000;
     public const int AsyncCommandDefaultTimeoutSeconds = 300;
     public const string PluginPackageName = "com.unityctl.bridge";
     public const string BatchEntryMethod = "Unityctl.Plugin.Editor.BatchMode.UnityctlBatchEntry.Execute";

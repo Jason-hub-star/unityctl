@@ -26,7 +26,7 @@ public class CommandCatalogTests
               // Phase C-1: Asset CRUD
               "asset-create", "asset-create-folder", "asset-copy", "asset-move", "asset-delete", "asset-import",
              // Phase C-2: Prefab
-             "prefab-create", "prefab-unpack", "prefab-apply", "prefab-edit",
+             "prefab-create", "prefab-unpack", "prefab-apply", "prefab-instantiate", "prefab-edit",
              // Phase C-3: Package Manager + Project Settings
              "package-list", "package-add", "package-remove", "project-settings-get", "project-settings-set",
              // Phase C-4: Material/Shader

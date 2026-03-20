@@ -69,6 +69,7 @@ namespace Unityctl.Plugin.Editor.Shared
         public const string PrefabUnpack = "prefab-unpack";
         public const string PrefabApply = "prefab-apply";
         public const string PrefabEdit = "prefab-edit";
+        public const string PrefabInstantiate = "prefab-instantiate";
 
         // Write API — Phase C-3: Package Manager + Project Settings
         public const string PackageList = "package-list";

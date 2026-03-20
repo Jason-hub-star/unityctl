@@ -544,6 +544,19 @@ public static class CommandCatalog
         Parameter("id", "string", "GlobalObjectId of the prefab instance", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("prefab apply");
 
+    public static readonly CommandDefinition PrefabInstantiateCmd = Define(
+        WellKnownCommands.PrefabInstantiate,
+        "Instantiate a prefab asset into the scene with optional transform and parent",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("path", "string", "Prefab asset path (e.g. Assets/Prefabs/Enemy.prefab)", required: true),
+        Parameter("name", "string", "Instance name (default: prefab name)", required: false),
+        Parameter("parent", "string", "GlobalObjectId of parent GameObject", required: false),
+        Parameter("position", "string", "Position as [x,y,z]", required: false),
+        Parameter("rotation", "string", "Rotation as euler [x,y,z]", required: false),
+        Parameter("scale", "string", "Scale as [x,y,z]", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("prefab instantiate");
+
     public static readonly CommandDefinition PrefabEditCmd = Define(
         WellKnownCommands.PrefabEdit,
         "Edit a Prefab asset's contents (set property on root or child)",
@@ -1458,6 +1471,7 @@ public static class CommandCatalog
         PrefabCreate,
         PrefabUnpack,
         PrefabApply,
+        PrefabInstantiateCmd,
         PrefabEditCmd,
         // Phase C-3: Package Manager + Project Settings
         PackageListCmd,

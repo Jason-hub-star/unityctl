@@ -24,6 +24,14 @@ public static class PrefabCommand
         CommandRunner.Execute(project, request, json);
     }
 
+    public static void Instantiate(string project, string path, string? name = null,
+        string? parent = null, string? position = null, string? rotation = null,
+        string? scale = null, bool json = false)
+    {
+        var request = CreateInstantiateRequest(path, name, parent, position, rotation, scale);
+        CommandRunner.Execute(project, request, json);
+    }
+
     public static void Edit(string project, string path, string property, string value, string? childPath = null, bool json = false)
     {
         var request = CreateEditRequest(path, property, value, childPath);
@@ -72,6 +80,26 @@ public static class PrefabCommand
         {
             Command = WellKnownCommands.PrefabApply,
             Parameters = new JsonObject { ["id"] = id }
+        };
+    }
+
+    internal static CommandRequest CreateInstantiateRequest(string path, string? name = null,
+        string? parent = null, string? position = null, string? rotation = null, string? scale = null)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            throw new ArgumentException("path must not be empty", nameof(path));
+
+        var parameters = new JsonObject { ["path"] = path };
+        if (!string.IsNullOrEmpty(name)) parameters["name"] = name;
+        if (!string.IsNullOrEmpty(parent)) parameters["parent"] = parent;
+        if (!string.IsNullOrEmpty(position)) parameters["position"] = position;
+        if (!string.IsNullOrEmpty(rotation)) parameters["rotation"] = rotation;
+        if (!string.IsNullOrEmpty(scale)) parameters["scale"] = scale;
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.PrefabInstantiate,
+            Parameters = parameters
         };
     }
 

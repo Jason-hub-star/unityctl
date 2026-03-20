@@ -41,12 +41,23 @@ public sealed class IpcTransport : ITransport
             await using (pipe.ConfigureAwait(false))
             {
                 await pipe.ConnectAsync(Constants.IpcConnectTimeoutMs, ct).ConfigureAwait(false);
-                return await MessageFraming.SendReceiveAsync(pipe, request, ct).ConfigureAwait(false);
+
+                // Message-level timeout: 30s to prevent hanging on partial server writes
+                using var messageCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                messageCts.CancelAfter(TimeSpan.FromMilliseconds(Constants.IpcMessageTimeoutMs));
+
+                return await MessageFraming.SendReceiveAsync(pipe, request, messageCts.Token).ConfigureAwait(false);
             }
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // Message timeout (not user cancellation)
+            return CommandResponse.Fail(StatusCode.Busy,
+                "IPC message timed out (30s). Unity Editor may be frozen or in domain reload. Try again.");
         }
         catch (OperationCanceledException)
         {
-            throw; // Let cancellation propagate
+            throw; // User cancellation propagates
         }
         catch (TimeoutException)
         {
