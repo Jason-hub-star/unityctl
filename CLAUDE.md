@@ -61,6 +61,7 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - CLI Feedback Fixes (CLI-012 `prefab instantiate`, CLI-014 `asset copy` 외부 경로, CLI-000 IPC 30초 메시지 타임아웃): Done
 - Token Optimization (status state 구분, hierarchy summary/maxDepth, component get summary, console get-entries dedupe): Done
 - CLI Enhancement (profiler rendering stats, component add --name, component enable/disable, profiler --detailed): Done
+- Exec Security Relaxation (BlockedPatterns-only, project code allowed): Done
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
 - CLI Enhancement (2026-03-23): profiler get-stats에 FPS/batches/drawCalls/triangles/vertices 추가, component add --name 폴백, component enable/disable 단축 명령, profiler --detailed GC 통계. 755 테스트 통과.

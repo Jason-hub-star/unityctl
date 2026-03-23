@@ -10,33 +10,28 @@ namespace Unityctl.Plugin.Editor.Commands
 {
     /// <summary>
     /// Handles the "exec" command: evaluates a C# expression in the Unity Editor
-    /// using reflection. Supports property get/set and method calls on types in
-    /// UnityEditor.* and UnityEngine.* namespaces.
+    /// using reflection. Supports property get/set and method calls on any type
+    /// loaded in the current AppDomain.
     ///
-    /// Security note: access is limited to allow-listed namespaces.
+    /// Security: dangerous types (System.IO.File, System.Diagnostics.Process,
+    /// System.Net.*, System.Reflection.Emit) are blocked via BlockedTypePatterns.
+    /// All other types — including project code — are allowed.
     /// This handler assumes a trusted agent caller.
     /// </summary>
     public class ExecHandler : CommandHandlerBase
     {
         public override string CommandName => WellKnownCommands.Exec;
 
-        // Namespaces allowed for reflection access
-        private static readonly string[] AllowedNamespacePrefixes =
-        {
-            "UnityEditor.",
-            "UnityEngine.",
-            "UnityEditor",
-            "UnityEngine"
-        };
-
-        // Type name patterns that are always blocked regardless of namespace
+        // Type name patterns that are always blocked for safety
         private static readonly string[] BlockedTypePatterns =
         {
             "System.IO.File",
             "System.IO.Directory",
+            "System.IO.Path",
             "System.Diagnostics.Process",
             "System.Net.",
-            "System.Reflection.Emit"
+            "System.Reflection.Emit",
+            "System.Runtime.InteropServices.Marshal"
         };
 
         protected override CommandResponse ExecuteInEditor(CommandRequest request)
@@ -167,28 +162,19 @@ namespace Unityctl.Plugin.Editor.Commands
             var memberName = expr.Substring(lastDot + 1).Trim();
 
             var type = ResolveType(typePart)
-                ?? throw new ExecParseException($"Type not found: '{typePart}'. Only UnityEditor.* and UnityEngine.* are supported.");
+                ?? throw new ExecParseException($"Type not found: '{typePart}'. Ensure the type is loaded in the current AppDomain.");
 
             return (type, memberName);
         }
 
         private static Type? ResolveType(string typeName)
         {
-            // Check blocked patterns first
+            // Block dangerous types (file I/O, process exec, network, native interop)
             foreach (var blocked in BlockedTypePatterns)
             {
                 if (typeName.StartsWith(blocked, StringComparison.OrdinalIgnoreCase))
-                    throw new ExecSecurityException($"Type '{typeName}' is not permitted.");
+                    throw new ExecSecurityException($"Type '{typeName}' is blocked for safety.");
             }
-
-            // Only allow-listed namespaces
-            var isAllowed = AllowedNamespacePrefixes.Any(p =>
-                typeName.Equals(p, StringComparison.Ordinal) ||
-                typeName.StartsWith(p + ".", StringComparison.Ordinal));
-
-            if (!isAllowed)
-                throw new ExecSecurityException(
-                    $"Type '{typeName}' is not in an allowed namespace. Only UnityEditor.* and UnityEngine.* are permitted.");
 
             // Search all loaded assemblies
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
