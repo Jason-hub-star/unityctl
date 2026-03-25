@@ -6,28 +6,33 @@ namespace Unityctl.Core.Tests;
 public class PluginSourceLocatorTests
 {
     [Fact]
-    public void TryResolvePackageSource_UsesWorkspacePluginDirectoryWhenSourceIsMissing()
+    public void BundledTemplateLocator_UsesBundledTemplateDirectory()
     {
         using var tempDirectory = new TemporaryDirectory();
-        var repoRoot = tempDirectory.Path;
-        var pluginDirectory = Path.Combine(repoRoot, "src", "Unityctl.Plugin");
-        Directory.CreateDirectory(pluginDirectory);
-        File.WriteAllText(Path.Combine(repoRoot, "unityctl.slnx"), string.Empty);
-        File.WriteAllText(Path.Combine(pluginDirectory, "package.json"), "{}");
+        var templateDirectory = Path.Combine(tempDirectory.Path, PluginProjectPaths.BundledTemplateDirectoryName);
+        Directory.CreateDirectory(templateDirectory);
+        File.WriteAllText(Path.Combine(templateDirectory, "package.json"), "{}");
 
-        var toolBinDirectory = Path.Combine(repoRoot, "artifacts", "bin", "Debug", "net10.0");
-        Directory.CreateDirectory(toolBinDirectory);
-
-        var success = PluginSourceLocator.TryResolvePackageSource(
-            source: null,
-            packageSource: out var packageSource,
-            resolvedDirectory: out var resolvedDirectory,
-            error: out var error,
-            baseDirectory: toolBinDirectory);
+        var success = BundledPluginTemplateLocator.TryResolveTemplateDirectory(
+            out var resolvedDirectory,
+            out var error,
+            tempDirectory.Path);
 
         Assert.True(success, error);
-        Assert.Equal(Path.GetFullPath(pluginDirectory), resolvedDirectory);
-        Assert.Equal($"file:{resolvedDirectory!.Replace('\\', '/')}", packageSource);
+        Assert.Equal(Path.GetFullPath(templateDirectory), resolvedDirectory);
+    }
+
+    [Fact]
+    public void TryResolvePackageSource_RejectsMissingSource()
+    {
+        var success = PluginSourceLocator.TryResolvePackageSource(
+            source: null,
+            packageSource: out _,
+            resolvedDirectory: out _,
+            error: out var error);
+
+        Assert.False(success);
+        Assert.Contains("required", error, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -68,6 +73,14 @@ public class PluginSourceLocatorTests
         Assert.True(success, error);
         Assert.Equal(gitUrl, packageSource);
         Assert.Null(resolvedDirectory);
+    }
+
+    [Fact]
+    public void ClassifyPackageSource_RecognizesEmbedded()
+    {
+        var sourceKind = PluginSourceLocator.ClassifyPackageSource("embedded:Packages/com.unityctl.bridge");
+
+        Assert.Equal(PluginSourceLocator.EmbeddedSourceKind, sourceKind);
     }
 
     [Fact]

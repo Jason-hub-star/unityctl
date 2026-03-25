@@ -199,6 +199,12 @@ internal static class DoctorAnalyzer
     {
         var recommendations = new List<string>();
 
+        if (string.Equals(snapshot.PluginSourceKind, "local-file", StringComparison.OrdinalIgnoreCase))
+        {
+            recommendations.Add($"This project is using a local `file:` bridge source. Migrate with `unityctl detach --project \"{projectPath}\" --clean-cache` and then `unityctl init --project \"{projectPath}\"` to avoid source drift and extra asset refresh work.");
+            recommendations.Add("`unityctl init` without `--source` now installs an embedded project-local bridge copy; use `--source` only for contributor workflows.");
+        }
+
         switch (classification)
         {
             case "editor-missing":
@@ -356,6 +362,8 @@ internal sealed class DoctorSnapshot
     public bool PluginInstalled { get; set; }
     public string? PluginSource { get; set; }
     public string? PluginSourceKind { get; set; }
+    public bool BridgeEnabled { get; set; }
+    public string? EmbeddedPath { get; set; }
     public bool IpcConnected { get; set; }
     public bool IpcPipePresent { get; set; }
     public bool BridgeLoaded { get; set; }

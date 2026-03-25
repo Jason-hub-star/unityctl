@@ -7,6 +7,7 @@ using Unityctl.Core.Diagnostics;
 using Unityctl.Core.Discovery;
 using Unityctl.Core.EditorRouting;
 using Unityctl.Core.Platform;
+using Unityctl.Core.Setup;
 using Unityctl.Core.Sessions;
 using Unityctl.Core.Transport;
 using Unityctl.Shared;
@@ -51,32 +52,12 @@ public static class DoctorCommand
         var editorFound = editors.Count > 0;
         var editorVersion = editors.FirstOrDefault()?.Version ?? "not found";
 
-        var manifestPath = Path.Combine(project, "Packages", "manifest.json");
-        var pluginInstalled = false;
-        string? pluginSource = null;
-        string? pluginSourceKind = null;
-        if (File.Exists(manifestPath))
-        {
-            try
-            {
-                var manifest = JsonNode.Parse(File.ReadAllText(manifestPath));
-                var dependencies = manifest?["dependencies"]?.AsObject();
-                if (dependencies != null
-                    && dependencies.TryGetPropertyValue(Constants.PluginPackageName, out var sourceNode)
-                    && sourceNode is JsonValue sourceValue)
-                {
-                    pluginSource = sourceValue.TryGetValue<string>(out var stringValue)
-                        ? stringValue
-                        : sourceNode.ToJsonString();
-                    pluginInstalled = !string.IsNullOrWhiteSpace(pluginSource);
-                    pluginSourceKind = ClassifyPluginSource(pluginSource);
-                }
-            }
-            catch
-            {
-                // Keep doctor resilient even when manifest parsing fails.
-            }
-        }
+        var installInfo = PluginInstallationInspector.Inspect(project);
+        var pluginInstalled = installInfo.PluginInstalled;
+        var pluginSource = installInfo.EffectiveSource;
+        var pluginSourceKind = installInfo.EffectiveSourceKind;
+        var bridgeEnabled = installInfo.BridgeEnabled;
+        var embeddedPath = installInfo.EmbeddedPath;
 
         var ipcConnected = false;
         bool? isCompiling = null;
@@ -144,6 +125,8 @@ public static class DoctorCommand
             PluginInstalled = pluginInstalled,
             PluginSource = pluginSource,
             PluginSourceKind = pluginSourceKind,
+            BridgeEnabled = bridgeEnabled,
+            EmbeddedPath = embeddedPath,
             IpcConnected = ipcConnected,
             IpcPipePresent = ipcPipePresent,
             BridgeLoaded = bridgeLoaded,
@@ -278,6 +261,8 @@ public static class DoctorCommand
                 ["installed"] = result.PluginInstalled,
                 ["source"] = result.PluginSource,
                 ["sourceKind"] = result.PluginSourceKind,
+                ["bridgeEnabled"] = result.BridgeEnabled,
+                ["embeddedPath"] = result.EmbeddedPath,
                 ["bridgeLoaded"] = result.BridgeLoaded
             },
             ["ipc"] = new JsonObject
@@ -367,6 +352,9 @@ public static class DoctorCommand
             lines.Add($"    Source kind: {result.PluginSourceKind ?? "unknown"}");
             if (!string.IsNullOrWhiteSpace(result.PluginSource))
                 lines.Add($"    Source: {result.PluginSource}");
+            lines.Add($"    Bridge enabled: {result.BridgeEnabled}");
+            if (!string.IsNullOrWhiteSpace(result.EmbeddedPath))
+                lines.Add($"    Embedded path: {result.EmbeddedPath}");
         }
 
         lines.Add(result.IpcConnected
@@ -471,30 +459,9 @@ public static class DoctorCommand
             || message.Contains("domain", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string? ClassifyPluginSource(string? pluginSource)
-    {
-        if (string.IsNullOrWhiteSpace(pluginSource))
-            return null;
-
-        if (pluginSource.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-            return "local-file";
-
-        if (pluginSource.Contains(".git", StringComparison.OrdinalIgnoreCase)
-            || pluginSource.StartsWith("git@", StringComparison.OrdinalIgnoreCase))
-            return "git";
-
-        if (pluginSource.Contains("://", StringComparison.Ordinal))
-            return "remote-url";
-
-        return "unknown";
-    }
-
     private static JsonArray ToJsonArray(IEnumerable<string> values)
     {
-        var array = new JsonArray();
-        foreach (var value in values)
-            array.Add(value);
-        return array;
+        return new JsonArray(values.Select(value => JsonValue.Create(value)).ToArray());
     }
 
     private static JsonObject BuildActivityJson(DoctorActivity activity)

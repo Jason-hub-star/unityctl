@@ -57,6 +57,7 @@ namespace Unityctl.Plugin.Editor.BatchMode
             try
             {
                 CommandRegistry.Initialize();
+                ScriptCompilationCollector.EnsureSubscribed();
 
                 CommandRequest request;
                 if (!string.IsNullOrEmpty(requestPath) && File.Exists(requestPath))

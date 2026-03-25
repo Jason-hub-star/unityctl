@@ -88,4 +88,12 @@ public sealed class ScreenshotCommandTests
 
         Assert.Null(request.Parameters!["outputPath"]);
     }
+
+    [CliTestFact]
+    public void CreateCaptureRequest_WithOverlayFlag_IncludesOverlayParameter()
+    {
+        var request = ScreenshotCommand.CreateCaptureRequest(view: "game", includeOverlayUi: true);
+
+        Assert.True(request.Parameters!["includeOverlayUi"]?.GetValue<bool>());
+    }
 }

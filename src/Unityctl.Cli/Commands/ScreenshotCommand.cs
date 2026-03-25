@@ -13,10 +13,11 @@ public static class ScreenshotCommand
         int height = 1080,
         string format = "png",
         int quality = 75,
+        bool includeOverlayUi = false,
         string? output = null,
         bool json = false)
     {
-        var request = CreateCaptureRequest(view, width, height, format, quality, output);
+        var request = CreateCaptureRequest(view, width, height, format, quality, includeOverlayUi, output);
         CommandRunner.Execute(project, request, json);
     }
 
@@ -26,6 +27,7 @@ public static class ScreenshotCommand
         int height = 1080,
         string format = "png",
         int quality = 75,
+        bool includeOverlayUi = false,
         string? output = null)
     {
         var parameters = new JsonObject
@@ -38,6 +40,9 @@ public static class ScreenshotCommand
 
         if (string.Equals(format, "jpg", StringComparison.OrdinalIgnoreCase))
             parameters["quality"] = quality;
+
+        if (includeOverlayUi)
+            parameters["includeOverlayUi"] = true;
 
         if (!string.IsNullOrWhiteSpace(output))
             parameters["outputPath"] = output;

@@ -3,7 +3,11 @@ namespace Unityctl.Core.Setup;
 public static class PluginSourceLocator
 {
     private const string PluginPackageFileName = "package.json";
-    private static readonly StringComparer PathComparer = StringComparer.OrdinalIgnoreCase;
+    public const string EmbeddedSourceKind = "embedded";
+    public const string LocalFileSourceKind = "local-file";
+    public const string GitSourceKind = "git";
+    public const string RemoteUrlSourceKind = "remote-url";
+    public const string UnknownSourceKind = "unknown";
 
     public static bool TryResolvePackageSource(
         string? source,
@@ -16,18 +20,20 @@ public static class PluginSourceLocator
         resolvedDirectory = null;
         error = null;
 
-        if (!string.IsNullOrWhiteSpace(source) && LooksLikeRemotePackageSource(source.Trim()))
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            error = "Plugin source is required for explicit local or Git installs.";
+            return false;
+        }
+
+        if (LooksLikeRemotePackageSource(source.Trim()))
             return TryResolveRemotePackageSource(source, out packageSource, out error);
 
-        var candidateDirectory = string.IsNullOrWhiteSpace(source)
-            ? TryResolveWorkspacePluginDirectory(baseDirectory)
-            : GetCandidateDirectory(source, baseDirectory);
+        var candidateDirectory = GetCandidateDirectory(source, baseDirectory);
 
         if (candidateDirectory == null)
         {
-            error = string.IsNullOrWhiteSpace(source)
-                ? "Could not locate src/Unityctl.Plugin from the current unityctl workspace."
-                : $"Plugin source '{source}' could not be resolved.";
+            error = $"Plugin source '{source}' could not be resolved.";
             return false;
         }
 
@@ -36,46 +42,6 @@ public static class PluginSourceLocator
 
         packageSource = $"file:{resolvedDirectory!.Replace('\\', '/')}";
         return true;
-    }
-
-    public static string? TryResolveWorkspacePluginDirectory(string? baseDirectory = null)
-    {
-        foreach (var startDirectory in EnumerateSearchRoots(baseDirectory))
-        {
-            var current = new DirectoryInfo(startDirectory);
-            while (current != null)
-            {
-                var workspaceSolutionPath = Path.Combine(current.FullName, "unityctl.slnx");
-                if (!File.Exists(workspaceSolutionPath))
-                {
-                    current = current.Parent;
-                    continue;
-                }
-
-                var candidateDirectory = Path.Combine(current.FullName, "src", "Unityctl.Plugin");
-                if (TryValidatePluginDirectory(candidateDirectory, out var resolvedDirectory, out _))
-                    return resolvedDirectory;
-
-                current = current.Parent;
-            }
-        }
-
-        return null;
-    }
-
-    private static IEnumerable<string> EnumerateSearchRoots(string? baseDirectory)
-    {
-        var seen = new HashSet<string>(PathComparer);
-
-        foreach (var candidate in new[] { baseDirectory, AppContext.BaseDirectory, Environment.CurrentDirectory })
-        {
-            if (string.IsNullOrWhiteSpace(candidate))
-                continue;
-
-            var fullPath = Path.GetFullPath(candidate);
-            if (seen.Add(fullPath))
-                yield return fullPath;
-        }
     }
 
     private static string? GetCandidateDirectory(string source, string? baseDirectory)
@@ -112,6 +78,31 @@ public static class PluginSourceLocator
 
         packageSource = trimmed;
         return true;
+    }
+
+    public static string? ClassifyPackageSource(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+            return null;
+
+        var trimmed = source.Trim();
+        if (trimmed.StartsWith(PluginProjectPaths.EmbeddedSourcePrefix, StringComparison.OrdinalIgnoreCase))
+            return EmbeddedSourceKind;
+
+        if (trimmed.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            return LocalFileSourceKind;
+
+        if (trimmed.Contains(".git", StringComparison.OrdinalIgnoreCase)
+            || trimmed.StartsWith("git@", StringComparison.OrdinalIgnoreCase)
+            || trimmed.Contains("?path=", StringComparison.OrdinalIgnoreCase))
+        {
+            return GitSourceKind;
+        }
+
+        if (trimmed.Contains("://", StringComparison.Ordinal))
+            return RemoteUrlSourceKind;
+
+        return UnknownSourceKind;
     }
 
     private static bool LooksLikeRemotePackageSource(string source)

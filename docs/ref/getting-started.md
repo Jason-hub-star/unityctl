@@ -18,14 +18,15 @@ dotnet tool install -g unityctl-mcp   # MCP server (optional)
 Important today:
 
 - `dotnet tool install` gives you the CLI and MCP entrypoints.
-- `unityctl init` supports either a local `Unityctl.Plugin` source checkout or an explicit Git URL source. When `--source` is omitted, it still falls back to local workspace discovery.
+- `unityctl init` now installs an embedded `Packages/com.unityctl.bridge` copy by default.
+- Use `unityctl init --source <path-or-git-url>` only when you intentionally want a contributor-style local or Git-backed package reference.
 - GitHub Release CLI archives are framework-dependent publishes (`self-contained false`), not self-contained single-file binaries.
 - The validated Apple silicon macOS path is Homebrew `.NET 10` + `dotnet tool install -g unityctl` + Unity Hub.
 
 ### Option B: Build from source
 
 ```bash
-git clone https://github.com/kimjuyoung1127/unityctl.git
+git clone https://github.com/Jason-hub-star/unityctl.git
 cd unityctl
 dotnet build unityctl.slnx
 ```
@@ -69,10 +70,24 @@ Important caveat: one validation project depended on a third-party Unity package
 ### 1. Install the plugin into your Unity project
 
 ```bash
-unityctl init --project /path/to/unity/project --source "https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2"
+unityctl init --project /path/to/unity/project
 ```
 
-This adds the `com.unityctl.bridge` UPM package to your project's `Packages/manifest.json`. With a local path it writes a `file:` package reference; with a Git URL it writes the URL directly. If you run `unityctl` from a cloned `unityctl` workspace, `--source` can still be omitted because the CLI will try to find `src/Unityctl.Plugin` automatically. Open (or restart) the Unity Editor after running this command.
+By default this copies a bundled `com.unityctl.bridge` package into `Packages/com.unityctl.bridge` and writes `ProjectSettings/UnityctlSettings.asset` so the bridge only auto-starts for projects explicitly installed via `unityctl`.
+
+If you need a contributor-style source install instead, you can still do one of these explicitly:
+
+```bash
+unityctl init --project /path/to/unity/project --source /path/to/unityctl/src/Unityctl.Plugin
+unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.3"
+```
+
+When switching away from an older `file:` install, first run:
+
+```bash
+unityctl detach --project /path/to/unity/project --clean-cache
+unityctl init --project /path/to/unity/project
+```
 
 ### 2. Verify connectivity
 
@@ -148,7 +163,7 @@ unityctl doctor --project /path/to/project --json
 ```
 
 `doctor` checks IPC connectivity, plugin health, Editor log errors, build state, and recent project-specific failures — useful as a first step when something fails.
-It also reports the configured plugin source, active session hints, recommended next steps, and whether a Unity project lock is currently detected.
+It also reports the configured plugin source kind (`embedded`, `local-file`, `git`), bridge enabled state, embedded path when relevant, active session hints, recommended next steps, and whether a Unity project lock is currently detected.
 When IPC is already healthy, a detected Unity lockfile is treated as informational rather than an automatic failure signal.
 
 ### 7. Run a verification bundle

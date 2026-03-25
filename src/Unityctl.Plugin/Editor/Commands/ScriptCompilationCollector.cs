@@ -7,11 +7,9 @@ namespace Unityctl.Plugin.Editor.Commands
 {
 #if UNITY_EDITOR
     /// <summary>
-    /// Always-on collector that subscribes to assemblyCompilationFinished
-    /// and caches CompilerMessage[] with file/line/column/message detail.
+    /// Bridge-managed collector that caches CompilerMessage[] with file/line/column/message detail.
     /// Persists to Library/Unityctl/compile-errors/latest.json for reload safety.
     /// </summary>
-    [UnityEditor.InitializeOnLoad]
     internal static class ScriptCompilationCollector
     {
         private static readonly string PersistDir =
@@ -25,11 +23,26 @@ namespace Unityctl.Plugin.Editor.Commands
 
         private static JObject _latestResult;
         private static readonly object Lock = new object();
+        private static bool _subscribed;
 
-        static ScriptCompilationCollector()
+        public static void EnsureSubscribed()
         {
+            if (_subscribed)
+                return;
+
             UnityEditor.Compilation.CompilationPipeline.assemblyCompilationFinished += OnAssemblyCompilationFinished;
             UnityEditor.Compilation.CompilationPipeline.compilationFinished += OnCompilationFinished;
+            _subscribed = true;
+        }
+
+        public static void ResetSubscriptions()
+        {
+            if (!_subscribed)
+                return;
+
+            UnityEditor.Compilation.CompilationPipeline.assemblyCompilationFinished -= OnAssemblyCompilationFinished;
+            UnityEditor.Compilation.CompilationPipeline.compilationFinished -= OnCompilationFinished;
+            _subscribed = false;
         }
 
         public static JObject GetLatestResult()

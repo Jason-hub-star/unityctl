@@ -10,9 +10,9 @@
     <ToolCommandName>unityctl</ToolCommandName>
     <PackageId>unityctl</PackageId>
     <Description>A deterministic control plane for Unity — CLI, IPC, and MCP server</Description>
-    <Authors>kimjuyoung1127</Authors>
-    <PackageProjectUrl>https://github.com/kimjuyoung1127/unityctl</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/kimjuyoung1127/unityctl</RepositoryUrl>
+    <Authors>Jason-hub-star</Authors>
+    <PackageProjectUrl>https://github.com/Jason-hub-star/unityctl</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Jason-hub-star/unityctl</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>unity;cli;mcp;gamedev;editor</PackageTags>
   </PropertyGroup>
@@ -29,5 +29,23 @@
   <ItemGroup>
     <ProjectReference Include="..\Unityctl.Shared\Unityctl.Shared.csproj" />
     <ProjectReference Include="..\Unityctl.Core\Unityctl.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Unityctl.Plugin\package.json">
+      <Link>unityctl-plugin-template\package.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Pack>true</Pack>
+      <PackagePath>tools\net10.0\any\unityctl-plugin-template\package.json</PackagePath>
+    </Content>
+    <Content Include="..\Unityctl.Plugin\Editor\**\*"
+             Exclude="..\Unityctl.Plugin\Editor\bin\**\*;..\Unityctl.Plugin\Editor\obj\**\*">
+      <Link>unityctl-plugin-template\Editor\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Pack>true</Pack>
+      <PackagePath>tools\net10.0\any\unityctl-plugin-template\Editor\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
+    </Content>
   </ItemGroup>
 </Project>

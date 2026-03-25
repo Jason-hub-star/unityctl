@@ -11,15 +11,20 @@ dotnet tool install -g unityctl
 dotnet tool install -g unityctl-mcp   # MCP server
 ```
 
-Today the CLI packages do not bundle the Unity plugin directly. `unityctl init` supports either a local `Unityctl.Plugin` checkout or an explicit Git URL source.
+`unityctl init` installs an embedded project-local bridge copy by default. Use `--source` only when you intentionally want a local path or Git-backed source install.
 
 ### 2. Install plugin into Unity project
 
 ```bash
-unityctl init --project "/path/to/unity/project" --source "https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2"
+unityctl init --project "/path/to/unity/project"
 ```
 
-Open (or restart) the Unity Editor after running this command. When you run from a cloned `unityctl` workspace, the CLI can usually find `src/Unityctl.Plugin` without `--source`; you can also pass that local path explicitly instead of a Git URL.
+Open (or restart) the Unity Editor after running this command. For contributor workflows, explicit source installs are still supported:
+
+```bash
+unityctl init --project "/path/to/unity/project" --source /path/to/unityctl/src/Unityctl.Plugin
+unityctl init --project "/path/to/unity/project" --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.3"
+```
 
 ### 3. Verify
 
@@ -326,6 +331,6 @@ If a command fails:
 3. `unityctl init --project <path>` — reinstall plugin if missing
 4. Check the Unity Editor log path shown in error output
 
-`doctor` now includes the configured plugin source (`file:` vs Git URL), project lock detection, recent failure summaries, active session hints, and recommended next actions.
+`doctor` now includes the configured plugin source kind (`embedded`, `local-file`, `git`), bridge enabled state, embedded path when relevant, project lock detection, recent failure summaries, active session hints, and recommended next actions.
 When IPC is healthy, a detected lockfile is informational rather than an automatic error by itself.
 For recent script failures, `doctor` also distinguishes compile/reload waiting from script compile-cache issues and recommends either `status --wait` or `script validate --wait` accordingly.

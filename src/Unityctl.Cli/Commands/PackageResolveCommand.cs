@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using Unityctl.Cli.Execution;
 using Unityctl.Core.Discovery;
 using Unityctl.Core.Platform;
+using Unityctl.Core.Setup;
 using Unityctl.Core.Transport;
 using Unityctl.Shared.Protocol;
 
@@ -32,6 +33,10 @@ public static class PackageResolveCommand
         packageListAsync ??= DefaultPackageListAsync;
 
         var manifestDependencies = ReadManifestDependencies(project);
+        var installInfo = PluginInstallationInspector.Inspect(project);
+        if (installInfo.EmbeddedInstalled)
+            manifestDependencies[Unityctl.Shared.Constants.PluginPackageName] = PluginProjectPaths.GetEmbeddedSourceToken();
+
         var lockDependencies = ReadDependencyObject(Path.Combine(project, "Packages", "packages-lock.json"));
         var projectResolution = ReadJsonObject(Path.Combine(project, "Library", "PackageManager", "projectResolution.json"));
 
@@ -96,7 +101,10 @@ public static class PackageResolveCommand
                 {
                     ["target"] = manifestTarget,
                     ["sourceKind"] = manifestExpectation.SourceKind,
-                    ["expectedVersion"] = manifestExpectation.ExpectedVersion
+                    ["expectedVersion"] = manifestExpectation.ExpectedVersion,
+                    ["embeddedPath"] = string.Equals(manifestExpectation.SourceKind, PluginSourceLocator.EmbeddedSourceKind, StringComparison.OrdinalIgnoreCase)
+                        ? PluginProjectPaths.GetEmbeddedPackagePath(project)
+                        : null
                 },
                 ["resolved"] = resolvedEntry?.DeepClone(),
                 ["lock"] = lockEntry?.DeepClone(),
@@ -130,14 +138,17 @@ public static class PackageResolveCommand
             return new PackageManifestExpectation(null, null);
 
         var trimmed = target.Trim();
+        if (trimmed.StartsWith(PluginProjectPaths.EmbeddedSourcePrefix, StringComparison.OrdinalIgnoreCase))
+            return new PackageManifestExpectation(PluginSourceLocator.EmbeddedSourceKind, null);
+
         if (trimmed.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-            return new PackageManifestExpectation("local-file", null);
+            return new PackageManifestExpectation(PluginSourceLocator.LocalFileSourceKind, null);
 
         if (trimmed.StartsWith("git+", StringComparison.OrdinalIgnoreCase)
             || trimmed.Contains(".git", StringComparison.OrdinalIgnoreCase)
             || trimmed.Contains("?path=", StringComparison.OrdinalIgnoreCase))
         {
-            return new PackageManifestExpectation("git", ExtractFragmentVersion(trimmed));
+            return new PackageManifestExpectation(PluginSourceLocator.GitSourceKind, ExtractFragmentVersion(trimmed));
         }
 
         return new PackageManifestExpectation("registry", trimmed);
@@ -273,11 +284,11 @@ public static class PackageResolveCommand
     {
         return source?.Trim().ToLowerInvariant() switch
         {
-            "local" => "local-file",
-            "git" => "git",
+            "local" => PluginSourceLocator.LocalFileSourceKind,
+            "git" => PluginSourceLocator.GitSourceKind,
             "registry" => "registry",
             "builtin" => "builtin",
-            "embedded" => "embedded",
+            "embedded" => PluginSourceLocator.EmbeddedSourceKind,
             _ => source
         };
     }

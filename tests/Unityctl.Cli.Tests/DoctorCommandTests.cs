@@ -126,6 +126,39 @@ public class DoctorCommandTests
     }
 
     [CliTestFact]
+    public void Diagnose_ReportsEmbeddedPluginSourceAndBridgeSetting()
+    {
+        using var tempProject = new TemporaryProject("{ }");
+        Directory.CreateDirectory(Path.Combine(tempProject.Path, "Packages", "com.unityctl.bridge"));
+        File.WriteAllText(Path.Combine(tempProject.Path, "Packages", "com.unityctl.bridge", "package.json"), """
+{
+  "name": "com.unityctl.bridge",
+  "version": "1.2.3"
+}
+""");
+        File.WriteAllText(Path.Combine(tempProject.Path, "ProjectSettings", "UnityctlSettings.asset"), """
+{
+  "enabled": true,
+  "installSourceKind": "embedded",
+  "installedVersion": "1.2.3"
+}
+""");
+        File.WriteAllText(Path.Combine(tempProject.Path, "Packages", "com.unityctl.bridge", "unityctl-install.json"), """
+{
+  "installSourceKind": "embedded",
+  "installedVersion": "1.2.3"
+}
+""");
+
+        var result = DoctorCommand.Diagnose(tempProject.Path);
+
+        Assert.True(result.PluginInstalled);
+        Assert.Equal("embedded", result.PluginSourceKind);
+        Assert.True(result.BridgeEnabled);
+        Assert.Equal(Path.Combine(tempProject.Path, "Packages", "com.unityctl.bridge"), result.EmbeddedPath);
+    }
+
+    [CliTestFact]
     public void RenderText_HealthyLock_RendersInformationalLockAndRecommendations()
     {
         var snapshot = CreateSnapshot();
@@ -230,6 +263,8 @@ public class DoctorCommandTests
         Assert.True(json["recentActivity"]?["pipeErrorsDetected"]?.GetValue<bool>());
         Assert.True(json["readiness"]?["bridgeLoaded"]?.GetValue<bool>());
         Assert.True(json["readiness"]?["ipcPipePresent"]?.GetValue<bool>());
+        Assert.True(json["plugin"]?["bridgeEnabled"]?.GetValue<bool>());
+        Assert.Equal(@"C:\Users\gmdqn\robotapp\Packages\com.unityctl.bridge", json["plugin"]?["embeddedPath"]?.GetValue<string>());
         Assert.NotNull(json["readiness"]?["recommendedNextCommand"]);
         Assert.Single(json["activeSessions"]!.AsArray());
         Assert.Single(json["recommendations"]!.AsArray());
@@ -266,6 +301,8 @@ public class DoctorCommandTests
             PluginInstalled = true,
             PluginSource = "file:C:/Users/gmdqn/unityagent/src/Unityctl.Plugin",
             PluginSourceKind = "local-file",
+            BridgeEnabled = true,
+            EmbeddedPath = @"C:\Users\gmdqn\robotapp\Packages\com.unityctl.bridge",
             IpcConnected = true,
             IpcPipePresent = true,
             BridgeLoaded = true,
@@ -286,6 +323,7 @@ public class DoctorCommandTests
         {
             Path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "unityctl-doctor-test-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(System.IO.Path.Combine(Path, "Packages"));
+            Directory.CreateDirectory(System.IO.Path.Combine(Path, "ProjectSettings"));
             File.WriteAllText(System.IO.Path.Combine(Path, "Packages", "manifest.json"), manifestJson);
         }
 

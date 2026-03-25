@@ -11,7 +11,7 @@ public class CommandCatalogTests
         var names = CommandCatalog.All.Select(command => command.Name).ToArray();
 
         Assert.Equal(
-            ["init", "editor list", "editor instances", "editor current", "editor select", "ping", "status", "await-ready", "build",
+            ["init", "detach", "editor list", "editor instances", "editor current", "editor select", "ping", "status", "await-ready", "build",
              "build-profile-list", "build-profile-get-active", "build-profile-set-active", "build-target-switch",
              "test", "test-result", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",
@@ -102,10 +102,12 @@ public class CommandCatalogTests
     public void RequiredParameters_AreMarkedCorrectly()
     {
         var init = CommandCatalog.All.Single(command => command.Name == "init");
+        var detach = CommandCatalog.All.Single(command => command.Name == "detach");
         var status = CommandCatalog.All.Single(command => command.Name == "status");
         var testResult = CommandCatalog.All.Single(command => command.Name == "test-result");
 
         Assert.Contains(init.Parameters, parameter => parameter.Name == "project" && parameter.Required);
+        Assert.Contains(detach.Parameters, parameter => parameter.Name == "project" && parameter.Required);
         Assert.Contains(status.Parameters, parameter => parameter.Name == "project" && parameter.Required);
         Assert.Contains(testResult.Parameters, parameter => parameter.Name == "project" && parameter.Required);
         Assert.Contains(testResult.Parameters, parameter => parameter.Name == "requestId" && parameter.Required);

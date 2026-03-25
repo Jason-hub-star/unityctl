@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Unityctl.Cli.Commands;
+using Unityctl.Core.Setup;
 using Unityctl.Shared.Protocol;
 using Xunit;
 
@@ -24,6 +25,16 @@ public sealed class PackageResolveCommandTests
             "file:C:/repo/src/Unityctl.Plugin");
 
         Assert.Equal("local-file", expectation.SourceKind);
+        Assert.Null(expectation.ExpectedVersion);
+    }
+
+    [CliTestFact]
+    public void InterpretManifestTarget_ParsesEmbeddedSource()
+    {
+        var expectation = PackageResolveCommand.InterpretManifestTarget(
+            "embedded:Packages/com.unityctl.bridge");
+
+        Assert.Equal("embedded", expectation.SourceKind);
         Assert.Null(expectation.ExpectedVersion);
     }
 
@@ -122,6 +133,54 @@ public sealed class PackageResolveCommandTests
 
         var package = response.Data!["packages"]!.AsArray()[0]!.AsObject();
         Assert.False(package["mismatch"]!["resolvedVsLockVersion"]!.GetValue<bool>());
+    }
+
+    [CliTestFact]
+    public async Task ResolveAsync_ReportsEmbeddedSourceKind()
+    {
+        using var tempProject = new TemporaryPackageProject(
+            """
+            {
+              "dependencies": {
+                "com.unity.ugui": "2.0.0"
+              }
+            }
+            """,
+            "{}",
+            "{}");
+        Directory.CreateDirectory(Path.Combine(tempProject.Path, "Packages", "com.unityctl.bridge"));
+        File.WriteAllText(Path.Combine(tempProject.Path, "Packages", "com.unityctl.bridge", "package.json"), """
+{
+  "name": "com.unityctl.bridge",
+  "version": "0.3.2"
+}
+""");
+        File.WriteAllText(PluginProjectPaths.GetEmbeddedInstallMetadataPath(tempProject.Path), """
+{
+  "installSourceKind": "embedded",
+  "installedVersion": "0.3.2"
+}
+""");
+
+        var response = await PackageResolveCommand.ResolveAsync(
+            tempProject.Path,
+            "com.unityctl.bridge",
+            _ => Task.FromResult(CommandResponse.Ok("packages", new JsonObject
+            {
+                ["packages"] = new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["name"] = "com.unityctl.bridge",
+                        ["version"] = "0.3.2",
+                        ["source"] = "Embedded"
+                    }
+                }
+            })));
+
+        var package = response.Data!["packages"]!.AsArray()[0]!.AsObject();
+        Assert.Equal("embedded", package["manifest"]!["sourceKind"]!.GetValue<string>());
+        Assert.NotNull(package["manifest"]!["embeddedPath"]);
     }
 
     private sealed class TemporaryPackageProject : IDisposable

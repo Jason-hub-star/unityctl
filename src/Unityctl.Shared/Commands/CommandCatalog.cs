@@ -10,7 +10,15 @@ public static class CommandCatalog
         "Install the unityctl plugin into a Unity project",
         "setup",
         Parameter("project", "string", "Path to Unity project", required: true),
-        Parameter("source", "string", "Custom local plugin source path", required: false));
+        Parameter("source", "string", "Explicit local plugin source path or Unity UPM Git URL", required: false));
+
+    public static readonly CommandDefinition Detach = Define(
+        "detach",
+        "Remove the unityctl plugin and cleanup stale bridge cache files",
+        "setup",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("cleanCache", "bool", "Also remove Bee and PackageManager cache files", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false));
 
     public static readonly CommandDefinition EditorList = Define(
         "editor list",
@@ -1474,6 +1482,7 @@ public static class CommandCatalog
     public static CommandDefinition[] All { get; } =
     [
         Init,
+        Detach,
         EditorList,
         EditorInstances,
         EditorCurrent,

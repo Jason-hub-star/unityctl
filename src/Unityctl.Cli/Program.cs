@@ -9,6 +9,9 @@ app.Add("", () => Console.WriteLine($"unityctl v{Unityctl.Shared.Constants.Versi
 app.Add("init", (string project, string? source = null) =>
     InitCommand.Execute(project, source));
 
+app.Add("detach", (string project, bool cleanCache = false, bool json = false) =>
+    DetachCommand.Execute(project, cleanCache, json));
+
 app.Add("editor list", (bool json = false) =>
     EditorCommands.List(json));
 
