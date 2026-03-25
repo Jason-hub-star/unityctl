@@ -63,6 +63,25 @@ Add to your MCP settings:
 
 The MCP server currently exposes 12 top-level tools, including `unityctl_query`, `unityctl_run`, `unityctl_schema`, `unityctl_status`, and `unityctl_watch`.
 
+## Graph-Guided Review
+
+For medium or cross-module work inside the `unityctl` repository, prefer a graph-first review pass before broad file reads.
+
+Windows-first workflow:
+
+```powershell
+.\scripts\code_review_graph_report.ps1
+.\scripts\code_review_graph_report.ps1 -Update
+.\scripts\code_review_graph_report.ps1 -RebuildIfMissing
+```
+
+Notes:
+
+- if `code-review-graph` is not installed directly, the script falls back to `uvx --from code-review-graph`
+- the current graph surface for `unityctl` is effectively authored C# plus tests
+- canonical docs remain source-of-truth reading material, but they are not expected to appear in the graph DB on this setup
+- tuning and interpretation guidance lives in `docs/ref/CODE-REVIEW-GRAPH-TUNING.md`
+
 ## Tool Discovery
 
 ```bash
@@ -242,7 +261,16 @@ unityctl build --project "/path/to/project" --target StandaloneWindows64 --json
 
 # Run tests
 unityctl test --project "/path/to/project" --mode edit --json
+
+# Start PlayMode tests asynchronously
+unityctl test --project "/path/to/project" --mode play --no-wait --json
+
+# Poll an async test run
+unityctl test-result --project "/path/to/project" --request-id "<requestId>" --json
 ```
+
+`test --filter` currently maps directly to Unity Test Runner `Filter.testNames` and should be treated as an exact-match value, not a fuzzy substring search.
+For PlayMode, `test --wait` is not a true synchronous path yet; use the returned `requestId` with `test-result`.
 
 ### Batch edit with rollback
 

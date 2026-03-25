@@ -83,6 +83,7 @@ internal static class DoctorAnalyzer
         analysis.LockSeverity = snapshot.ProjectLocked && snapshot.IpcConnected ? "informational" : snapshot.ProjectLocked ? "warning" : "none";
         analysis.Summary = BuildSummary(analysis.Classification, snapshot);
         analysis.Recommendations = BuildRecommendations(analysis.Classification, projectPath, analysis, snapshot);
+        analysis.RecommendedNextCommand = ExtractCommandSuggestion(analysis.Recommendations.FirstOrDefault());
         return analysis;
     }
 
@@ -244,6 +245,23 @@ internal static class DoctorAnalyzer
             .ToList();
     }
 
+    private static string? ExtractCommandSuggestion(string? recommendation)
+    {
+        if (string.IsNullOrWhiteSpace(recommendation))
+            return null;
+
+        var start = recommendation.IndexOf('`');
+        if (start < 0)
+            return null;
+
+        var end = recommendation.IndexOf('`', start + 1);
+        if (end <= start)
+            return null;
+
+        var candidate = recommendation.Substring(start + 1, end - start - 1).Trim();
+        return candidate.StartsWith("unityctl ", StringComparison.OrdinalIgnoreCase) ? candidate : null;
+    }
+
     private static void AddScriptSpecificRecommendations(List<string> recommendations, string projectPath, DoctorAnalysis analysis)
     {
         var lastScriptFailure = analysis.RecentFailures
@@ -331,7 +349,11 @@ internal sealed class DoctorSnapshot
     public string? PluginSource { get; set; }
     public string? PluginSourceKind { get; set; }
     public bool IpcConnected { get; set; }
+    public bool IpcPipePresent { get; set; }
+    public bool BridgeLoaded { get; set; }
     public bool ProjectLocked { get; set; }
+    public bool? IsCompiling { get; set; }
+    public bool? IsDomainReloading { get; set; }
     public string LockFilePath { get; set; } = string.Empty;
     public bool LockFileExists { get; set; }
     public string? LogPath { get; set; }
@@ -356,6 +378,7 @@ internal sealed class DoctorAnalysis
     public bool HasRecentPipeErrors { get; set; }
     public List<DoctorSessionSummary> ActiveSessions { get; set; } = [];
     public List<string> Recommendations { get; set; } = [];
+    public string? RecommendedNextCommand { get; set; }
 }
 
 internal sealed class DoctorActivity

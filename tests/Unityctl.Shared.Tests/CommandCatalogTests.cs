@@ -13,7 +13,7 @@ public class CommandCatalogTests
         Assert.Equal(
             ["init", "editor list", "editor instances", "editor current", "editor select", "ping", "status", "build",
              "build-profile-list", "build-profile-get-active", "build-profile-set-active", "build-target-switch",
-             "test", "check", "tools", "doctor", "log",
+             "test", "test-result", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",
              "scene snapshot", "scene-hierarchy", "scene diff",
              "schema", "exec", "workflow", "workflow-verify", "batch-execute",
@@ -103,9 +103,12 @@ public class CommandCatalogTests
     {
         var init = CommandCatalog.All.Single(command => command.Name == "init");
         var status = CommandCatalog.All.Single(command => command.Name == "status");
+        var testResult = CommandCatalog.All.Single(command => command.Name == "test-result");
 
         Assert.Contains(init.Parameters, parameter => parameter.Name == "project" && parameter.Required);
         Assert.Contains(status.Parameters, parameter => parameter.Name == "project" && parameter.Required);
+        Assert.Contains(testResult.Parameters, parameter => parameter.Name == "project" && parameter.Required);
+        Assert.Contains(testResult.Parameters, parameter => parameter.Name == "requestId" && parameter.Required);
         Assert.DoesNotContain(status.Parameters, parameter => parameter.Name == "json" && parameter.Required);
     }
 

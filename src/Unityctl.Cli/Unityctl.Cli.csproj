@@ -9,7 +9,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>unityctl</ToolCommandName>
     <PackageId>unityctl</PackageId>
-    <Version>0.3.0</Version>
     <Description>A deterministic control plane for Unity — CLI, IPC, and MCP server</Description>
     <Authors>kimjuyoung1127</Authors>
     <PackageProjectUrl>https://github.com/kimjuyoung1127/unityctl</PackageProjectUrl>

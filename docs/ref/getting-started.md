@@ -118,9 +118,18 @@ unityctl test --project /path/to/project --mode edit --json
 # Fire-and-forget (returns immediately)
 unityctl test --project /path/to/project --no-wait
 
+# Start PlayMode tests asynchronously
+unityctl test --project /path/to/project --mode play --no-wait --json
+
+# Poll an async test run
+unityctl test-result --project /path/to/project --request-id "<requestId>" --json
+
 # Custom timeout
 unityctl test --project /path/to/project --timeout 60 --json
 ```
+
+`test --filter` currently maps to Unity Test Runner `Filter.testNames` and should be treated as an exact-match filter value.
+For PlayMode, prefer `--no-wait` plus `test-result` polling rather than assuming a blocking `--wait` flow.
 
 ### 5. Build
 

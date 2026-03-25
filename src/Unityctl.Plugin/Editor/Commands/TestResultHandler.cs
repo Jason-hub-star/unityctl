@@ -2,6 +2,7 @@
 using System;
 using Newtonsoft.Json.Linq;
 using Unityctl.Plugin.Editor.Shared;
+using Unityctl.Plugin.Editor.Utilities;
 
 namespace Unityctl.Plugin.Editor.Commands
 {
@@ -17,7 +18,28 @@ namespace Unityctl.Plugin.Editor.Commands
 
             var state = AsyncOperationRegistry.TryGet(requestId);
             if (state == null)
-                return InvalidParameters($"No async operation found for requestId: {requestId}");
+            {
+                var persistedState = TestRunStateStore.Load(requestId);
+                if (persistedState == null)
+                    return InvalidParameters($"No async operation found for requestId: {requestId}");
+
+                if (string.Equals(persistedState.Status, "running", StringComparison.OrdinalIgnoreCase))
+                {
+                    PlayModeTestResultRecovery.RestorePendingPlayModeRuns();
+
+                    var elapsed = (DateTime.UtcNow - persistedState.StartedAtUtc).TotalSeconds;
+                    var data = new JObject
+                    {
+                        ["requestId"] = requestId,
+                        ["elapsed"] = Math.Round(elapsed, 1),
+                        ["mode"] = persistedState.Mode,
+                        ["filter"] = string.IsNullOrWhiteSpace(persistedState.Filter) ? "(all)" : persistedState.Filter
+                    };
+                    return Ok(StatusCode.Accepted, $"Tests still running... ({elapsed:F1}s elapsed)", data);
+                }
+
+                return TestRunStateStore.ToCommandResponse(persistedState);
+            }
 
             if (state.Status == AsyncStatus.Running)
             {

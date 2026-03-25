@@ -44,6 +44,9 @@ app.Add("build-target switch", (string project, string target, int timeout = 900
 app.Add("test", (string project, string mode = "edit", string? filter = null, bool noWait = false, int timeout = 300, bool json = false) =>
     TestCommand.Execute(project, mode, filter, !noWait, timeout, json));
 
+app.Add("test-result", (string project, string requestId, bool json = false) =>
+    TestCommand.Result(project, requestId, json));
+
 app.Add("check", (string? project = null, string type = "compile", bool json = false) =>
     CheckCommand.Execute(project, type, json));
 

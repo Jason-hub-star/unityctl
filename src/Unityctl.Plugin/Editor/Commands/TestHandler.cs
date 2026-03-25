@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using Unityctl.Plugin.Editor.Shared;
+using Unityctl.Plugin.Editor.Utilities;
 
 namespace Unityctl.Plugin.Editor.Commands
 {
@@ -36,6 +37,8 @@ namespace Unityctl.Plugin.Editor.Commands
             var api = UnityEngine.ScriptableObject
                 .CreateInstance<UnityEditor.TestTools.TestRunner.Api.TestRunnerApi>();
 
+            TestRunStateStore.CreateRunning(requestId, mode, filter);
+
             var executionSettings = new UnityEditor.TestTools.TestRunner.Api.ExecutionSettings
             {
                 filters = new[]
@@ -50,6 +53,7 @@ namespace Unityctl.Plugin.Editor.Commands
 
             var resultCollector = new TestResultCollector(requestId);
             api.RegisterCallbacks(resultCollector);
+            PlayModeTestResultRecovery.MarkRegistered(requestId);
             api.Execute(executionSettings);
 
             // Store Execute() GUID for diagnostics
@@ -61,7 +65,10 @@ namespace Unityctl.Plugin.Editor.Commands
                 ["mode"] = mode,
                 ["filter"] = filter ?? "(all)",
                 ["requestId"] = requestId,
-                ["started"] = true
+                ["started"] = true,
+                ["pollCommand"] = WellKnownCommands.TestResult,
+                ["recommendedNextCommand"] = $"unityctl test-result --project \"<project>\" --request-id \"{requestId}\" --json",
+                ["filterSemantics"] = "Unity Test Runner Filter.testNames exact match"
             };
             return Ok(StatusCode.Accepted, $"Tests started (mode={mode}). Poll 'test-result' with requestId to get results.", data);
 #else
@@ -132,7 +139,9 @@ namespace Unityctl.Plugin.Editor.Commands
                     data);
             }
 
+            PersistResult(response);
             AsyncOperationRegistry.Complete(_requestId, response);
+            PlayModeTestResultRecovery.MarkCompleted(_requestId);
         }
 
         public void TestStarted(UnityEditor.TestTools.TestRunner.Api.ITestAdaptor test) { }
@@ -168,7 +177,62 @@ namespace Unityctl.Plugin.Editor.Commands
                 StatusCode.TestFailed,
                 $"Test run failed before execution: {message}");
 
+            PersistResult(response);
             AsyncOperationRegistry.Complete(_requestId, response);
+            PlayModeTestResultRecovery.MarkCompleted(_requestId);
+        }
+
+        private void PersistResult(CommandResponse response)
+        {
+            try
+            {
+                var state = TestRunStateStore.Load(_requestId);
+                if (state != null)
+                    TestRunStateStore.Complete(state, response);
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogWarning($"[unityctl] Failed to persist test result: {ex.Message}");
+            }
+        }
+    }
+
+    internal static class PlayModeTestResultRecovery
+    {
+        private static readonly HashSet<string> RegisteredRequestIds = new HashSet<string>(StringComparer.Ordinal);
+
+        public static void RestorePendingPlayModeRuns()
+        {
+            foreach (var state in TestRunStateStore.LoadRunningPlayModeStates())
+                EnsureRegistered(state);
+        }
+
+        public static void MarkRegistered(string requestId)
+        {
+            if (!string.IsNullOrWhiteSpace(requestId))
+                RegisteredRequestIds.Add(requestId);
+        }
+
+        public static void MarkCompleted(string requestId)
+        {
+            if (!string.IsNullOrWhiteSpace(requestId))
+                RegisteredRequestIds.Remove(requestId);
+        }
+
+        private static void EnsureRegistered(TestRunState state)
+        {
+            if (state == null || string.IsNullOrWhiteSpace(state.RequestId))
+                return;
+
+            if (RegisteredRequestIds.Contains(state.RequestId))
+                return;
+
+            var api = UnityEngine.ScriptableObject
+                .CreateInstance<UnityEditor.TestTools.TestRunner.Api.TestRunnerApi>();
+
+            api.RegisterCallbacks(new TestResultCollector(state.RequestId));
+            RegisteredRequestIds.Add(state.RequestId);
+            UnityEngine.Debug.Log($"[unityctl] Reattached play mode test callbacks for requestId={state.RequestId}");
         }
     }
 #endif

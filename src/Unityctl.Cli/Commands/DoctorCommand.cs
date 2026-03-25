@@ -8,6 +8,7 @@ using Unityctl.Core.Discovery;
 using Unityctl.Core.EditorRouting;
 using Unityctl.Core.Platform;
 using Unityctl.Core.Sessions;
+using Unityctl.Core.Transport;
 using Unityctl.Shared;
 using Unityctl.Shared.Protocol;
 
@@ -78,6 +79,8 @@ public static class DoctorCommand
         }
 
         var ipcConnected = false;
+        bool? isCompiling = null;
+        bool? isDomainReloading = null;
         try
         {
             using var pipe = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
@@ -95,6 +98,43 @@ public static class DoctorCommand
         var buildState = GetBuildStateInfo(project);
 
         var structuredDiagnostics = EditorLogDiagnostics.GetStructuredDiagnostics();
+        var unityctlSignals = EditorLogDiagnostics.GetUnityctlSignals();
+        var bridgeLoaded = ipcConnected
+                           || unityctlSignals.BridgeInitialized
+                           || unityctlSignals.CommandRegistryInitialized;
+        var ipcPipePresent = ipcConnected
+                             || string.Equals(unityctlSignals.LastIpcServerState, "started", StringComparison.OrdinalIgnoreCase);
+
+        if (ipcConnected)
+        {
+            IpcTransport? ipc = null;
+            try
+            {
+                ipc = new IpcTransport(project);
+                var statusResponse = ipc.SendAsync(new CommandRequest { Command = WellKnownCommands.Status }).GetAwaiter().GetResult();
+                if (statusResponse.Success)
+                {
+                    isCompiling = statusResponse.Data?["isCompiling"]?.GetValue<bool>();
+                    var isUpdating = statusResponse.Data?["isUpdating"]?.GetValue<bool>();
+                    var isEnteringPlayMode = statusResponse.Data?["isEnteringPlayMode"]?.GetValue<bool>();
+                    isDomainReloading = (isUpdating ?? false) || (isEnteringPlayMode ?? false);
+                }
+            }
+            catch
+            {
+                // Keep doctor resilient.
+            }
+            finally
+            {
+                if (ipc != null)
+                    ipc.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+        }
+        else if (projectLocked && bridgeLoaded)
+        {
+            isCompiling = false;
+            isDomainReloading = true;
+        }
 
         return new DoctorSnapshot
         {
@@ -105,7 +145,11 @@ public static class DoctorCommand
             PluginSource = pluginSource,
             PluginSourceKind = pluginSourceKind,
             IpcConnected = ipcConnected,
+            IpcPipePresent = ipcPipePresent,
+            BridgeLoaded = bridgeLoaded,
             ProjectLocked = projectLocked,
+            IsCompiling = isCompiling,
+            IsDomainReloading = isDomainReloading,
             LockFilePath = lockFilePath,
             LockFileExists = lockFileExists,
             BuildStateDirectory = GetBuildStateDirectory(project),
@@ -233,9 +277,15 @@ public static class DoctorCommand
             {
                 ["installed"] = result.PluginInstalled,
                 ["source"] = result.PluginSource,
-                ["sourceKind"] = result.PluginSourceKind
+                ["sourceKind"] = result.PluginSourceKind,
+                ["bridgeLoaded"] = result.BridgeLoaded
             },
-            ["ipc"] = new JsonObject { ["connected"] = result.IpcConnected, ["pipeName"] = result.PipeName },
+            ["ipc"] = new JsonObject
+            {
+                ["connected"] = result.IpcConnected,
+                ["pipeName"] = result.PipeName,
+                ["ipcPipePresent"] = result.IpcPipePresent
+            },
             ["projectLock"] = new JsonObject
             {
                 ["locked"] = result.ProjectLocked,
@@ -260,6 +310,15 @@ public static class DoctorCommand
                 ["classification"] = analysis.Classification,
                 ["message"] = analysis.Summary,
                 ["lockSeverity"] = analysis.LockSeverity
+            },
+            ["readiness"] = new JsonObject
+            {
+                ["projectLocked"] = result.ProjectLocked,
+                ["ipcPipePresent"] = result.IpcPipePresent,
+                ["bridgeLoaded"] = result.BridgeLoaded,
+                ["isDomainReloading"] = result.IsDomainReloading == null ? null : JsonValue.Create(result.IsDomainReloading.Value),
+                ["isCompiling"] = result.IsCompiling == null ? null : JsonValue.Create(result.IsCompiling.Value),
+                ["recommendedNextCommand"] = analysis.RecommendedNextCommand
             },
             ["recentActivity"] = new JsonObject
             {
@@ -313,12 +372,22 @@ public static class DoctorCommand
         lines.Add(result.IpcConnected
             ? $"  \u2713 IPC connected (pipe: {result.PipeName})"
             : $"  \u2717 IPC probe failed (pipe: {result.PipeName})");
+        lines.Add(result.BridgeLoaded
+            ? "  \u2713 Bridge loaded"
+            : "  \u2717 Bridge not confirmed as loaded");
+        lines.Add($"  \u2713 IPC pipe present: {(result.IpcPipePresent ? "yes" : "no")}");
 
         lines.Add(result.ProjectLocked && analysis.LockSeverity == "informational"
             ? $"  \u2713 Project lock detected but informational: {result.LockFilePath}"
             : result.ProjectLocked
             ? $"  \u26a0 Project lock detected: {result.LockFilePath}"
             : $"  \u2713 Project lock: not detected ({result.LockFilePath})");
+
+        if (result.IsCompiling.HasValue || result.IsDomainReloading.HasValue)
+        {
+            lines.Add($"  \u2713 isCompiling: {result.IsCompiling?.ToString() ?? "unknown"}");
+            lines.Add($"  \u2713 isDomainReloading: {result.IsDomainReloading?.ToString() ?? "unknown"}");
+        }
 
         lines.Add(result.BuildStateExists
             ? $"  \u2713 Build transition state: {result.BuildStateCount} file(s), oldest {result.BuildStateOldestAgeMinutes:n1} min"
@@ -369,6 +438,8 @@ public static class DoctorCommand
             lines.Add("  Recommended next steps:");
             for (var i = 0; i < analysis.Recommendations.Count; i++)
                 lines.Add($"    {i + 1}. {analysis.Recommendations[i]}");
+            if (!string.IsNullOrWhiteSpace(analysis.RecommendedNextCommand))
+                lines.Add($"    Next command: {analysis.RecommendedNextCommand}");
         }
 
         if (result.HumanDiagnostics != null)

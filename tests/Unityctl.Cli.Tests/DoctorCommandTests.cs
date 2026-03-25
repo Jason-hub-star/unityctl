@@ -164,6 +164,7 @@ public class DoctorCommandTests
 
         Assert.Contains("Classification: healthy", text);
         Assert.Contains("Project lock detected but informational", text);
+        Assert.Contains("Bridge loaded", text);
         Assert.Contains("Recent activity:", text);
         Assert.Contains("Recommended next steps:", text);
     }
@@ -218,7 +219,8 @@ public class DoctorCommandTests
             Recommendations =
             [
                 "Prefer a running Unity Editor with IPC ready before retrying commands on this project."
-            ]
+            ],
+            RecommendedNextCommand = "unityctl status --project \"C:/Users/gmdqn/robotapp\" --wait"
         };
 
         var json = DoctorCommand.BuildJson(@"C:\Users\gmdqn\robotapp", snapshot, analysis, selection);
@@ -226,6 +228,9 @@ public class DoctorCommandTests
         Assert.Equal("transport-degraded", json["summary"]?["classification"]?.GetValue<string>());
         Assert.True(json["recentActivity"]?["batchFallbackSignature"]?.GetValue<bool>());
         Assert.True(json["recentActivity"]?["pipeErrorsDetected"]?.GetValue<bool>());
+        Assert.True(json["readiness"]?["bridgeLoaded"]?.GetValue<bool>());
+        Assert.True(json["readiness"]?["ipcPipePresent"]?.GetValue<bool>());
+        Assert.NotNull(json["readiness"]?["recommendedNextCommand"]);
         Assert.Single(json["activeSessions"]!.AsArray());
         Assert.Single(json["recommendations"]!.AsArray());
         Assert.True(json["selection"]?["matchesRequestedProject"]?.GetValue<bool>());
@@ -262,8 +267,12 @@ public class DoctorCommandTests
             PluginSource = "file:C:/Users/gmdqn/unityagent/src/Unityctl.Plugin",
             PluginSourceKind = "local-file",
             IpcConnected = true,
+            IpcPipePresent = true,
+            BridgeLoaded = true,
             PipeName = "unityctl_deadbeefdeadbeef",
             ProjectLocked = true,
+            IsCompiling = false,
+            IsDomainReloading = false,
             LockFilePath = @"C:\Users\gmdqn\robotapp\Temp\UnityLockfile",
             BuildStateDirectory = @"C:\Users\gmdqn\robotapp\Library\Unityctl\build-state",
             EditorLogErrors = [],

@@ -1,12 +1,16 @@
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Reflection;
 
 namespace Unityctl.Shared;
 
 public static class Constants
 {
-    public const string Version = "0.3.0";
+    private static readonly string? InformationalVersion =
+        typeof(Constants).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+    public static string Version => NormalizeVersion(InformationalVersion) ?? "0.3.0";
     public const string PipePrefix = "unityctl_";
     public const int DefaultTimeoutMs = 120_000;
     public const int PingTimeoutMs = 10_000;
@@ -56,5 +60,14 @@ public static class Constants
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return Path.Combine(home, ".unityctl");
+    }
+
+    private static string? NormalizeVersion(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version))
+            return null;
+
+        var plusIndex = version.IndexOf('+');
+        return plusIndex >= 0 ? version[..plusIndex] : version;
     }
 }

@@ -34,7 +34,7 @@ public sealed class BatchTransport : ITransport
         if (_platform.IsProjectLocked(_projectPath))
         {
             return CommandResponse.Fail(StatusCode.ProjectLocked,
-                "Unity project is locked by another process. Close the running Editor first.");
+                "Editor is running; IPC is not ready yet. Try `unityctl status --wait` before falling back to batch.");
         }
 
         var editor = _discovery.FindEditorForProject(_projectPath);

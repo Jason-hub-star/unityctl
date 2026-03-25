@@ -31,6 +31,7 @@ namespace Unityctl.Plugin.Editor.Bootstrap
             {
                 var projectPath = Path.GetDirectoryName(Application.dataPath);
                 IpcServer.Instance.Start(projectPath);
+                PlayModeTestResultRecovery.RestorePendingPlayModeRuns();
 
                 EditorApplication.update += PruneUpdate;
                 _lastPruneTime = EditorApplication.timeSinceStartup;
@@ -47,6 +48,7 @@ namespace Unityctl.Plugin.Editor.Bootstrap
             _lastPruneTime = EditorApplication.timeSinceStartup;
             AsyncOperationRegistry.Prune(PruneRunningTtl, PruneCompletedTtl);
             BuildTransitionStateStore.Prune(BuildTransitionRunningTtl, BuildTransitionCompletedTtl);
+            TestRunStateStore.PruneDefault();
         }
     }
 }

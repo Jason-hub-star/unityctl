@@ -158,7 +158,11 @@ public sealed class DoctorAnalyzerTests
             PluginSource = "file:C:/repo/src/Unityctl.Plugin",
             PluginSourceKind = "local-file",
             IpcConnected = ipcConnected,
+            IpcPipePresent = ipcConnected,
+            BridgeLoaded = true,
             ProjectLocked = projectLocked,
+            IsCompiling = false,
+            IsDomainReloading = projectLocked && !ipcConnected,
             LockFilePath = @"C:\project\Temp\UnityLockfile",
             BuildStateDirectory = @"C:\project\Library\Unityctl\build-state",
             UnityctlLogLines = ["[unityctl] IPC connection error: Pipe closed before full message was read."]

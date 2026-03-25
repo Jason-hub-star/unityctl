@@ -51,6 +51,9 @@ namespace Unityctl.Plugin.Editor.Commands
                 ["isPaused"] = isPaused,
                 ["isUpdating"] = isUpdating,
                 ["isEnteringPlayMode"] = willChangePlaymode && !isPlaying,
+                ["isDomainReloading"] = isUpdating || (willChangePlaymode && !isPlaying),
+                ["bridgeLoaded"] = true,
+                ["ipcPipePresent"] = true,
                 ["projectPath"] = UnityEngine.Application.dataPath,
                 ["unityVersion"] = UnityEngine.Application.unityVersion,
                 ["platform"] = UnityEditor.EditorUserBuildSettings.activeBuildTarget.ToString()

@@ -101,9 +101,17 @@ public static class CommandCatalog
         "action",
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("mode", "string", "Test mode: edit or play", required: false),
-        Parameter("filter", "string", "Test name filter", required: false),
-        Parameter("wait", "bool", "Wait for test completion (default: true, disabled for PlayMode)", required: false),
+        Parameter("filter", "string", "Unity Test Runner Filter.testNames exact match value", required: false),
+        Parameter("wait", "bool", "Wait for completion (default: true, PlayMode returns requestId and requires test-result polling)", required: false),
         Parameter("timeout", "int", "Timeout in seconds when waiting (default: 300)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false));
+
+    public static readonly CommandDefinition TestResult = Define(
+        WellKnownCommands.TestResult,
+        "Poll an async Unity test run by requestId",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("requestId", "string", "Async test request id returned by `test`", required: true),
         Parameter("json", "bool", "Output as JSON", required: false));
 
     public static readonly CommandDefinition Check = Define(
@@ -1431,6 +1439,7 @@ public static class CommandCatalog
         BuildProfileSetActive,
         BuildTargetSwitch,
         Test,
+        TestResult,
         Check,
         Tools,
         Doctor,

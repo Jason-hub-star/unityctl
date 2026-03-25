@@ -69,6 +69,12 @@ Unity Editor 브릿지. `dotnet build` 불가 — Unity 내에서만 컴파일.
 - 상태 변경 시 관련 downstream 문서도 같은 턴에 동기화.
 - 마일스톤 변경은 `docs/internal/daily/MM-DD/` 로그 + 주간 롤업 반영.
 
+## Graph-Guided Review
+- 중간 이상 변경, 교차 모듈 리팩터, 코드 리뷰, 테스트 범위 선정 시 `code-review-graph`를 우선 고려한다.
+- 기준 문서: `docs/ref/CODE-REVIEW-GRAPH-TUNING.md`
+- Windows 리포트 진입점: `.\scripts\code_review_graph_report.ps1`
+- 그래프는 현재 이 저장소에서 사실상 authored C# + tests 중심으로 동작한다고 가정한다. Markdown 문서는 탐색용 Source-of-Truth로 읽고, graph DB coverage 대상으로 가정하지 않는다.
+
 ## Task Routing
 1. 아키텍처/설계 확인: `docs/ref/architecture-mermaid.md`
 2. 현재 Phase 상태: `docs/status/PROJECT-STATUS.md`
@@ -77,4 +83,5 @@ Unity Editor 브릿지. `dotnet build` 불가 — Unity 내에서만 컴파일.
 5. IPC Transport 설계: `docs/ref/phase-2b-plan.md`
 6. Phase 로드맵 전체: `docs/ref/phase-roadmap.md`
 7. AI 에이전트 빠른 시작: `docs/ref/ai-quickstart.md`
-8. 사용자 시작 가이드: `docs/ref/getting-started.md`
+8. graph-guided review / 영향 범위 축소: `docs/ref/CODE-REVIEW-GRAPH-TUNING.md`
+9. 사용자 시작 가이드: `docs/ref/getting-started.md`

@@ -94,6 +94,9 @@ public static class EditorLogDiagnostics
     public static (List<string> Errors, List<string> UnityctlLines)? GetStructuredDiagnostics(int tailLines = DefaultTailLines)
         => GetStructuredDiagnostics(GetEditorLogPath(), tailLines);
 
+    internal static UnityctlLogSignals GetUnityctlSignals(int tailLines = DefaultTailLines)
+        => GetUnityctlSignals(GetEditorLogPath(), tailLines);
+
     /// <inheritdoc cref="GetStructuredDiagnostics(int)"/>
     internal static (List<string> Errors, List<string> UnityctlLines)? GetStructuredDiagnostics(string? logPath, int tailLines = DefaultTailLines)
     {
@@ -129,6 +132,43 @@ public static class EditorLogDiagnostics
         }
     }
 
+    internal static UnityctlLogSignals GetUnityctlSignals(string? logPath, int tailLines = DefaultTailLines)
+    {
+        if (logPath == null || !File.Exists(logPath))
+            return new UnityctlLogSignals();
+
+        try
+        {
+            var tail = ReadTail(logPath, tailLines);
+            var signals = new UnityctlLogSignals();
+
+            foreach (var line in tail)
+            {
+                if (!line.Contains("[unityctl]"))
+                    continue;
+
+                if (line.Contains("Bridge initialized", StringComparison.OrdinalIgnoreCase))
+                    signals.BridgeInitialized = true;
+
+                if (line.Contains("Registered ", StringComparison.OrdinalIgnoreCase)
+                    && line.Contains(" commands", StringComparison.OrdinalIgnoreCase))
+                    signals.CommandRegistryInitialized = true;
+
+                if (line.Contains("IPC server started on pipe", StringComparison.OrdinalIgnoreCase))
+                    signals.LastIpcServerState = "started";
+
+                if (line.Contains("IPC server stopped", StringComparison.OrdinalIgnoreCase))
+                    signals.LastIpcServerState = "stopped";
+            }
+
+            return signals;
+        }
+        catch
+        {
+            return new UnityctlLogSignals();
+        }
+    }
+
     /// <summary>
     /// Read the last N lines from a file using FileShare.ReadWrite to avoid conflicts with Unity.
     /// </summary>
@@ -140,8 +180,19 @@ public static class EditorLogDiagnostics
         var allLines = new List<string>();
         string? line;
         while ((line = reader.ReadLine()) != null)
-            allLines.Add(line);
+        {
+            var cleaned = line.Replace("\0", string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(cleaned))
+                allLines.Add(cleaned);
+        }
 
         return allLines.Skip(Math.Max(0, allLines.Count - lines)).ToList();
     }
+}
+
+public sealed class UnityctlLogSignals
+{
+    public bool BridgeInitialized { get; set; }
+    public bool CommandRegistryInitialized { get; set; }
+    public string? LastIpcServerState { get; set; }
 }

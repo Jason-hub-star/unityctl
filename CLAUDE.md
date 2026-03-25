@@ -179,6 +179,7 @@ unityctl.slnx
 - 탐색 인덱스: `AGENTS.md`
 - 아키텍처 (빠른 맥락): `docs/ref/architecture-mermaid.md`
 - 코드 패턴: `docs/ref/code-patterns.md`
+- graph-guided review: `docs/ref/CODE-REVIEW-GRAPH-TUNING.md`
 - Phase 로드맵: `docs/ref/phase-roadmap.md`
 - Phase 2B 설계: `docs/ref/phase-2b-plan.md`
 - 프로젝트 상태: `docs/status/PROJECT-STATUS.md`
@@ -195,7 +196,14 @@ unityctl.slnx
 4. 코드 작성 전 패턴: `docs/ref/code-patterns.md`
 5. IPC Transport 설계: `docs/ref/phase-2b-plan.md`
 6. 전체 로드맵: `docs/ref/phase-roadmap.md`
-7. 개발 진행 상세 이력: `docs/internal/DEVELOPMENT.md`
+7. graph-guided review / 영향 범위 축소: `docs/ref/CODE-REVIEW-GRAPH-TUNING.md`
+8. 개발 진행 상세 이력: `docs/internal/DEVELOPMENT.md`
+
+## Graph-Guided Review
+- 중간 이상 변경, 교차 모듈 리팩터, 코드 리뷰, 테스트 범위 선정에서는 `code-review-graph`를 먼저 고려한다.
+- 기본 진입점은 `.\scripts\code_review_graph_report.ps1` 이다. direct install이 없으면 `uvx --from code-review-graph` fallback을 사용한다.
+- 현재 `unityctl`에서 graph는 사실상 authored C# + tests 중심으로 인덱싱된다. 루트/`docs/ref`/`docs/status` 문서는 여전히 Source-of-Truth지만 graph DB coverage 대상으로 가정하지 않는다.
+- Claude 전역 스킬 `unityctl-graph-ops`가 있으면 이 워크플로를 우선 사용한다.
 
 ## 테스트 표준
 - `dotnet test unityctl.slnx` green 필수 (현재 수치는 `docs/status/PROJECT-STATUS.md` 참조)

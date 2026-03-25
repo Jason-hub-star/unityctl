@@ -22,6 +22,12 @@ public static class TestCommand
         Environment.Exit(exitCode);
     }
 
+    public static void Result(string project, string requestId, bool json = false)
+    {
+        var request = CreateResultRequest(requestId);
+        CommandRunner.Execute(project, request, json, retry: false);
+    }
+
     internal static async Task<int> ExecuteAsync(
         string project,
         string mode,
@@ -37,7 +43,7 @@ public static class TestCommand
         if (isPlayMode && wait)
         {
             Console.Error.WriteLine(
-                "[unityctl] Warning: PlayMode tests cause domain reload — --wait is not supported. Running with --no-wait.");
+                "[unityctl] Warning: PlayMode tests are started asynchronously. Use `unityctl test-result --project <project> --request-id <id> --json` to poll results.");
             wait = false;
         }
 
@@ -73,5 +79,20 @@ public static class TestCommand
 
         CommandRunner.PrintResponse(response, json);
         return CommandRunner.GetExitCode(response);
+    }
+
+    internal static CommandRequest CreateResultRequest(string requestId)
+    {
+        if (string.IsNullOrWhiteSpace(requestId))
+            throw new ArgumentException("requestId must not be empty", nameof(requestId));
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.TestResult,
+            Parameters = new JsonObject
+            {
+                ["requestId"] = requestId
+            }
+        };
     }
 }

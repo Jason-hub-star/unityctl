@@ -116,6 +116,16 @@ public class CommandSyncGuardrailTests
         Assert.Contains(nameof(WellKnownCommands.MeshCreatePrimitive), pluginHandlers);
     }
 
+    [Fact]
+    public void TestResult_IsRegisteredAcrossCliAndPlugin()
+    {
+        var cliCommands = ParseCliCommands();
+        Assert.Contains("test-result", cliCommands);
+
+        var pluginHandlers = ParsePluginHandlerFieldNames();
+        Assert.Contains(nameof(WellKnownCommands.TestResult), pluginHandlers);
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar);

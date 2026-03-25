@@ -62,12 +62,16 @@ public sealed class CommandExecutorReadinessTests
             {
                 ProcessId = 2944,
                 ProjectPath = @"C:\Users\gmdqn\RobotApp"
-            });
+            },
+            projectLocked: true,
+            fallbackReason: "ipc-probe-failed");
 
         Assert.NotNull(response.Data);
         Assert.Equal("ipc", response.Data!["target"]!["transport"]!.GetValue<string>());
         Assert.Equal("6000.0.64f1", response.Data["target"]!["editorVersion"]!.GetValue<string>());
         Assert.Contains("unityctl_", response.Data["target"]!["pipeName"]!.GetValue<string>());
         Assert.Equal(2944, response.Data["target"]!["unityPid"]!.GetValue<int>());
+        Assert.True(response.Data["target"]!["projectLocked"]!.GetValue<bool>());
+        Assert.Equal("ipc-probe-failed", response.Data["target"]!["fallbackReason"]!.GetValue<string>());
     }
 }

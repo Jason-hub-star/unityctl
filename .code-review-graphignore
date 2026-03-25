@@ -1,0 +1,48 @@
+# unityctl code-review-graph scope tuning
+# Goal:
+# - Keep authored C# code, tests, and canonical docs visible
+# - Exclude generated Unity state, internal planning material, and binary noise
+
+# VCS and editor metadata
+.git/**
+.vs/**
+.idea/**
+
+# Build and packaging output
+bin/**
+obj/**
+publish/**
+artifacts/**
+nupkg/**
+
+# Local automation and scratch work
+.claude/**
+ralph/**
+
+# Node tooling output
+node_modules/**
+package-lock.json
+scripts/generate-terminal-svg.js
+
+# Documentation noise
+docs/internal/**
+docs/assets/**
+
+# Unity generated sample project state
+tests/Unityctl.Integration/SampleUnityProject/Library/**
+tests/Unityctl.Integration/SampleUnityProject/Logs/**
+tests/Unityctl.Integration/SampleUnityProject/Temp/**
+tests/Unityctl.Integration/SampleUnityProject/UserSettings/**
+
+# Plugin scratch/source-copy staging not part of the canonical authored surface
+src/Unityctl.Plugin/Editor/Shared~/**
+
+# Binary or generated Unity artifacts that add noise to code graphs
+**/*.meta
+**/*.asset
+**/*.unity
+**/*.dll
+**/*.pdb
+**/*.png
+**/*.svg
+**/*.traceevents

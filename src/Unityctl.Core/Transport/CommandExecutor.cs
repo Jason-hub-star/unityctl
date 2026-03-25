@@ -59,31 +59,33 @@ public sealed class CommandExecutor
         var processDetector = new UnityProcessDetector(_platform);
         var process = processDetector.FindProcessForProject(projectPath);
         var editor = _discovery.FindEditorForProject(projectPath);
+        var projectLocked = _platform.IsProjectLocked(projectPath);
         if (await ipc.ProbeAsync(ct))
         {
             var response = await ipc.SendAsync(request, ct);
-            return AttachTargetMetadata(response, projectPath, "ipc", editor, process);
+            return AttachTargetMetadata(response, projectPath, "ipc", editor, process, projectLocked, null);
         }
 
-        if (_platform.IsProjectLocked(projectPath))
+        if (projectLocked)
         {
             for (var attempt = 0; attempt < LockedProjectProbeRetries; attempt++)
             {
                 await Task.Delay(LockedProjectProbeDelay, ct);
                 if (await ipc.ProbeAsync(ct))
                 {
-                    return await ipc.SendAsync(request, ct);
+                    var reconnected = await ipc.SendAsync(request, ct);
+                    return AttachTargetMetadata(reconnected, projectPath, "ipc", editor, process, projectLocked, "ipc-became-ready-after-wait");
                 }
             }
 
             var pending = BuildInteractiveBusyResponse(projectPath, request.Command);
-            return AttachTargetMetadata(pending, projectPath, null, editor, process);
+            return AttachTargetMetadata(pending, projectPath, null, editor, process, projectLocked, "editor-running-ipc-not-ready");
         }
 
         // Fallback: batch transport (only when probe fails, NOT on SendAsync failure)
         await using var batch = new BatchTransport(_platform, _discovery, projectPath);
         var batchResponse = await batch.SendAsync(request, ct);
-        return AttachTargetMetadata(batchResponse, projectPath, "batch", editor, process);
+        return AttachTargetMetadata(batchResponse, projectPath, "batch", editor, process, projectLocked, "ipc-probe-failed");
     }
 
     internal static CommandResponse AttachTargetMetadata(
@@ -91,10 +93,12 @@ public sealed class CommandExecutor
         string projectPath,
         string? transport,
         UnityEditorInfo? editor,
-        UnityProcessInfo? process)
+        UnityProcessInfo? process,
+        bool projectLocked,
+        string? fallbackReason)
     {
         response.Data ??= new JsonObject();
-        response.Data["target"] = BuildTargetMetadata(projectPath, transport, editor, process);
+        response.Data["target"] = BuildTargetMetadata(projectPath, transport, editor, process, projectLocked, fallbackReason);
         return response;
     }
 
@@ -102,16 +106,22 @@ public sealed class CommandExecutor
         string projectPath,
         string? transport,
         UnityEditorInfo? editor,
-        UnityProcessInfo? process)
+        UnityProcessInfo? process,
+        bool projectLocked,
+        string? fallbackReason)
     {
         var target = new JsonObject
         {
             ["projectPath"] = Unityctl.Shared.Constants.NormalizeProjectPath(projectPath),
-            ["pipeName"] = Unityctl.Shared.Constants.GetPipeName(projectPath)
+            ["pipeName"] = Unityctl.Shared.Constants.GetPipeName(projectPath),
+            ["projectLocked"] = projectLocked
         };
 
         if (!string.IsNullOrWhiteSpace(transport))
             target["transport"] = transport;
+
+        if (!string.IsNullOrWhiteSpace(fallbackReason))
+            target["fallbackReason"] = fallbackReason;
 
         if (editor != null)
         {
