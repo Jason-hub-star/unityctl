@@ -73,7 +73,7 @@ Phase C  — Profiler Commands (get-stats/start/stop 3개 명령) ✅ 완료
 Phase I-1 — UGUI Enhancement (ui-scroll/slider-set/dropdown-set 3개 명령) ✅ 완료
 Phase D  — Volume/PostProcessing (volume 4개 + renderer-feature 1개 = 5개 명령, Reflection) ✅ 완료
 Phase E  — Cinemachine (list/get/set-property 3개 명령, 2.x/3.x auto-detect) ✅ 완료
-Phase I-2 — UI Toolkit (uitk-find/get/set-value 3개 명령, runtime capability) ✅ 완료
+Phase I-2 — UI Toolkit (uitk-find/get/set-value/click 4개 명령, runtime capability) ✅ 완료
 Marketplace — mcp.so + PulseMCP 등록 ✅ 완료
 ```
 
@@ -123,7 +123,7 @@ Marketplace — mcp.so + PulseMCP 등록 ✅ 완료
 | **Phase I-1: UGUI Enhancement** | ui-scroll (ScrollRect), slider-set (Slider), dropdown-set (Dropdown), PrefabGuard+UndoScope | — |
 | **Phase D: Volume/PostProcessing** | volume-list/get/set-override/get-overrides (Reflection, no URP/HDRP hard dep), renderer-feature-list | — |
 | **Phase E: Cinemachine** | cinemachine-list/get/set-property, 2.x/3.x auto-detect, SerializedObject property editing | — |
-| **Phase I-2: UI Toolkit** | uitk-find/get/set-value, runtime UIDocument capability check, element tree traversal | — |
+| **Phase I-2: UI Toolkit** | uitk-find/get/set-value/click, runtime UIDocument capability check, element tree traversal | — |
 | **Marketplace** | mcp.so + PulseMCP 등록 완료 | — |
 
 ---

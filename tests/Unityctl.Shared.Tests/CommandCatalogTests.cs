@@ -74,7 +74,7 @@ public class CommandCatalogTests
              // Shader
              "shader-find", "shader-get-properties",
              // UI Toolkit — Phase I-2
-             "uitk-find", "uitk-get", "uitk-set-value",
+             "uitk-find", "uitk-get", "uitk-set-value", "uitk-click",
              // Cinemachine — Phase E
              "cinemachine-list", "cinemachine-get", "cinemachine-set-property",
              // Volume/PostProcessing — Phase D

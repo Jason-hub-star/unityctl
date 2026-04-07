@@ -523,6 +523,9 @@ app.Add("uitk get", (string project, string? name = null, string? locator = null
 app.Add("uitk set-value", (string project, string value, string? name = null, string? locator = null, bool json = false) =>
     UitkCommand.SetValue(project, value, name, locator, json));
 
+app.Add("uitk click", (string project, string? name = null, string? locator = null, string mode = "auto", bool json = false) =>
+    UitkCommand.Click(project, name, locator, mode, json));
+
 // Cinemachine — Phase E
 app.Add("cinemachine list", (string project, bool includeInactive = false, bool json = false) =>
     CinemachineCommand.List(project, includeInactive, json));

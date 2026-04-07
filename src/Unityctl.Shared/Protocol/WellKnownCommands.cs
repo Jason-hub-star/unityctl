@@ -190,6 +190,7 @@ public static class WellKnownCommands
     public const string UitkFind = "uitk-find";
     public const string UitkGet = "uitk-get";
     public const string UitkSetValue = "uitk-set-value";
+    public const string UitkClick = "uitk-click";
 
     // Cinemachine — Phase E
     public const string CinemachineList = "cinemachine-list";

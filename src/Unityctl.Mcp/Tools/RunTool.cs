@@ -104,6 +104,7 @@ internal sealed class RunTool(CommandExecutor executor)
         WellKnownCommands.ScriptableObjectSetProperty,
         // UI Toolkit — Phase I-2
         WellKnownCommands.UitkSetValue,
+        WellKnownCommands.UitkClick,
         // Cinemachine — Phase E
         WellKnownCommands.CinemachineSetProperty,
         // Volume/PostProcessing — Phase D

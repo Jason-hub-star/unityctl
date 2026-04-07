@@ -782,7 +782,7 @@ public static class CommandCatalog
 
     public static readonly CommandDefinition UiClickCmd = Define(
         WellKnownCommands.UiClick,
-        "Invoke a Button's onClick deterministically in Play Mode with optional scene assertion",
+        "Invoke a UGUI Button's onClick deterministically in Play Mode with optional scene assertion",
         "action",
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("id", "string", "GlobalObjectId of the Button GameObject", required: true),
@@ -1294,6 +1294,16 @@ public static class CommandCatalog
         Parameter("value", "string", "New value", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("uitk set-value");
 
+    public static readonly CommandDefinition UitkClickCmd = Define(
+        WellKnownCommands.UitkClick,
+        "Invoke a UI Toolkit Button-like element deterministically in Play Mode",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("name", "string", "Element name", required: false),
+        Parameter("locator", "string", "Stable locator returned by uitk find", required: false),
+        Parameter("mode", "string", "Interaction mode: auto or play (default: auto, resolves to play only)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("uitk click");
+
     // Cinemachine — Phase E
     public static readonly CommandDefinition CinemachineListCmd = Define(
         WellKnownCommands.CinemachineList,
@@ -1651,6 +1661,7 @@ public static class CommandCatalog
         UitkFindCmd,
         UitkGetCmd,
         UitkSetValueCmd,
+        UitkClickCmd,
         // Cinemachine — Phase E
         CinemachineListCmd,
         CinemachineGetCmd,

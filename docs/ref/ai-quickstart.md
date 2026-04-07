@@ -23,7 +23,7 @@ Open (or restart) the Unity Editor after running this command. For contributor w
 
 ```bash
 unityctl init --project "/path/to/unity/project" --source /path/to/unityctl/src/Unityctl.Plugin
-unityctl init --project "/path/to/unity/project" --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.5"
+unityctl init --project "/path/to/unity/project" --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
 ```
 
 ### 3. Verify
@@ -112,7 +112,7 @@ For small artifact-first verification bundles, `workflow verify` now supports `p
 For UGUI interactions beyond toggle/input, use `ui scroll`, `ui slider-set`, `ui dropdown-set` to set ScrollRect/Slider/Dropdown values deterministically.
 For URP/HDRP projects, `volume list/get/get-overrides/set-override` and `renderer-feature list` inspect and modify Volume overrides via Reflection (no hard dependency on URP/HDRP).
 For Cinemachine, `cinemachine list/get/set-property` supports both 2.x and 3.x with runtime auto-detection.
-For UI Toolkit, `uitk find/get/set-value` queries and modifies UIDocument elements at runtime.
+For UI Toolkit, `uitk find/get/set-value/click` queries and interacts with UIDocument elements at runtime.
 For animation workflows, `animation list-clips/get-clip/get-controller/add-curve` inspect and edit AnimationClips and AnimatorControllers.
 For profiling, `profiler get-stats/start/stop` provides memory and performance statistics (full rendering stats require Play Mode).
 

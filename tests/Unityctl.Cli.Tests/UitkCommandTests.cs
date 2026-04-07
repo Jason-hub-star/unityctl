@@ -98,4 +98,39 @@ public class UitkCommandTests
     {
         Assert.Throws<ArgumentException>(() => UitkCommand.CreateSetValueRequest("hello"));
     }
+
+    [Fact]
+    public void ClickRequest_HasCorrectCommand()
+    {
+        var request = UitkCommand.CreateClickRequest(name: "myButton", mode: "play");
+        Assert.Equal(WellKnownCommands.UitkClick, request.Command);
+    }
+
+    [Fact]
+    public void ClickRequest_SetsNameAndMode()
+    {
+        var request = UitkCommand.CreateClickRequest(name: "myButton", mode: "play");
+        Assert.Equal("myButton", request.Parameters!["name"]!.ToString());
+        Assert.Equal("play", request.Parameters["mode"]!.ToString());
+    }
+
+    [Fact]
+    public void ClickRequest_Locator_IsSupported()
+    {
+        var request = UitkCommand.CreateClickRequest(locator: "MainHud::root/0:Button#Play", mode: "auto");
+        Assert.Equal("MainHud::root/0:Button#Play", request.Parameters!["locator"]!.ToString());
+        Assert.Equal("auto", request.Parameters["mode"]!.ToString());
+    }
+
+    [Fact]
+    public void ClickRequest_RequiresNameOrLocator()
+    {
+        Assert.Throws<ArgumentException>(() => UitkCommand.CreateClickRequest());
+    }
+
+    [Fact]
+    public void ClickRequest_InvalidMode_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => UitkCommand.CreateClickRequest(name: "myButton", mode: "invalid"));
+    }
 }

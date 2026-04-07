@@ -79,7 +79,7 @@ If you need a contributor-style source install instead, you can still do one of 
 
 ```bash
 unityctl init --project /path/to/unity/project --source /path/to/unityctl/src/Unityctl.Plugin
-unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.5"
+unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
 ```
 
 When switching away from an older `file:` install, first run:
@@ -398,9 +398,12 @@ unityctl uitk set-value --project /path/to/project --name "myTextField" --value 
 
 # Or set by locator
 unityctl uitk set-value --project /path/to/project --locator "MainHud::root/1:TextField#Name" --value "hello" --json
+
+# Click a Button-like UITK element in Play Mode
+unityctl uitk click --project /path/to/project --name "myButton" --mode play --json
 ```
 
-`uitk find`, `uitk get`, and `uitk set-value` now share the same resolver. Prefer the returned `locator` when multiple elements share the same `name`.
+`uitk find`, `uitk get`, `uitk set-value`, and `uitk click` share the same resolver. Prefer the returned `locator` when multiple elements share the same `name`.
 
 ### Script Management
 

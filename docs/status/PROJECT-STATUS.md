@@ -45,7 +45,7 @@
 - **Phase I-1: UGUI Enhancement (ui-scroll/slider-set/dropdown-set — 3개 명령)**: 구현 완료
 - **Phase D: Volume/PostProcessing (volume-list/get/set-override/get-overrides, renderer-feature-list — 5개 명령)**: 구현 완료
 - **Phase E: Cinemachine (cinemachine-list/get/set-property — 3개 명령, capability gating)**: 구현 완료
-- **Phase I-2: UI Toolkit (uitk-find/get/set-value — 3개 명령, runtime capability check)**: 구현 완료
+- **Phase I-2: UI Toolkit (uitk-find/get/set-value/click — 4개 명령, runtime capability check)**: 구현 완료
 
 - **MCP Prompts (create_game_scene, debug_game, iterate_gameplay, setup_project — 4개 AI 워크플로우 프롬프트)**: 구현 완료
 - **CLI Feedback Fixes (CLI-012 prefab-instantiate, CLI-014 asset copy 외부 경로, CLI-000 IPC 30초 메시지 타임아웃)**: 구현 완료. Unity 6 라이브 테스트 통과.
@@ -55,7 +55,7 @@
 - **CLI Enhancement (profiler rendering stats + component add --name + component enable/disable + profiler --detailed)**: 구현 완료. Unity 6 라이브 테스트 통과. 755 테스트 통과.
 - **Real-World UX Hardening (`await-ready` interactive gating, headless process classification, `exec` parser hardening, UITK locator resolver, scene dirty policy)**: 구현 완료. `My project` 기준 라이브 검증/통합 테스트 통과.
 
-**전체 Phase 완료. 총 84개 write allowlist 명령, 159개 CLI 명령 (+2 component enable/disable), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트.**
+**전체 Phase 완료. 총 85개 write allowlist 명령, 160개 CLI 명령 (+2 component enable/disable), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -76,7 +76,7 @@
   - Windows 프로세스 탐지에서 `headless` vs `interactive`를 구분한다.
   - `await-ready`는 interactive Editor가 없으면 IPC-ready를 기다리지 않는다.
   - `exec --code`는 `Type.Member`, `Type.Member = value`, `Type.Method(args...)` 미니 DSL로 정식화했다.
-  - `uitk find/get/set-value`는 공통 locator resolver를 쓴다.
+  - `uitk find/get/set-value/click`은 공통 locator resolver를 쓴다.
   - `scene open/create`는 `dirtyPolicy=fail|save|discard`를 지원한다.
 
 ## Visual Verification v2 Phase 1 라이브 검증 (My project, Unity 6000.0.64f1)

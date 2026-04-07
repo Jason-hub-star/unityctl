@@ -24,6 +24,13 @@ public static class UitkCommand
         CommandRunner.Execute(project, request, json);
     }
 
+    public static void Click(string project, string? name = null, string? locator = null, string mode = "auto", bool json = false)
+    {
+        var request = CreateClickRequest(name, locator, mode);
+        var exitCode = UiCommand.ExecuteInteractiveAsync(project, request, json).GetAwaiter().GetResult();
+        Environment.Exit(exitCode);
+    }
+
     internal static CommandRequest CreateFindRequest(string? name, string? className, string? type, int? limit)
     {
         var parameters = new JsonObject();
@@ -76,6 +83,27 @@ public static class UitkCommand
         return new CommandRequest
         {
             Command = WellKnownCommands.UitkSetValue,
+            Parameters = parameters
+        };
+    }
+
+    internal static CommandRequest CreateClickRequest(string? name = null, string? locator = null, string mode = "auto")
+    {
+        if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(locator))
+            throw new ArgumentException("name or locator must not be empty");
+
+        var parameters = new JsonObject
+        {
+            ["mode"] = UiCommand.ParseInteractionMode(mode, nameof(mode))
+        };
+        if (!string.IsNullOrWhiteSpace(name))
+            parameters["name"] = name;
+        if (!string.IsNullOrWhiteSpace(locator))
+            parameters["locator"] = locator;
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.UitkClick,
             Parameters = parameters
         };
     }

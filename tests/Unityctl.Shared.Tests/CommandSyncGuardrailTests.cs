@@ -117,6 +117,30 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void UitkCommands_AreRegisteredAcrossCliMcpAndPlugin()
+    {
+        var cliCommands = ParseCliCommands();
+        Assert.Contains("uitk find", cliCommands);
+        Assert.Contains("uitk get", cliCommands);
+        Assert.Contains("uitk set-value", cliCommands);
+        Assert.Contains("uitk click", cliCommands);
+
+        var queryAllowlist = ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\QueryTool.cs");
+        Assert.Contains(nameof(WellKnownCommands.UitkFind), queryAllowlist);
+        Assert.Contains(nameof(WellKnownCommands.UitkGet), queryAllowlist);
+
+        var runAllowlist = ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\RunTool.cs");
+        Assert.Contains(nameof(WellKnownCommands.UitkSetValue), runAllowlist);
+        Assert.Contains(nameof(WellKnownCommands.UitkClick), runAllowlist);
+
+        var pluginHandlers = ParsePluginHandlerFieldNames();
+        Assert.Contains(nameof(WellKnownCommands.UitkFind), pluginHandlers);
+        Assert.Contains(nameof(WellKnownCommands.UitkGet), pluginHandlers);
+        Assert.Contains(nameof(WellKnownCommands.UitkSetValue), pluginHandlers);
+        Assert.Contains(nameof(WellKnownCommands.UitkClick), pluginHandlers);
+    }
+
+    [Fact]
     public void ExecStructuredCommands_AreRegisteredAcrossCliMcpAndPlugin()
     {
         var cliCommands = ParseCliCommands();
