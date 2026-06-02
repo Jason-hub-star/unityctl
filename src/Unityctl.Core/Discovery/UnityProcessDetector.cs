@@ -81,7 +81,7 @@ public sealed class UnityProcessDetector
             return string.Equals(
                 Unityctl.Shared.Constants.NormalizeProjectPath(candidatePath),
                 normalizedProjectPath,
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.Ordinal);
         }
         catch
         {
