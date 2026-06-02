@@ -13,7 +13,7 @@
 Give your AI agent **166 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-166 CLI commands · 12 MCP tools · 856 PR .NET tests · Windows / macOS / Linux
+166 CLI commands · 12 MCP tools · 857 PR .NET tests · Windows / macOS / Linux
 ```
 
 Quality gates: every PR runs the .NET Shared/Core/Cli/Mcp test suites on Windows, macOS, and Linux. Unity Editor-dependent validation is separated into the Unity Integration workflow, with `init`, sample-project `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify` evidence uploaded from nightly/manual runs. Unity Integration requires either a `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret.
@@ -501,7 +501,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI shell
 +-- src/Unityctl.Mcp      (net10.0)         MCP server
 +-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 856 PR .NET xUnit tests
++-- tests/*                                 857 PR .NET xUnit tests
 ```
 
 ---

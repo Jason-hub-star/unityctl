@@ -1,9 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Microsoft.Extensions.Logging;
+using Unityctl.Shared.Commands;
+using Unityctl.Shared.Serialization;
 using Xunit;
 
 namespace Unityctl.Mcp.Tests;
@@ -61,6 +64,29 @@ public class McpBlackBoxTests
         Assert.False(string.IsNullOrWhiteSpace(payload));
         Assert.Contains("\"version\"", payload);
         Assert.Contains("\"commands\"", payload);
+    }
+
+    [Fact]
+    public async Task SchemaTool_ReturnsCompleteCommandCatalog()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+
+        var result = await harness.Client.CallToolAsync(
+            "unityctl_schema",
+            arguments: new Dictionary<string, object?>(),
+            progress: null,
+            options: new RequestOptions(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.NotEqual(true, result.IsError);
+        var payload = GetToolResultText(result);
+        var schema = JsonSerializer.Deserialize(payload, UnityctlJsonContext.Default.CommandSchema);
+
+        Assert.NotNull(schema);
+        Assert.Equal(CommandCatalog.All.Length, schema!.Commands.Length);
+        Assert.Equal(
+            CommandCatalog.All.Select(command => command.Name).OrderBy(name => name),
+            schema.Commands.Select(command => command.Name).OrderBy(name => name));
     }
 
     [Fact]
