@@ -18,6 +18,8 @@ Give your AI agent **166 commands** to build Unity scenes, write C# scripts, val
 
 Quality gates: every PR runs the .NET Shared/Core/Cli/Mcp test suites on Windows, macOS, and Linux. Unity Editor-dependent validation is separated into the Unity Integration workflow, with `init`, sample-project `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify` evidence uploaded from nightly/manual runs. Unity Integration requires either a `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret.
 
+Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) for the test trust checklist, flaky-test policy, command sync checklist, and Unity live-validation split.
+
 <p align="center">
   <img src="docs/assets/mcp-demo.svg" alt="AI agent building a Unity scene via MCP" width="700">
 </p>

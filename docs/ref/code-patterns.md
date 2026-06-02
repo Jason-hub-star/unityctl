@@ -120,6 +120,7 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - 새 flaky가 발견되면 `.github/ISSUE_TEMPLATE/flaky-test.yml`로 CI run, OS, 반복 횟수, isolation/stabilization plan을 남긴다.
 - 회귀 버그는 `.github/ISSUE_TEMPLATE/regression-bug.yml`로 신고하고, 수정 PR에는 실패 재현 테스트를 포함한다.
 - 모든 PR은 `.github/PULL_REQUEST_TEMPLATE.md`의 Test Trust / Contract Safety / README User Path / Unity Reality Check 체크리스트를 따라 검증 범위를 명시한다.
+- 외부 기여자는 루트 `CONTRIBUTING.md`에서 PR .NET gate, 명령 동기화, flaky/regression 처리, Unity live validation 분리를 먼저 확인한다.
 
 ### 새 명령 추가 체크리스트
 

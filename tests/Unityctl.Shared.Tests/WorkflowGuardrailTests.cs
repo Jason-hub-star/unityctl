@@ -94,6 +94,13 @@ public class WorkflowGuardrailTests
         AssertReadmeBadges(ReadRepoFile("README.ko.md"));
     }
 
+    [Fact]
+    public void Readmes_LinkContributorTrustGuide()
+    {
+        Assert.Contains("[CONTRIBUTING.md](CONTRIBUTING.md)", ReadRepoFile("README.md"));
+        Assert.Contains("[CONTRIBUTING.md](CONTRIBUTING.md)", ReadRepoFile("README.ko.md"));
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var path = Path.Combine(GetRepoRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));

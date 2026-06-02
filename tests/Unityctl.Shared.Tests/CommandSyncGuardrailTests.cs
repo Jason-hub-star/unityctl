@@ -256,6 +256,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
         Assert.Contains(".github/PULL_REQUEST_TEMPLATE.md", source);
+        Assert.Contains("CONTRIBUTING.md", source);
 
         Assert.Contains("### 새 명령 추가 체크리스트", source);
         Assert.Contains("WellKnownCommands", source);
@@ -319,6 +320,36 @@ public class CommandSyncGuardrailTests
         Assert.Contains("Unity Reality Check", source);
         Assert.Contains("UNITY_LICENSE", source);
         Assert.Contains("UNITY_SERIAL", source);
+    }
+
+    [Fact]
+    public void ContributingGuide_CapturesPublicTestTrustPolicy()
+    {
+        var source = ReadRepoFile("CONTRIBUTING.md");
+
+        Assert.Contains("dotnet test tests/Unityctl.Shared.Tests -c Release", source);
+        Assert.Contains("dotnet test tests/Unityctl.Core.Tests -c Release", source);
+        Assert.Contains("dotnet test tests/Unityctl.Cli.Tests -c Release", source);
+        Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests -c Release", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
+
+        Assert.Contains("WellKnownCommands", source);
+        Assert.Contains("CommandCatalog", source);
+        Assert.Contains("src/Unityctl.Cli/Program.cs", source);
+        Assert.Contains("QueryTool", source);
+        Assert.Contains("RunTool", source);
+        Assert.Contains("src/Unityctl.Plugin/Editor/Commands", source);
+        Assert.Contains("CommandSyncGuardrailTests", source);
+
+        Assert.Contains("dotnet tool install", source);
+        Assert.Contains("unityctl tools --json", source);
+        Assert.Contains("unityctl schema", source);
+        Assert.Contains("workflow verify", source);
+        Assert.Contains("UNITY_LICENSE", source);
+        Assert.Contains("UNITY_SERIAL", source);
+        Assert.Contains("license-preflight.txt", source);
     }
 
     private static string ReadRepoFile(string relativePath)
