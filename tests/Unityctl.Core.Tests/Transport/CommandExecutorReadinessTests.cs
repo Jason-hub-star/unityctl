@@ -1,4 +1,5 @@
 using Unityctl.Core.Transport;
+using Unityctl.Core.Discovery;
 using Unityctl.Core.Platform;
 using Unityctl.Shared.Models;
 using Unityctl.Shared.Protocol;
@@ -8,6 +9,43 @@ namespace Unityctl.Core.Tests.Transport;
 
 public sealed class CommandExecutorReadinessTests
 {
+    [Fact]
+    public async Task ExecuteAsync_LockedByHeadlessProcess_ReturnsBusyWithoutBatchFallback()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"unityctl-headless-executor-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(projectPath);
+        try
+        {
+            var platform = new FakePlatform(
+                locked: true,
+                new UnityProcessInfo
+                {
+                    ProcessId = 6681,
+                    ProjectPath = projectPath,
+                    IsBatchMode = true
+                });
+            var executor = new CommandExecutor(platform, new UnityEditorDiscovery(platform));
+
+            var response = await executor.ExecuteAsync(
+                projectPath,
+                new CommandRequest { Command = WellKnownCommands.Check });
+
+            Assert.False(response.Success);
+            Assert.Equal(StatusCode.Busy, response.StatusCode);
+            Assert.Contains("headless Unity process", response.Message);
+            Assert.Equal("check", response.Data!["command"]!.GetValue<string>());
+            Assert.Equal("headless-process-holding-lock", response.Data["target"]!["fallbackReason"]!.GetValue<string>());
+            Assert.Equal("headless", response.Data["target"]!["processKind"]!.GetValue<string>());
+            Assert.Equal(6681, response.Data["target"]!["unityPid"]!.GetValue<int>());
+            Assert.Null(response.Data["target"]!["transport"]);
+        }
+        finally
+        {
+            if (Directory.Exists(projectPath))
+                Directory.Delete(projectPath, recursive: true);
+        }
+    }
+
     [Fact]
     public void BuildInteractiveBusyResponse_ForScriptGetErrors_AddsScriptSpecificGuidance()
     {
@@ -101,5 +139,48 @@ public sealed class CommandExecutorReadinessTests
         Assert.Equal(StatusCode.Busy, response.StatusCode);
         Assert.Contains("headless Unity process", response.Message);
         Assert.True(response.Data!["requiresInteractiveEditor"]!.GetValue<bool>());
+    }
+
+    [Fact]
+    public void BuildHeadlessBusyResponse_ForProjectValidate_UsesCliCommandName()
+    {
+        var response = CommandExecutor.BuildHeadlessBusyResponse(
+            WellKnownCommands.ProjectValidate,
+            new UnityProcessInfo
+            {
+                ProcessId = 40185,
+                IsBatchMode = true
+            });
+
+        Assert.Equal(StatusCode.Busy, response.StatusCode);
+        Assert.Contains("project validate", response.Message);
+        Assert.Equal("project validate", response.Data!["command"]!.GetValue<string>());
+    }
+
+    private sealed class FakePlatform : IPlatformServices
+    {
+        private readonly bool _locked;
+        private readonly IReadOnlyList<UnityProcessInfo> _processes;
+
+        public FakePlatform(bool locked, params UnityProcessInfo[] processes)
+        {
+            _locked = locked;
+            _processes = processes;
+        }
+
+        public string GetUnityHubEditorsJsonPath() => Path.Combine(Path.GetTempPath(), "missing-editors.json");
+
+        public IEnumerable<string> GetDefaultEditorSearchPaths() => [];
+
+        public string GetUnityExecutablePath(string editorBasePath) => Path.Combine(editorBasePath, "Unity");
+
+        public IEnumerable<UnityProcessInfo> FindRunningUnityProcesses() => _processes;
+
+        public bool IsProjectLocked(string projectPath) => _locked;
+
+        public Stream CreateIpcClientStream(string projectPath) => throw new NotSupportedException();
+
+        public string GetTempResponseFilePath()
+            => Path.Combine(Path.GetTempPath(), $"unityctl-command-executor-{Guid.NewGuid():N}.json");
     }
 }

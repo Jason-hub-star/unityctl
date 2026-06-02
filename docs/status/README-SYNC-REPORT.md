@@ -8,18 +8,18 @@
 |------|--------|------|
 | CLI command count | **166** | published CLI `schema --format json` / `tools --json` smoke |
 | MCP tool count | **12** | README + MCP black-box tests |
-| PR .NET xUnit test inventory | **847** | Shared/Core/Cli/Mcp local Release test output |
+| PR .NET xUnit test inventory | **849** | Shared/Core/Cli/Mcp local Release test output |
 
 ## Synced Public Docs
 
 | 위치 | 현재값 | 상태 |
 |------|--------|------|
-| `README.md` hero / comparison / command heading / architecture | 166 commands, 847 PR .NET tests | ✅ |
-| `README.ko.md` hero / comparison / command heading / architecture | 166 명령, 847 PR .NET 테스트 | ✅ |
+| `README.md` hero / comparison / command heading / architecture | 166 commands, 849 PR .NET tests | ✅ |
+| `README.ko.md` hero / comparison / command heading / architecture | 166 명령, 849 PR .NET 테스트 | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 166 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 166 commands | ✅ |
-| `docs/ref/architecture-mermaid.md` architecture block | 847 PR .NET xUnit tests | ✅ |
-| `docs/ref/getting-started.md` architecture block | 847 PR .NET xUnit tests | ✅ |
+| `docs/ref/architecture-mermaid.md` architecture block | 849 PR .NET xUnit tests | ✅ |
+| `docs/ref/getting-started.md` architecture block | 849 PR .NET xUnit tests | ✅ |
 | `docs/ref/ai-quickstart.md` machine-readable schema note | 166 commands | ✅ |
 
 ## CI Guardrails
@@ -41,7 +41,7 @@ Remote CI note: the latest checked PR `CI - dotnet` run for `codex/test-trust-ba
 | `dotnet restore` | ✅ |
 | `dotnet build --no-restore -c Release` | ✅ warning 0 / error 0 |
 | `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 97 passed |
-| `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 148 passed |
+| `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 150 passed |
 | `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 578 passed |
 | `dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release` | ✅ 22 passed |
 | published CLI `schema` / `tools --json` / `doctor --json` smoke | ✅ 166 commands, no drift, doctor JSON shape valid |
