@@ -132,7 +132,8 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 3. CLI 등록: `src/Unityctl.Cli/Program.cs`에 verb를 등록하고 해당 CLI parser/request 테스트를 추가한다.
 4. MCP allowlist/schema: read 명령은 `QueryTool`, write 명령은 `RunTool` allowlist에 넣고 MCP schema/black-box 테스트가 표면을 검증하게 한다.
 5. Plugin handler 등록: `src/Unityctl.Plugin/Editor/Commands/*Handler.cs`에 handler를 추가하고 `CommandRegistry` 자동 등록/handler coverage guardrail을 통과시킨다.
-6. 공개 문서: README, getting-started, quickstart, status 문서가 새 public surface와 검증 범위를 정확히 말하는지 확인한다.
+6. 중복 등록 방지: CLI `app.Add(...)` verb와 Plugin handler `CommandName`이 기존 명령을 shadow하지 않는지 `CommandSyncGuardrailTests`로 확인한다.
+7. 공개 문서: README, getting-started, quickstart, status 문서가 새 public surface와 검증 범위를 정확히 말하는지 확인한다.
 
 최소 검증 세트:
 

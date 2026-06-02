@@ -18,6 +18,7 @@ For new or changed commands:
 - [ ] CLI registration in `src/Unityctl.Cli/Program.cs` is updated.
 - [ ] MCP `QueryTool`/`RunTool` allowlist/schema coverage is updated.
 - [ ] Plugin handler registration/coverage is updated.
+- [ ] CLI verb and Plugin handler command names do not duplicate or shadow another command.
 - [ ] `CommandSyncGuardrailTests` pass.
 
 ## README User Path

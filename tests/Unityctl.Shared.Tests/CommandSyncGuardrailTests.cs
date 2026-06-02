@@ -323,6 +323,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains(".github/PULL_REQUEST_TEMPLATE.md", source);
         Assert.Contains("CONTRIBUTING.md", source);
         Assert.Contains("Plugin shared copy drift", source);
+        Assert.Contains("shadow", source);
 
         Assert.Contains("### 새 명령 추가 체크리스트", source);
         Assert.Contains("WellKnownCommands", source);
@@ -374,6 +375,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("QueryTool", source);
         Assert.Contains("RunTool", source);
         Assert.Contains("Plugin handler", source);
+        Assert.Contains("duplicate or shadow", source);
         Assert.Contains("CommandSyncGuardrailTests", source);
 
         Assert.Contains("README User Path", source);
@@ -413,6 +415,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("src/Unityctl.Plugin/Editor/Commands", source);
         Assert.Contains("CommandSyncGuardrailTests", source);
         Assert.Contains("Plugin shared copy drift", source);
+        Assert.Contains("shadow a public command", source);
 
         Assert.Contains("dotnet tool install", source);
         Assert.Contains("unityctl tools --json", source);

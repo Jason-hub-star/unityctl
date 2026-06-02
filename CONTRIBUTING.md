@@ -31,9 +31,10 @@ New commands must stay synchronized across the public contract:
 3. Register the CLI verb in `src/Unityctl.Cli/Program.cs` and add parser/request tests.
 4. Update MCP `QueryTool` or `RunTool` allowlist/schema coverage.
 5. Add or update the Plugin handler under `src/Unityctl.Plugin/Editor/Commands`.
-6. Run `CommandCatalogTests`, `CommandSchemaTests`, and `CommandSyncGuardrailTests`.
+6. Confirm the CLI verb and Plugin handler command name are unique so no registration silently shadows another command.
+7. Run `CommandCatalogTests`, `CommandSchemaTests`, and `CommandSyncGuardrailTests`.
 
-`CommandSyncGuardrailTests` also protects against Plugin shared copy drift by comparing `WellKnownCommands`, wire DTO JSON fields, `StatusCode`, and Exec parser grammar sentinels between Shared and the Unity Plugin copy.
+`CommandSyncGuardrailTests` also protects against Plugin shared copy drift by comparing `WellKnownCommands`, wire DTO JSON fields, `StatusCode`, and Exec parser grammar sentinels between Shared and the Unity Plugin copy. It also fails duplicate CLI `app.Add(...)` or Plugin `CommandName` registrations before they can shadow a public command.
 
 ```bash
 dotnet test tests/Unityctl.Shared.Tests -c Release --filter "CommandCatalogTests|CommandSchemaTests|CommandSyncGuardrailTests"
