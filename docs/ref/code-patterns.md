@@ -119,6 +119,7 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`처럼 날짜/시각 경계가 원인인 테스트는 고정 시각 입력으로 안정화한다.
 - 새 flaky가 발견되면 `.github/ISSUE_TEMPLATE/flaky-test.yml`로 CI run, OS, 반복 횟수, isolation/stabilization plan을 남긴다.
 - 회귀 버그는 `.github/ISSUE_TEMPLATE/regression-bug.yml`로 신고하고, 수정 PR에는 실패 재현 테스트를 포함한다.
+- 모든 PR은 `.github/PULL_REQUEST_TEMPLATE.md`의 Test Trust / Contract Safety / README User Path / Unity Reality Check 체크리스트를 따라 검증 범위를 명시한다.
 
 ### 새 명령 추가 체크리스트
 

@@ -255,6 +255,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains(".github/PULL_REQUEST_TEMPLATE.md", source);
 
         Assert.Contains("### 새 명령 추가 체크리스트", source);
         Assert.Contains("WellKnownCommands", source);
@@ -286,6 +287,38 @@ public class CommandSyncGuardrailTests
         Assert.Contains("parser edge case", regression);
         Assert.Contains("command/schema/plugin drift", regression);
         Assert.Contains("Required reproduction test", regression);
+    }
+
+    [Fact]
+    public void PullRequestTemplate_CapturesTrustBaselineChecklist()
+    {
+        var source = ReadRepoFile(@".github\PULL_REQUEST_TEMPLATE.md");
+
+        Assert.Contains("Test Trust Checklist", source);
+        Assert.Contains("Shared/Core/Cli/Mcp on Linux, macOS, and Windows", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+
+        Assert.Contains("Contract Safety Checklist", source);
+        Assert.Contains("WellKnownCommands", source);
+        Assert.Contains("CommandCatalog", source);
+        Assert.Contains("src/Unityctl.Cli/Program.cs", source);
+        Assert.Contains("QueryTool", source);
+        Assert.Contains("RunTool", source);
+        Assert.Contains("Plugin handler", source);
+        Assert.Contains("CommandSyncGuardrailTests", source);
+
+        Assert.Contains("README User Path", source);
+        Assert.Contains("dotnet tool install", source);
+        Assert.Contains("unityctl tools --json", source);
+        Assert.Contains("unityctl schema", source);
+        Assert.Contains("doctor", source);
+        Assert.Contains("check", source);
+        Assert.Contains("workflow verify", source);
+
+        Assert.Contains("Unity Reality Check", source);
+        Assert.Contains("UNITY_LICENSE", source);
+        Assert.Contains("UNITY_SERIAL", source);
     }
 
     private static string ReadRepoFile(string relativePath)
