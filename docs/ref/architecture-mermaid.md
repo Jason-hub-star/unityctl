@@ -9,7 +9,7 @@ unityctl.slnx
 ├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
 ├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
 ├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-└── tests/*                                 854 PR .NET xUnit tests
+└── tests/*                                 855 PR .NET xUnit tests
 ```
 
 ## Dependency Direction

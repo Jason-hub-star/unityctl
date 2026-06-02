@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using Unityctl.Core.Platform;
 using Unityctl.Core.Discovery;
+using Unityctl.Shared;
 using Xunit;
 
 namespace Unityctl.Cli.Tests;
@@ -121,6 +123,60 @@ public class UnityEditorDiscoveryTests
             interactive => Assert.Equal("interactive", interactive.ProcessKind),
             headless => Assert.Equal("headless", headless.ProcessKind));
         Assert.All(instances, instance => Assert.NotNull(instance.PipeName));
+    }
+
+    [Fact]
+    public void FindEditors_RunningProjectPathCaseBehaviorFollowsPlatformPolicy()
+    {
+        using var tempDirectory = new TemporaryDirectory();
+        var editorsRoot = Path.Combine(tempDirectory.Path, "editors");
+        var editorDirectory = CreateEditor(editorsRoot, "6000.0.64f1");
+        var executablePath = Path.Combine(editorDirectory, "Unity.exe");
+        var lowerProjectPath = Path.Combine(tempDirectory.Path, "case-project");
+        var upperProjectPath = Path.Combine(tempDirectory.Path, "CASE-PROJECT");
+        var platform = new FakePlatform(
+            editorsRoot,
+            new[]
+            {
+                new UnityProcessInfo
+                {
+                    ProcessId = 100,
+                    ProjectPath = lowerProjectPath,
+                    Version = "6000.0.64f1",
+                    ExecutablePath = executablePath,
+                    HasMainWindow = true
+                },
+                new UnityProcessInfo
+                {
+                    ProcessId = 101,
+                    ProjectPath = upperProjectPath,
+                    Version = "6000.0.64f1",
+                    ExecutablePath = executablePath,
+                    HasMainWindow = true
+                }
+            });
+
+        var discovery = new UnityEditorDiscovery(platform);
+
+        var editor = Assert.Single(discovery.FindEditors());
+        Assert.NotNull(editor.RunningProjectPaths);
+        var runningProjectPaths = editor.RunningProjectPaths;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Assert.Single(runningProjectPaths);
+            Assert.Equal(Constants.NormalizeProjectPath(lowerProjectPath), runningProjectPaths[0]);
+        }
+        else
+        {
+            Assert.Equal(
+                new[]
+                {
+                    Constants.NormalizeProjectPath(upperProjectPath),
+                    Constants.NormalizeProjectPath(lowerProjectPath)
+                },
+                runningProjectPaths);
+        }
     }
 
     private static string CreateEditor(string root, string version)
