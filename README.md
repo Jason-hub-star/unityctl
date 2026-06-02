@@ -4,8 +4,8 @@
 
 [![NuGet](https://img.shields.io/nuget/v/unityctl?label=unityctl)](https://www.nuget.org/packages/unityctl)
 [![NuGet](https://img.shields.io/nuget/v/unityctl-mcp?label=unityctl-mcp)](https://www.nuget.org/packages/unityctl-mcp)
-[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml)
-[![Unity Integration](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml)
+[![CI](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml)
+[![Unity Integration](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ### The execution layer for AI-driven game development.
@@ -222,7 +222,7 @@ dotnet tool install -g unityctl-mcp
 ```
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2`
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6`
 - GitHub Release CLI archives are framework-dependent (not self-contained) today.
 
 ### Apple Silicon macOS Validation
@@ -249,7 +249,7 @@ Project compatibility note: if a Unity project or third-party package is pinned 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json
@@ -541,7 +541,7 @@ unityctl.slnx
 
 ## Changelog
 
-See [GitHub Releases](https://github.com/kimjuyoung1127/unityctl/releases) for version history.
+See [GitHub Releases](https://github.com/Jason-hub-star/unityctl/releases) for version history.
 
 ## License
 

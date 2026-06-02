@@ -395,8 +395,8 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 프로젝트 | 통과 |
 |----------|------|
 | Unityctl.Shared.Tests | 89 |
-| Unityctl.Core.Tests | 143 |
-| Unityctl.Cli.Tests | 576 |
+| Unityctl.Core.Tests | 146 |
+| Unityctl.Cli.Tests | 578 |
 | Unityctl.Mcp.Tests | 22 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 

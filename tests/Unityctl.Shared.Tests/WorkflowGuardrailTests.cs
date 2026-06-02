@@ -98,10 +98,10 @@ public class WorkflowGuardrailTests
     private static void AssertReadmeBadges(string source)
     {
         Assert.Contains(
-            "[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml)",
+            "[![CI](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml)",
             source);
         Assert.Contains(
-            "[![Unity Integration](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml)",
+            "[![Unity Integration](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml)",
             source);
     }
 

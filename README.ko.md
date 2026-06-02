@@ -4,8 +4,8 @@
 
 [![NuGet](https://img.shields.io/nuget/v/unityctl?label=unityctl)](https://www.nuget.org/packages/unityctl)
 [![NuGet](https://img.shields.io/nuget/v/unityctl-mcp?label=unityctl-mcp)](https://www.nuget.org/packages/unityctl-mcp)
-[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml)
-[![Unity Integration](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml)
+[![CI](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml)
+[![Unity Integration](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ### AI가 게임을 만들 수 있게 해주는 실행 레이어.
@@ -217,7 +217,7 @@ dotnet tool install -g unityctl-mcp
 ```
 
 참고:
-- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2`
+- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6`
 - GitHub Release의 CLI 아카이브는 현재 framework-dependent 빌드입니다 (self-contained 아님).
 
 ### Apple Silicon macOS 검증
@@ -244,7 +244,7 @@ Apple Silicon MacBook Air에서 Homebrew, .NET SDK `10.0.105`, Unity Hub, Unity 
 ```bash
 # 1. 에디터 플러그인 설치
 unityctl init --project /path/to/project \
-  --source "https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
 
 # 2. Unity Editor에서 프로젝트를 열고 연결 확인
 unityctl ping --project /path/to/project --json
@@ -536,7 +536,7 @@ unityctl.slnx
 
 ## 변경 이력
 
-버전 이력은 [GitHub Releases](https://github.com/kimjuyoung1127/unityctl/releases)를 확인하세요.
+버전 이력은 [GitHub Releases](https://github.com/Jason-hub-star/unityctl/releases)를 확인하세요.
 
 ## 라이선스
 

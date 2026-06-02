@@ -26,11 +26,11 @@
 
 - `.github/workflows/ci-dotnet.yml` validates published CLI `schema` and `tools --json` parse successfully, expose matching command names, include `doctor`, `check`, `workflow-verify`, `scene-snapshot`, `scene-diff`, and `player-settings`, and execute `doctor --json` against a mini Unity project.
 - `.github/workflows/ci-dotnet.yml` packs the current PR CLI nupkg, installs that exact version with `dotnet tool install --tool-path`, and smokes `schema`, `tools --json`, `doctor --json`, `check --json`, and `workflow verify --json` JSON contracts.
-- `.github/workflows/ci-unity.yml` runs manual/nightly smoke for mini-project `init`, sample-project `doctor`, `check`, representative read `scene hierarchy`, representative write/readback `player-settings set/get`, and `workflow verify`; validates live JSON success/readback evidence; then uploads the artifacts.
+- `.github/workflows/ci-unity.yml` runs manual/nightly smoke for mini-project `init`, sample-project `doctor`, `check`, representative read `scene hierarchy`, representative write/readback `player-settings set/get`, and `workflow verify`; validates live JSON success/readback evidence; then uploads the artifacts. The Unity version matrix uses `fail-fast: false` so one Unity version cannot cancel evidence collection for the other.
 - CI/release workflows use Node 24-ready action majors for `checkout`, `setup-dotnet`, artifact upload/download, and GitHub Release creation.
 - `.github/workflows/release.yml` runs Shared/Core/Cli/Mcp tests as a hard gate before packaging, NuGet publish, and GitHub Release creation.
 
-Remote CI note: the latest checked `CI - dotnet` failure on `master` (run `24076930620`, 2026-04-07) failed on Ubuntu/macOS in `StatusCommandTests.SmartWait_LockedThenUnlocked_StopsEarly` and `StatusCommandTests.SmartWait_LockedThenIpcReady_WaitsAndSucceeds` because the test path fell through when no interactive Unity process was detected. The current local guard injects the interactive-editor and delay dependencies explicitly, and the local Release CLI suite now passes 574/574.
+Remote CI note: the latest checked PR `CI - dotnet` run for `codex/test-trust-baseline` (run `26797703593`, 2026-06-02) is green on Ubuntu, macOS, and Windows. The previous macOS timeout race in `AsyncCommandRunnerFlightTests.Timeout_ReturnsTestFailedResponse` is covered by the stabilized async timeout path, and the Windows published/tool smoke path now executes through `ProcessStartInfo` to avoid PowerShell native command exit-code drift.
 
 ## Local Verification Evidence
 
@@ -45,7 +45,7 @@ Remote CI note: the latest checked `CI - dotnet` failure on `master` (run `24076
 | `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 578 passed |
 | `dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release` | ✅ 22 passed |
 | published CLI `schema` / `tools --json` / `doctor --json` smoke | ✅ 166 commands, no drift, doctor JSON shape valid |
-| local nupkg `dotnet tool install --tool-path` smoke | ✅ installed current `unityctl 0.3.2`; schema/tools/doctor/check/workflow verify smoke passed |
+| local nupkg `dotnet tool install --tool-path` smoke | ✅ installs the current PR `unityctl` package; schema/tools/doctor/check/workflow verify smoke passed |
 | local `init --source src/Unityctl.Plugin` smoke | ✅ mini project manifest/settings written |
 
 Unity Editor-dependent smoke in `.github/workflows/ci-unity.yml` still requires the GitHub Actions Unity environment and `UNITY_LICENSE` secret to prove the live Editor portions (`check`, `scene hierarchy`, `player-settings set/get` with value readback, `workflow verify`) end-to-end.
