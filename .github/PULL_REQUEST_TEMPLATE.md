@@ -7,7 +7,7 @@
 - [ ] PR .NET gate stays green: Shared/Core/Cli/Mcp on Linux, macOS, and Windows.
 - [ ] Local focused tests were run for the changed layer(s).
 - [ ] No flaky test is left as "sometimes fails"; file `.github/ISSUE_TEMPLATE/flaky-test.yml` if isolation is still needed.
-- [ ] Bug fixes include a failing reproduction test, or `.github/ISSUE_TEMPLATE/regression-bug.yml` explains the missing coverage.
+- [ ] Bug fixes include a failing reproduction test, or link a `.github/ISSUE_TEMPLATE/regression-bug.yml` issue that explains the missing coverage.
 
 ## Contract Safety Checklist
 

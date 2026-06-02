@@ -320,6 +320,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains("regression issue를 링크", source);
         Assert.Contains(".github/PULL_REQUEST_TEMPLATE.md", source);
         Assert.Contains("CONTRIBUTING.md", source);
         Assert.Contains("Plugin shared copy drift", source);
@@ -367,6 +368,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("Shared/Core/Cli/Mcp on Linux, macOS, and Windows", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains("link a `.github/ISSUE_TEMPLATE/regression-bug.yml` issue", source);
 
         Assert.Contains("Contract Safety Checklist", source);
         Assert.Contains("WellKnownCommands", source);

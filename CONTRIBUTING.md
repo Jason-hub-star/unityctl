@@ -18,7 +18,7 @@ For focused changes, run the smallest relevant filter locally first, then rely o
 ## Flaky and regression policy
 
 - Flaky tests must be stabilized or isolated with evidence. Use `.github/ISSUE_TEMPLATE/flaky-test.yml` when a test needs follow-up isolation.
-- Bug fixes should include a failing reproduction test in the same PR. Use `.github/ISSUE_TEMPLATE/regression-bug.yml` if coverage cannot be added immediately.
+- Bug fixes should include a failing reproduction test in the same PR. Link a `.github/ISSUE_TEMPLATE/regression-bug.yml` issue when coverage cannot be added immediately.
 - High-value regression areas include IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case, and command/schema/plugin drift.
 - Resolved date/time boundary regressions such as `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` should stay on fixed timestamps instead of drifting back to wall-clock assumptions.
 
