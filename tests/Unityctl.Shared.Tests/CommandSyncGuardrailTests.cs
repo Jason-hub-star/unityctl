@@ -310,6 +310,63 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void CatalogCommandsWithoutWellKnownNames_AreDocumentedLocalCliSurfaces()
+    {
+        var wellKnownNames = GetSharedWellKnownConstants()
+            .Values
+            .ToHashSet(StringComparer.Ordinal);
+        var localCliCommands = CommandCatalog.All
+            .Where(command => !wellKnownNames.Contains(command.Name))
+            .Select(command => command.Name)
+            .OrderBy(command => command, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                "await-ready",
+                "detach",
+                "doctor",
+                "editor current",
+                "editor instances",
+                "editor list",
+                "editor select",
+                "init",
+                "log",
+                "package resolve",
+                "player-settings-get",
+                "player-settings-set",
+                "session clean",
+                "session list",
+                "session stop",
+                "tools",
+                "workflow-verify"
+            ],
+            localCliCommands);
+    }
+
+    [Fact]
+    public void CatalogWellKnownCommands_AreMcpReachableOrExplicitlyDocumentedAsSpecialCases()
+    {
+        var catalogFields = ParseCommandCatalogWellKnownFieldReferences();
+        var mcpFields = ParseMcpToolWellKnownFieldReferences();
+        var specialCases = catalogFields
+            .Where(field => !mcpFields.Contains(field))
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                nameof(WellKnownCommands.BuildProfileSetActive),
+                nameof(WellKnownCommands.BuildTargetSwitch),
+                nameof(WellKnownCommands.Schema),
+                nameof(WellKnownCommands.TestResult),
+                nameof(WellKnownCommands.Watch),
+                nameof(WellKnownCommands.Workflow)
+            ],
+            specialCases);
+    }
+
+    [Fact]
     public void CatalogCliNames_AreRegisteredInProgram()
     {
         var cliCommands = ParseCliCommands();
@@ -554,6 +611,19 @@ public class CommandSyncGuardrailTests
         return files
             .SelectMany(path => PluginHandlerRegex.Matches(File.ReadAllText(path)).Select(match => match.Groups[1].Value))
             .ToArray();
+    }
+
+    private static string[] ParseCommandCatalogWellKnownFieldReferences()
+        => ParseWellKnownFieldReferences(@"src\Unityctl.Shared\Commands\CommandCatalog.cs")
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+    private static HashSet<string> ParseMcpToolWellKnownFieldReferences()
+    {
+        var toolsDir = Path.Combine(GetRepoRoot(), "src", "Unityctl.Mcp", "Tools");
+        return Directory.GetFiles(toolsDir, "*.cs", SearchOption.TopDirectoryOnly)
+            .SelectMany(path => WellKnownRefRegex.Matches(File.ReadAllText(path)).Select(match => match.Groups[1].Value))
+            .ToHashSet(StringComparer.Ordinal);
     }
 
     private static HashSet<string> ParseWellKnownFieldReferences(string relativePath)
