@@ -387,7 +387,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
 | `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 107 통과. workflow hard-gate/smoke/README badge/public trust inventory/Unity blocker tracking/PR skip guardrail, CLI/Plugin duplicate registration guardrail, catalog↔WellKnown↔MCP reachability guardrail 추가 |
-| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 152 통과. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`를 고정 시각 테스트로 안정화. slash/backslash/case policy path/pipe normalization, UnityProcessDetector slash/case process matching, CommandExecutor headless lock no-batch-fallback, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
+| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 153 통과. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`를 고정 시각 테스트로 안정화. slash/backslash/case policy path/pipe normalization, UnityProcessDetector slash/case process matching, CommandExecutor headless/interactive lock no-batch-fallback, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 579 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, running project path case policy, dirty scene policy normalization, batch command parser edge regression 추가 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
 | `dotnet test unityctl.slnx -c Release` | ⚠️ | Integration/환경 락, AppLocker 등 워크스테이션 조건에 따라 개별 프로젝트 실행이 더 안정적 |
@@ -395,12 +395,12 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 프로젝트 | 통과 |
 |----------|------|
 | Unityctl.Shared.Tests | 107 |
-| Unityctl.Core.Tests | 152 |
+| Unityctl.Core.Tests | 153 |
 | Unityctl.Cli.Tests | 579 |
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **863개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **864개**다.
 
 신규 자동 검증:
 
@@ -417,7 +417,7 @@ PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **863개**다.
 - `Unityctl.Cli.Tests`에 Unity discovery/platform regression 추가: CRLF/indent ProjectVersion parsing, Unity Hub `Location` casing, interactive/headless process classification
 - `Unityctl.Cli.Tests`에 dirty scene policy normalization regression 추가: `scene open/create --dirty-policy` 대소문자/공백 입력을 CLI 요청 단계에서 안정화
 - `Unityctl.Core.Tests`에 slash/backslash project path normalization regression 추가: 같은 프로젝트 경로의 separator/trailing slash 차이가 pipe name을 바꾸지 않음을 Unity 실행 없이 검증
-- `Unityctl.Core.Tests`에 CommandExecutor headless lock regression 추가: headless Unity lock 상태에서 `check`가 batch fallback으로 내려가지 않고 Busy + target metadata를 반환함을 Unity 실행 없이 검증
+- `Unityctl.Core.Tests`에 CommandExecutor headless/interactive lock regression 추가: headless Unity lock 상태와 interactive Editor IPC-not-ready 상태에서 `check`가 batch fallback으로 내려가지 않고 Busy + target metadata를 반환함을 Unity 실행 없이 검증
 - `Unityctl.Core.Tests`에 BatchTransport readiness regression 추가: interactive editor lock, headless batch lock, stale lockfile guidance를 Unity 실행 없이 검증
 
 > 이전 실측 상세/경쟁 분석 아카이브 → `docs/internal/DEVELOPMENT.md` "라이브 검증 아카이브" 섹션 참조.

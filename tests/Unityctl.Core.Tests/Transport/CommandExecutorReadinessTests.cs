@@ -47,6 +47,43 @@ public sealed class CommandExecutorReadinessTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_LockedByInteractiveEditor_ReturnsBusyWithoutBatchFallback()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"unityctl-interactive-executor-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(projectPath);
+        try
+        {
+            var platform = new FakePlatform(
+                locked: true,
+                new UnityProcessInfo
+                {
+                    ProcessId = 6682,
+                    ProjectPath = projectPath,
+                    HasMainWindow = true
+                });
+            var executor = new CommandExecutor(platform, new UnityEditorDiscovery(platform));
+
+            var response = await executor.ExecuteAsync(
+                projectPath,
+                new CommandRequest { Command = WellKnownCommands.Check });
+
+            Assert.False(response.Success);
+            Assert.Equal(StatusCode.Busy, response.StatusCode);
+            Assert.Contains("IPC is not ready", response.Message);
+            Assert.Equal("editor-running-ipc-not-ready", response.Data!["target"]!["fallbackReason"]!.GetValue<string>());
+            Assert.Equal("interactive", response.Data["target"]!["processKind"]!.GetValue<string>());
+            Assert.Equal(6682, response.Data["target"]!["unityPid"]!.GetValue<int>());
+            Assert.True(response.Data["target"]!["projectLocked"]!.GetValue<bool>());
+            Assert.Null(response.Data["target"]!["transport"]);
+        }
+        finally
+        {
+            if (Directory.Exists(projectPath))
+                Directory.Delete(projectPath, recursive: true);
+        }
+    }
+
+    [Fact]
     public void BuildInteractiveBusyResponse_ForScriptGetErrors_AddsScriptSpecificGuidance()
     {
         var response = CommandExecutor.BuildInteractiveBusyResponse(
