@@ -24,6 +24,19 @@ public class WorkflowGuardrailTests
     }
 
     [Fact]
+    public void DotnetCi_RunsForEveryPrWithoutPathOrEventNarrowing()
+    {
+        var source = ReadRepoFile(".github/workflows/ci-dotnet.yml");
+
+        Assert.Contains("pull_request:", source);
+        Assert.DoesNotContain("paths:", source);
+        Assert.DoesNotContain("paths-ignore:", source);
+        Assert.DoesNotContain("branches-ignore:", source);
+        Assert.DoesNotContain("types:", source);
+        Assert.DoesNotContain("pull_request_target:", source);
+    }
+
+    [Fact]
     public void ReleaseWorkflow_DoesNotPublishWhenTestsFail()
     {
         var source = ReadRepoFile(".github/workflows/release.yml");
@@ -135,12 +148,12 @@ public class WorkflowGuardrailTests
             Assert.DoesNotContain("476", source);
         }
 
-        Assert.Contains("853 PR .NET tests", publicDocs[0]);
-        Assert.Contains("853 PR .NET 테스트", publicDocs[1]);
-        Assert.Contains("853 PR .NET xUnit tests", publicDocs[2]);
-        Assert.Contains("853 PR .NET xUnit tests", publicDocs[3]);
-        Assert.Contains("**853**", publicDocs[4]);
-        Assert.Contains("**853개**", publicDocs[5]);
+        Assert.Contains("854 PR .NET tests", publicDocs[0]);
+        Assert.Contains("854 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("854 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("854 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**854**", publicDocs[4]);
+        Assert.Contains("**854개**", publicDocs[5]);
         Assert.Contains("Unity live blocker tracking issue: #17", publicDocs[4]);
         Assert.Contains("Configure Unity Integration Actions secret", publicDocs[4]);
     }
