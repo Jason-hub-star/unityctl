@@ -205,6 +205,36 @@ public class McpBlackBoxTests
     }
 
     [Fact]
+    public async Task SchemaToolWithCommand_ReturnsCatalogDefinitionForNameAndCliAlias()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+        var expected = CommandCatalog.All.Single(command => command.Name == "scene-hierarchy");
+
+        foreach (var commandName in new[] { expected.Name, expected.CliName! })
+        {
+            var result = await harness.Client.CallToolAsync(
+                "unityctl_schema",
+                arguments: new Dictionary<string, object?> { ["command"] = commandName },
+                progress: null,
+                options: new RequestOptions(),
+                cancellationToken: CancellationToken.None);
+
+            Assert.NotEqual(true, result.IsError);
+            var payload = GetToolResultText(result);
+            var actual = JsonSerializer.Deserialize(payload, UnityctlJsonContext.Default.CommandDefinition);
+
+            Assert.NotNull(actual);
+            Assert.Equal(expected.Name, actual!.Name);
+            Assert.Equal(expected.CliName, actual.CliName);
+            Assert.Equal(expected.Category, actual.Category);
+            Assert.Equal(expected.Description, actual.Description);
+            Assert.Equal(
+                expected.Parameters.Select(parameter => parameter.Name).OrderBy(name => name),
+                actual.Parameters.Select(parameter => parameter.Name).OrderBy(name => name));
+        }
+    }
+
+    [Fact]
     public async Task SchemaToolWithUnknownCommand_ReturnsError()
     {
         await using var harness = await UnityctlMcpHarness.StartAsync();
