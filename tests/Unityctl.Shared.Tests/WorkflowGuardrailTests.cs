@@ -18,6 +18,8 @@ public class WorkflowGuardrailTests
         Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release", source);
         Assert.Contains("fail-fast: false", source);
         Assert.DoesNotContain("continue-on-error", source);
+        Assert.DoesNotContain("|| true", source);
+        AssertCiTestStepPrecedesPackagingAndSmoke(source);
         AssertDotnetTestCommandsDoNotFilterSuites(source);
     }
 
@@ -220,6 +222,21 @@ public class WorkflowGuardrailTests
             .ToArray();
 
         Assert.Empty(filteredCommands);
+    }
+
+    private static void AssertCiTestStepPrecedesPackagingAndSmoke(string source)
+    {
+        var testStepIndex = source.IndexOf("- name: Test (unit + MCP, excluding Integration)", StringComparison.Ordinal);
+        var publishStepIndex = source.IndexOf("- name: Publish CLI", StringComparison.Ordinal);
+        var packStepIndex = source.IndexOf("- name: Pack CLI tool", StringComparison.Ordinal);
+        var publishedSmokeIndex = source.IndexOf("- name: Smoke published CLI", StringComparison.Ordinal);
+        var installedToolSmokeIndex = source.IndexOf("- name: Smoke local dotnet tool install", StringComparison.Ordinal);
+
+        Assert.True(testStepIndex >= 0, "CI workflow must run Shared/Core/Cli/Mcp tests.");
+        Assert.True(publishStepIndex > testStepIndex, "CI must run PR .NET tests before publishing the CLI.");
+        Assert.True(packStepIndex > testStepIndex, "CI must run PR .NET tests before packing the CLI tool.");
+        Assert.True(publishedSmokeIndex > testStepIndex, "CI must run PR .NET tests before published CLI smoke.");
+        Assert.True(installedToolSmokeIndex > testStepIndex, "CI must run PR .NET tests before installed tool smoke.");
     }
 
     private static string GetRepoRoot()
