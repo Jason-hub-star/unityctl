@@ -33,6 +33,8 @@ New commands must stay synchronized across the public contract:
 5. Add or update the Plugin handler under `src/Unityctl.Plugin/Editor/Commands`.
 6. Run `CommandCatalogTests`, `CommandSchemaTests`, and `CommandSyncGuardrailTests`.
 
+`CommandSyncGuardrailTests` also protects against Plugin shared copy drift by comparing `WellKnownCommands`, wire DTO JSON fields, `StatusCode`, and Exec parser grammar sentinels between Shared and the Unity Plugin copy.
+
 ```bash
 dotnet test tests/Unityctl.Shared.Tests -c Release --filter "CommandCatalogTests|CommandSchemaTests|CommandSyncGuardrailTests"
 ```
@@ -55,4 +57,3 @@ If a PR changes any public surface, update `README.md`, `README.ko.md`, and rele
 Regular PRs run fast .NET tests. Unity Editor-dependent validation lives in the Unity Integration workflow and covers sample-project `init`, `doctor`, `check`, representative read/write commands, and `workflow verify`.
 
 Unity Integration requires either the `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret. When those secrets are unavailable, the workflow fails in a preflight step and uploads `license-preflight.txt` artifacts instead of hiding the reason inside GameCI logs.
-

@@ -12,6 +12,9 @@ public class CommandSyncGuardrailTests
     private static readonly Regex WellKnownRefRegex = new(@"WellKnownCommands\.(\w+)", RegexOptions.Compiled);
     private static readonly Regex PluginConstRegex = new(@"public const string (\w+) = ""([^""]+)"";", RegexOptions.Compiled);
     private static readonly Regex PluginHandlerRegex = new(@"CommandName\s*=>\s*WellKnownCommands\.(\w+)", RegexOptions.Compiled);
+    private static readonly Regex SharedJsonPropertyRegex = new(@"\[JsonPropertyName\(""([^""]+)""\)\]\s*public\s+[^{};]+?\s+(\w+)\s*\{", RegexOptions.Compiled);
+    private static readonly Regex PluginJsonPropertyRegex = new(@"\[JsonProperty\(""([^""]+)""\)\]\s*public\s+[^;]+?\s+(\w+)\s*(?:;|=)", RegexOptions.Compiled);
+    private static readonly Regex EnumMemberRegex = new(@"^\s*(\w+)\s*=\s*(-?\d+)\s*,?", RegexOptions.Compiled | RegexOptions.Multiline);
 
     [Fact]
     public void PluginSharedWellKnownCommands_CopyMatchesSharedDefinition()
@@ -23,6 +26,57 @@ public class CommandSyncGuardrailTests
         var pluginCopy = ParsePluginWellKnownConstants();
 
         Assert.Equal(expected, pluginCopy);
+    }
+
+    [Fact]
+    public void PluginSharedWireDtoFields_MatchSharedJsonContracts()
+    {
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\CommandRequest.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\CommandRequest.cs"));
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\CommandResponse.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\CommandResponse.cs"));
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\EventEnvelope.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\EventEnvelope.cs"));
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\PreflightCheck.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\PreflightCheck.cs"));
+    }
+
+    [Fact]
+    public void PluginSharedStatusCode_CopyMatchesSharedDefinition()
+    {
+        Assert.Equal(
+            ParseEnumMembers(@"src\Unityctl.Shared\Protocol\StatusCode.cs"),
+            ParseEnumMembers(@"src\Unityctl.Plugin\Editor\Shared\StatusCode.cs"));
+    }
+
+    [Fact]
+    public void PluginSharedExecExpressionParser_PreservesCoreGrammarSentinels()
+    {
+        var shared = ReadRepoFile(@"src\Unityctl.Shared\Exec\ExecExpressionParser.cs");
+        var plugin = ReadRepoFile(@"src\Unityctl.Plugin\Editor\Shared\ExecExpressionParser.cs");
+
+        foreach (var sentinel in new[]
+        {
+            "expression must not be empty.",
+            "expected a member path before '='.",
+            "expected a value after '='.",
+            "expected 'TypeName.MemberName'.",
+            "unterminated string or bracketed expression.",
+            "unterminated string or bracketed argument.",
+            "empty arguments are not allowed.",
+            "FindTopLevelAssignment",
+            "FindInvocationOpenParen",
+            "SplitArguments",
+            "LastTopLevelOpenParenIndex"
+        })
+        {
+            Assert.Contains(sentinel, shared);
+            Assert.Contains(sentinel, plugin);
+        }
     }
 
     [Fact]
@@ -257,6 +311,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
         Assert.Contains(".github/PULL_REQUEST_TEMPLATE.md", source);
         Assert.Contains("CONTRIBUTING.md", source);
+        Assert.Contains("Plugin shared copy drift", source);
 
         Assert.Contains("### 새 명령 추가 체크리스트", source);
         Assert.Contains("WellKnownCommands", source);
@@ -342,6 +397,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("RunTool", source);
         Assert.Contains("src/Unityctl.Plugin/Editor/Commands", source);
         Assert.Contains("CommandSyncGuardrailTests", source);
+        Assert.Contains("Plugin shared copy drift", source);
 
         Assert.Contains("dotnet tool install", source);
         Assert.Contains("unityctl tools --json", source);
@@ -385,6 +441,26 @@ public class CommandSyncGuardrailTests
             .Select(match => (Field: match.Groups[1].Value, Value: match.Groups[2].Value))
             .ToDictionary(item => item.Field, item => item.Value, StringComparer.Ordinal);
     }
+
+    private static string[] ParseSharedJsonPropertyNames(string relativePath)
+        => SharedJsonPropertyRegex
+            .Matches(ReadRepoFile(relativePath))
+            .Select(match => match.Groups[1].Value)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string[] ParsePluginJsonPropertyNames(string relativePath)
+        => PluginJsonPropertyRegex
+            .Matches(ReadRepoFile(relativePath))
+            .Select(match => match.Groups[1].Value)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+    private static Dictionary<string, int> ParseEnumMembers(string relativePath)
+        => EnumMemberRegex
+            .Matches(ReadRepoFile(relativePath))
+            .Select(match => (Name: match.Groups[1].Value, Value: int.Parse(match.Groups[2].Value)))
+            .ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
 
     private static HashSet<string> ParsePluginHandlerFieldNames()
     {
