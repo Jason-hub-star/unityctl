@@ -35,10 +35,14 @@ jobs:
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         run: |
           set -euo pipefail
+          mkdir -p unityctl-live-artifacts
+          printf 'Unity license preflight for %s\n' "${{ matrix.unityVersion }}" > unityctl-live-artifacts/license-preflight.txt
           if [ -z "${UNITY_LICENSE:-}" ] && [ -z "${UNITY_SERIAL:-}" ]; then
+            printf 'Missing UNITY_LICENSE or UNITY_SERIAL GitHub secret.\n' >> unityctl-live-artifacts/license-preflight.txt
             echo "::error::Unity Integration requires either the UNITY_LICENSE or UNITY_SERIAL GitHub secret before GameCI can run live Editor validation."
             exit 1
           fi
+          printf 'Unity license secret present.\n' >> unityctl-live-artifacts/license-preflight.txt
 
       # GameCI Unity Test Runner
       - uses: game-ci/unity-test-runner@v4
