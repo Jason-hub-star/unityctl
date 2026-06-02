@@ -386,7 +386,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 98 통과. workflow hard-gate/smoke/README badge/public trust inventory guardrail 추가 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 99 통과. workflow hard-gate/smoke/README badge/public trust inventory/Unity blocker tracking guardrail 추가 |
 | `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 150 통과. `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` flaky 원인(UTC 날짜/entry timestamp 경계)을 고정 시각 테스트로 안정화. slash/backslash path/pipe normalization, CommandExecutor headless lock no-batch-fallback, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 578 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, dirty scene policy normalization, batch command parser edge regression 추가 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 22 통과 |
@@ -400,7 +400,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | Unityctl.Mcp.Tests | 22 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **850개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **851개**다.
 
 신규 자동 검증:
 

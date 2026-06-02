@@ -128,12 +128,28 @@ public class WorkflowGuardrailTests
             Assert.DoesNotContain("476", source);
         }
 
-        Assert.Contains("850 PR .NET tests", publicDocs[0]);
-        Assert.Contains("850 PR .NET 테스트", publicDocs[1]);
-        Assert.Contains("850 PR .NET xUnit tests", publicDocs[2]);
-        Assert.Contains("850 PR .NET xUnit tests", publicDocs[3]);
-        Assert.Contains("**850**", publicDocs[4]);
-        Assert.Contains("**850개**", publicDocs[5]);
+        Assert.Contains("851 PR .NET tests", publicDocs[0]);
+        Assert.Contains("851 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("851 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("851 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**851**", publicDocs[4]);
+        Assert.Contains("**851개**", publicDocs[5]);
+        Assert.Contains("Unity live blocker tracking issue: #17", publicDocs[4]);
+        Assert.Contains("Configure Unity Integration Actions secret", publicDocs[4]);
+    }
+
+    [Fact]
+    public void ReadmeSyncReport_TracksUnityLiveBlockerIssue()
+    {
+        var source = ReadRepoFile("docs/status/README-SYNC-REPORT.md");
+
+        Assert.Contains("Unity live blocker tracking issue: #17", source);
+        Assert.Contains("Configure Unity Integration Actions secret", source);
+        Assert.Contains("gh secret list --repo Jason-hub-star/unityctl", source);
+        Assert.Contains("NUGET_API_KEY", source);
+        Assert.Contains("UNITY_LICENSE", source);
+        Assert.Contains("UNITY_SERIAL", source);
+        Assert.Contains("ci-unity.yml", source);
     }
 
     private static string ReadRepoFile(string relativePath)

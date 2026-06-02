@@ -8,18 +8,18 @@
 |------|--------|------|
 | CLI command count | **166** | published CLI `schema --format json` / `tools --json` smoke |
 | MCP tool count | **12** | README + MCP black-box tests |
-| PR .NET xUnit test inventory | **850** | Shared/Core/Cli/Mcp local Release test output |
+| PR .NET xUnit test inventory | **851** | Shared/Core/Cli/Mcp local Release test output |
 
 ## Synced Public Docs
 
 | 위치 | 현재값 | 상태 |
 |------|--------|------|
-| `README.md` hero / comparison / command heading / architecture | 166 commands, 850 PR .NET tests | ✅ |
-| `README.ko.md` hero / comparison / command heading / architecture | 166 명령, 850 PR .NET 테스트 | ✅ |
+| `README.md` hero / comparison / command heading / architecture | 166 commands, 851 PR .NET tests | ✅ |
+| `README.ko.md` hero / comparison / command heading / architecture | 166 명령, 851 PR .NET 테스트 | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 166 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 166 commands | ✅ |
-| `docs/ref/architecture-mermaid.md` architecture block | 850 PR .NET xUnit tests | ✅ |
-| `docs/ref/getting-started.md` architecture block | 850 PR .NET xUnit tests | ✅ |
+| `docs/ref/architecture-mermaid.md` architecture block | 851 PR .NET xUnit tests | ✅ |
+| `docs/ref/getting-started.md` architecture block | 851 PR .NET xUnit tests | ✅ |
 | `docs/ref/ai-quickstart.md` machine-readable schema note | 166 commands | ✅ |
 
 ## CI Guardrails
@@ -32,7 +32,9 @@
 
 Remote CI evidence: PR `CI — dotnet` run `26800364431` for `codex/test-trust-baseline` passed on Ubuntu, macOS, and Windows on 2026-06-02. The previous macOS timeout race in `AsyncCommandRunnerFlightTests.Timeout_ReturnsTestFailedResponse` is covered by the stabilized async timeout path, and the Windows published/tool smoke path now executes through `ProcessStartInfo` to avoid PowerShell native command exit-code drift.
 
-Unity live evidence: manual `CI — Unity Integration` run `26800529273` is blocked by missing `UNITY_LICENSE` / `UNITY_SERIAL`, but both Unity matrix jobs uploaded `license-preflight.txt` and `planned-smoke.txt` artifacts. The downloaded planned-smoke artifacts preserve intended coverage for `init`, `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify`.
+Unity live evidence: manual `CI — Unity Integration` run `26800762372` is blocked by missing `UNITY_LICENSE` / `UNITY_SERIAL`, but both Unity matrix jobs uploaded `license-preflight.txt` and `planned-smoke.txt` artifacts. The downloaded planned-smoke artifacts preserve intended coverage for `init`, `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify`.
+
+Unity live blocker tracking issue: #17 (`Configure Unity Integration Actions secret`). Current `gh secret list --repo Jason-hub-star/unityctl` evidence shows only `NUGET_API_KEY`; add `UNITY_LICENSE` or `UNITY_SERIAL`, rerun `ci-unity.yml`, and download artifacts before closing the blocker.
 
 ## Local Verification Evidence
 
@@ -42,7 +44,7 @@ Unity live evidence: manual `CI — Unity Integration` run `26800529273` is bloc
 |------|--------|
 | `dotnet restore` | ✅ |
 | `dotnet build --no-restore -c Release` | ✅ warning 0 / error 0 |
-| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 98 passed |
+| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 99 passed |
 | `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 150 passed |
 | `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 578 passed |
 | `dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release` | ✅ 22 passed |
