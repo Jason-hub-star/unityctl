@@ -386,8 +386,8 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 89 통과. workflow hard-gate/smoke/README badge guardrail 추가 |
-| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 146 통과. `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` flaky 원인(UTC 날짜/entry timestamp 경계)을 고정 시각 테스트로 안정화. path/pipe normalization, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 97 통과. workflow hard-gate/smoke/README badge guardrail 추가 |
+| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 148 통과. `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` flaky 원인(UTC 날짜/entry timestamp 경계)을 고정 시각 테스트로 안정화. slash/backslash path/pipe normalization, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 578 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, dirty scene policy normalization, batch command parser edge regression 추가 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 22 통과 |
 | `dotnet test unityctl.slnx -c Release` | ⚠️ | Integration/환경 락, AppLocker 등 워크스테이션 조건에 따라 개별 프로젝트 실행이 더 안정적 |
@@ -400,7 +400,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | Unityctl.Mcp.Tests | 22 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **835개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **847개**다.
 
 신규 자동 검증:
 
@@ -416,6 +416,7 @@ PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **835개**다.
 - `Unityctl.Shared.Tests` workflow guardrail이 README/README.ko CI badge를 정확한 `ci-dotnet.yml` / `ci-unity.yml` workflow URL에 고정
 - `Unityctl.Cli.Tests`에 Unity discovery/platform regression 추가: CRLF/indent ProjectVersion parsing, Unity Hub `Location` casing, interactive/headless process classification
 - `Unityctl.Cli.Tests`에 dirty scene policy normalization regression 추가: `scene open/create --dirty-policy` 대소문자/공백 입력을 CLI 요청 단계에서 안정화
+- `Unityctl.Core.Tests`에 slash/backslash project path normalization regression 추가: 같은 프로젝트 경로의 separator/trailing slash 차이가 pipe name을 바꾸지 않음을 Unity 실행 없이 검증
 - `Unityctl.Core.Tests`에 BatchTransport readiness regression 추가: interactive editor lock, headless batch lock, stale lockfile guidance를 Unity 실행 없이 검증
 
 > 이전 실측 상세/경쟁 분석 아카이브 → `docs/internal/DEVELOPMENT.md` "라이브 검증 아카이브" 섹션 참조.

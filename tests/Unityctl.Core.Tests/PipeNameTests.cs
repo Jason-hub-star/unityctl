@@ -58,6 +58,17 @@ public class PipeNameTests
     }
 
     [Fact]
+    public void NormalizeProjectPath_IgnoresMixedSlashAndTrailingSeparatorDifferences()
+    {
+        var forwardSlashPath = "C:/Users/jason/My project";
+        var mixedSlashPath = @"C:\Users/jason\My project\\";
+
+        Assert.Equal(
+            Constants.NormalizeProjectPath(forwardSlashPath),
+            Constants.NormalizeProjectPath(mixedSlashPath));
+    }
+
+    [Fact]
     public void GetPipeName_IgnoresTrailingSlashDifferences()
     {
         var path = Path.Combine(Path.GetTempPath(), "unityctl-pipe-test");
@@ -66,6 +77,15 @@ public class PipeNameTests
 
         Assert.Equal(Constants.GetPipeName(path), Constants.GetPipeName(withSlash));
         Assert.Equal(Constants.GetPipeName(path), Constants.GetPipeName(withMultipleSlashes));
+    }
+
+    [Fact]
+    public void GetPipeName_IgnoresSlashDirectionDifferences()
+    {
+        var forwardSlashPath = "C:/Users/jason/My project";
+        var backslashPath = @"C:\Users\jason\My project";
+
+        Assert.Equal(Constants.GetPipeName(forwardSlashPath), Constants.GetPipeName(backslashPath));
     }
 
     [Fact]
