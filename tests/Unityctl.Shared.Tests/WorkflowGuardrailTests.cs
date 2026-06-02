@@ -61,6 +61,11 @@ public class WorkflowGuardrailTests
         Assert.Contains("dotnet tool install unityctl --tool-path", source);
         Assert.Contains("installed tool check smoke", source);
         Assert.Contains("installed tool workflow verify smoke", source);
+        Assert.Contains("installed tool schema and tools command names drifted", source);
+        Assert.Contains("installed tool schema is missing required command", source);
+        Assert.Contains("installed tool doctor JSON is missing", source);
+        Assert.Contains("installed tool check JSON is missing", source);
+        Assert.Contains("installed tool workflow verify JSON is missing", source);
         Assert.Contains("check JSON is missing", source);
         Assert.Contains("workflow verify JSON is missing", source);
     }

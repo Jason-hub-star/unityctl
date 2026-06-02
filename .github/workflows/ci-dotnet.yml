@@ -171,14 +171,39 @@ jobs:
           Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("--help") -AllowedExitCodes @(0, 1) -Name "installed tool help smoke"
           Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("schema", "--format", "json") -AllowedExitCodes @(0) -OutputPath "publish/tool-schema.json" -Name "installed tool schema smoke"
           Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("tools", "--json") -AllowedExitCodes @(0) -OutputPath "publish/tool-tools.json" -Name "installed tool tools smoke"
-          Get-Content publish/tool-schema.json -Raw | ConvertFrom-Json | Out-Null
-          Get-Content publish/tool-tools.json -Raw | ConvertFrom-Json | Out-Null
+          $toolSchema = Get-Content publish/tool-schema.json -Raw | ConvertFrom-Json
+          $toolTools = Get-Content publish/tool-tools.json -Raw | ConvertFrom-Json
+          $toolSchemaNames = @($toolSchema.commands | ForEach-Object { $_.name } | Sort-Object)
+          $toolNames = @($toolTools | ForEach-Object { $_.name } | Sort-Object)
+          if (($toolSchemaNames -join "`n") -ne ($toolNames -join "`n")) {
+            throw "installed tool schema and tools command names drifted"
+          }
+          foreach ($required in @("doctor", "check", "workflow-verify", "scene-snapshot", "scene-diff", "player-settings")) {
+            if ($toolSchemaNames -notcontains $required) {
+              throw "installed tool schema is missing required command '$required'"
+            }
+          }
           Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("doctor", "--project", "publish/smoke-project", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/tool-doctor.json" -Name "installed tool doctor smoke"
-          Get-Content publish/tool-doctor.json -Raw | ConvertFrom-Json | Out-Null
+          $toolDoctor = Get-Content publish/tool-doctor.json -Raw | ConvertFrom-Json
+          foreach ($property in @("editor", "plugin", "ipc", "summary")) {
+            if (-not $toolDoctor.PSObject.Properties[$property]) {
+              throw "installed tool doctor JSON is missing '$property'"
+            }
+          }
           Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("check", "--project", "publish/smoke-project", "--type", "compile", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/tool-check.json" -Name "installed tool check smoke"
-          Get-Content publish/tool-check.json -Raw | ConvertFrom-Json | Out-Null
+          $toolCheck = Get-Content publish/tool-check.json -Raw | ConvertFrom-Json
+          foreach ($property in @("statusCode", "success", "message")) {
+            if (-not $toolCheck.PSObject.Properties[$property]) {
+              throw "installed tool check JSON is missing '$property'"
+            }
+          }
           Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("workflow", "verify", "--file", "publish/smoke-verify.json", "--project", "publish/smoke-project", "--artifacts-dir", "publish/smoke-artifacts-tool", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/tool-workflow.json" -Name "installed tool workflow verify smoke"
-          Get-Content publish/tool-workflow.json -Raw | ConvertFrom-Json | Out-Null
+          $toolWorkflow = Get-Content publish/tool-workflow.json -Raw | ConvertFrom-Json
+          foreach ($property in @("passed", "summary", "steps", "artifacts")) {
+            if (-not $toolWorkflow.PSObject.Properties[$property]) {
+              throw "installed tool workflow verify JSON is missing '$property'"
+            }
+          }
 
       - name: Smoke published CLI (Unix)
         if: runner.os != 'Windows'
@@ -270,8 +295,25 @@ jobs:
           version="${version#unityctl.}"
           dotnet tool install unityctl --tool-path publish/tool --add-source publish/packages --version "$version" --no-cache
           ./publish/tool/unityctl --help >/dev/null
-          ./publish/tool/unityctl schema --format json >/dev/null
-          ./publish/tool/unityctl tools --json >/dev/null
+          ./publish/tool/unityctl schema --format json > publish/tool-schema.json
+          ./publish/tool/unityctl tools --json > publish/tool-tools.json
+          python3 - <<'PY'
+          import json
+
+          with open("publish/tool-schema.json", encoding="utf-8") as f:
+              schema = json.load(f)
+          with open("publish/tool-tools.json", encoding="utf-8") as f:
+              tools = json.load(f)
+          schema_names = sorted(command["name"] for command in schema["commands"])
+          tool_names = sorted(command["name"] for command in tools)
+
+          if schema_names != tool_names:
+              raise SystemExit("installed tool schema and tools command names drifted")
+
+          for required in ("doctor", "check", "workflow-verify", "scene-snapshot", "scene-diff", "player-settings"):
+              if required not in schema_names:
+                  raise SystemExit(f"installed tool schema is missing required command '{required}'")
+          PY
           set +e
           doctor_json="$(./publish/tool/unityctl doctor --project publish/smoke-project --json)"
           doctor_exit=$?
@@ -284,7 +326,10 @@ jobs:
           import json
           import os
 
-          json.loads(os.environ["DOCTOR_JSON"])
+          doctor = json.loads(os.environ["DOCTOR_JSON"])
+          for key in ("editor", "plugin", "ipc", "summary"):
+              if key not in doctor:
+                  raise SystemExit(f"installed tool doctor JSON is missing '{key}'")
           PY
           set +e
           check_json="$(./publish/tool/unityctl check --project publish/smoke-project --type compile --json)"
@@ -298,7 +343,10 @@ jobs:
           import json
           import os
 
-          json.loads(os.environ["CHECK_JSON"])
+          check = json.loads(os.environ["CHECK_JSON"])
+          for key in ("statusCode", "success", "message"):
+              if key not in check:
+                  raise SystemExit(f"installed tool check JSON is missing '{key}'")
           PY
           set +e
           workflow_json="$(./publish/tool/unityctl workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts-tool --json)"
@@ -312,5 +360,8 @@ jobs:
           import json
           import os
 
-          json.loads(os.environ["WORKFLOW_JSON"])
+          workflow = json.loads(os.environ["WORKFLOW_JSON"])
+          for key in ("passed", "summary", "steps", "artifacts"):
+              if key not in workflow:
+                  raise SystemExit(f"installed tool workflow verify JSON is missing '{key}'")
           PY
