@@ -111,6 +111,35 @@ public class McpBlackBoxTests
     }
 
     [Fact]
+    public async Task SchemaToolWithCategory_ReturnsOnlyMatchingCatalogCommands()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+
+        var result = await harness.Client.CallToolAsync(
+            "unityctl_schema",
+            arguments: new Dictionary<string, object?> { ["category"] = "query" },
+            progress: null,
+            options: new RequestOptions(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.NotEqual(true, result.IsError);
+        var payload = GetToolResultText(result);
+        var schema = JsonSerializer.Deserialize(payload, UnityctlJsonContext.Default.CommandSchema);
+        var expected = CommandCatalog.All
+            .Where(command => command.Category.Equals("query", StringComparison.OrdinalIgnoreCase))
+            .Select(command => command.Name)
+            .OrderBy(name => name)
+            .ToArray();
+
+        Assert.NotNull(schema);
+        Assert.NotEmpty(schema!.Commands);
+        Assert.All(schema.Commands, command => Assert.Equal("query", command.Category));
+        Assert.Equal(
+            expected,
+            schema.Commands.Select(command => command.Name).OrderBy(name => name).ToArray());
+    }
+
+    [Fact]
     public async Task SchemaToolWithUnknownCategory_ReturnsError()
     {
         await using var harness = await UnityctlMcpHarness.StartAsync();
