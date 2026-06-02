@@ -53,13 +53,41 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $PSNativeCommandUseErrorActionPreference = $false
-          & ./publish/cli/unityctl.exe --help
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "published CLI help smoke exited with unexpected code $LASTEXITCODE"
+          function Invoke-UnityctlSmoke {
+            param(
+              [string]$Exe,
+              [string[]]$Arguments,
+              [int[]]$AllowedExitCodes,
+              [string]$OutputPath,
+              [string]$Name
+            )
+            $psi = [System.Diagnostics.ProcessStartInfo]::new()
+            $psi.FileName = $Exe
+            foreach ($argument in $Arguments) {
+              [void]$psi.ArgumentList.Add($argument)
+            }
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.UseShellExecute = $false
+            $process = [System.Diagnostics.Process]::Start($psi)
+            $stdout = $process.StandardOutput.ReadToEnd()
+            $stderr = $process.StandardError.ReadToEnd()
+            $process.WaitForExit()
+            if ($OutputPath) {
+              $stdout | Set-Content -Path $OutputPath -Encoding utf8
+            } elseif ($stdout) {
+              Write-Host $stdout
+            }
+            if ($stderr) {
+              Write-Host $stderr
+            }
+            if ($AllowedExitCodes -notcontains $process.ExitCode) {
+              throw "$Name exited with unexpected code $($process.ExitCode)"
+            }
           }
-          & ./publish/cli/unityctl.exe schema --format json | Out-File -FilePath publish/schema.json -Encoding utf8
-          & ./publish/cli/unityctl.exe tools --json | Out-File -FilePath publish/tools.json -Encoding utf8
+          Invoke-UnityctlSmoke -Exe "./publish/cli/unityctl.exe" -Arguments @("--help") -AllowedExitCodes @(0, 1) -Name "published CLI help smoke"
+          Invoke-UnityctlSmoke -Exe "./publish/cli/unityctl.exe" -Arguments @("schema", "--format", "json") -AllowedExitCodes @(0) -OutputPath "publish/schema.json" -Name "published CLI schema smoke"
+          Invoke-UnityctlSmoke -Exe "./publish/cli/unityctl.exe" -Arguments @("tools", "--json") -AllowedExitCodes @(0) -OutputPath "publish/tools.json" -Name "published CLI tools smoke"
           $schema = Get-Content publish/schema.json -Raw | ConvertFrom-Json
           $tools = Get-Content publish/tools.json -Raw | ConvertFrom-Json
           $schemaNames = @($schema.commands | ForEach-Object { $_.name } | Sort-Object)
@@ -75,20 +103,14 @@ jobs:
           New-Item -ItemType Directory -Force publish/smoke-project/Packages, publish/smoke-project/ProjectSettings | Out-Null
           '{"dependencies":{}}' | Set-Content -Path publish/smoke-project/Packages/manifest.json -Encoding utf8
           'm_EditorVersion: 6000.0.64f1' | Set-Content -Path publish/smoke-project/ProjectSettings/ProjectVersion.txt -Encoding utf8
-          & ./publish/cli/unityctl.exe doctor --project publish/smoke-project --json | Out-File -FilePath publish/doctor.json -Encoding utf8
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "doctor smoke exited with unexpected code $LASTEXITCODE"
-          }
+          Invoke-UnityctlSmoke -Exe "./publish/cli/unityctl.exe" -Arguments @("doctor", "--project", "publish/smoke-project", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/doctor.json" -Name "doctor smoke"
           $doctor = Get-Content publish/doctor.json -Raw | ConvertFrom-Json
           foreach ($property in @("editor", "plugin", "ipc", "summary")) {
             if (-not $doctor.PSObject.Properties[$property]) {
               throw "doctor JSON is missing '$property'"
             }
           }
-          & ./publish/cli/unityctl.exe check --project publish/smoke-project --type compile --json | Out-File -FilePath publish/check.json -Encoding utf8
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "check smoke exited with unexpected code $LASTEXITCODE"
-          }
+          Invoke-UnityctlSmoke -Exe "./publish/cli/unityctl.exe" -Arguments @("check", "--project", "publish/smoke-project", "--type", "compile", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/check.json" -Name "check smoke"
           $check = Get-Content publish/check.json -Raw | ConvertFrom-Json
           foreach ($property in @("statusCode", "success", "message")) {
             if (-not $check.PSObject.Properties[$property]) {
@@ -96,10 +118,7 @@ jobs:
             }
           }
           '{"name":"smoke","steps":[{"id":"validate","kind":"projectValidate"}]}' | Set-Content -Path publish/smoke-verify.json -Encoding utf8
-          & ./publish/cli/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts --json | Out-File -FilePath publish/workflow.json -Encoding utf8
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "workflow verify smoke exited with unexpected code $LASTEXITCODE"
-          }
+          Invoke-UnityctlSmoke -Exe "./publish/cli/unityctl.exe" -Arguments @("workflow", "verify", "--file", "publish/smoke-verify.json", "--project", "publish/smoke-project", "--artifacts-dir", "publish/smoke-artifacts", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/workflow.json" -Name "workflow verify smoke"
           $workflow = Get-Content publish/workflow.json -Raw | ConvertFrom-Json
           foreach ($property in @("passed", "summary", "steps", "artifacts")) {
             if (-not $workflow.PSObject.Properties[$property]) {
@@ -111,35 +130,54 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $PSNativeCommandUseErrorActionPreference = $false
+          function Invoke-UnityctlSmoke {
+            param(
+              [string]$Exe,
+              [string[]]$Arguments,
+              [int[]]$AllowedExitCodes,
+              [string]$OutputPath,
+              [string]$Name
+            )
+            $psi = [System.Diagnostics.ProcessStartInfo]::new()
+            $psi.FileName = $Exe
+            foreach ($argument in $Arguments) {
+              [void]$psi.ArgumentList.Add($argument)
+            }
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            $psi.UseShellExecute = $false
+            $process = [System.Diagnostics.Process]::Start($psi)
+            $stdout = $process.StandardOutput.ReadToEnd()
+            $stderr = $process.StandardError.ReadToEnd()
+            $process.WaitForExit()
+            if ($OutputPath) {
+              $stdout | Set-Content -Path $OutputPath -Encoding utf8
+            } elseif ($stdout) {
+              Write-Host $stdout
+            }
+            if ($stderr) {
+              Write-Host $stderr
+            }
+            if ($AllowedExitCodes -notcontains $process.ExitCode) {
+              throw "$Name exited with unexpected code $($process.ExitCode)"
+            }
+          }
           $package = Get-ChildItem publish/packages/unityctl.*.nupkg | Select-Object -First 1
           if (-not ($package.BaseName -match '^unityctl\.(.+)$')) {
             throw "Could not infer unityctl package version from $($package.Name)"
           }
           $version = $Matches[1]
           dotnet tool install unityctl --tool-path publish/tool --add-source publish/packages --version $version --no-cache
-          & ./publish/tool/unityctl.exe --help
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "installed tool help smoke exited with unexpected code $LASTEXITCODE"
-          }
-          & ./publish/tool/unityctl.exe schema --format json | Out-File -FilePath publish/tool-schema.json -Encoding utf8
-          & ./publish/tool/unityctl.exe tools --json | Out-File -FilePath publish/tool-tools.json -Encoding utf8
+          Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("--help") -AllowedExitCodes @(0, 1) -Name "installed tool help smoke"
+          Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("schema", "--format", "json") -AllowedExitCodes @(0) -OutputPath "publish/tool-schema.json" -Name "installed tool schema smoke"
+          Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("tools", "--json") -AllowedExitCodes @(0) -OutputPath "publish/tool-tools.json" -Name "installed tool tools smoke"
           Get-Content publish/tool-schema.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content publish/tool-tools.json -Raw | ConvertFrom-Json | Out-Null
-          & ./publish/tool/unityctl.exe doctor --project publish/smoke-project --json | Out-File -FilePath publish/tool-doctor.json -Encoding utf8
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "installed tool doctor smoke exited with unexpected code $LASTEXITCODE"
-          }
+          Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("doctor", "--project", "publish/smoke-project", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/tool-doctor.json" -Name "installed tool doctor smoke"
           Get-Content publish/tool-doctor.json -Raw | ConvertFrom-Json | Out-Null
-          & ./publish/tool/unityctl.exe check --project publish/smoke-project --type compile --json | Out-File -FilePath publish/tool-check.json -Encoding utf8
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "installed tool check smoke exited with unexpected code $LASTEXITCODE"
-          }
+          Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("check", "--project", "publish/smoke-project", "--type", "compile", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/tool-check.json" -Name "installed tool check smoke"
           Get-Content publish/tool-check.json -Raw | ConvertFrom-Json | Out-Null
-          & ./publish/tool/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts-tool --json | Out-File -FilePath publish/tool-workflow.json -Encoding utf8
-          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
-            throw "installed tool workflow verify smoke exited with unexpected code $LASTEXITCODE"
-          }
+          Invoke-UnityctlSmoke -Exe "./publish/tool/unityctl.exe" -Arguments @("workflow", "verify", "--file", "publish/smoke-verify.json", "--project", "publish/smoke-project", "--artifacts-dir", "publish/smoke-artifacts-tool", "--json") -AllowedExitCodes @(0, 1) -OutputPath "publish/tool-workflow.json" -Name "installed tool workflow verify smoke"
           Get-Content publish/tool-workflow.json -Raw | ConvertFrom-Json | Out-Null
 
       - name: Smoke published CLI (Unix)
