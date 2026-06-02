@@ -1,0 +1,48 @@
+name: Regression bug
+description: Report a behavior regression that should get a reproduction test.
+title: "[regression] "
+labels: ["regression", "needs-repro-test"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Regression fixes should include a failing reproduction test in the same PR.
+        Prefer focused tests for IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case, and command/schema/plugin drift.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Broken behavior
+      description: What changed, and what should have happened?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - IPC timeout
+        - AppLocker
+        - batch fallback
+        - dirty scene policy
+        - parser edge case
+        - command/schema/plugin drift
+        - Unity live validation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal command, project state, CI job, or fixture that demonstrates the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-test
+    attributes:
+      label: Required reproduction test
+      description: Name the test suite and the assertion that should fail before the fix and pass after it.
+      placeholder: tests/Unityctl.Cli.Tests/... should assert ...
+    validations:
+      required: true
+

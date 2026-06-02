@@ -117,6 +117,8 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - Unity Editor, AppLocker, 라이선스처럼 PR .NET gate에서 안정적으로 증명할 수 없는 항목은 Integration/Unity workflow로 격리하고 skip/preflight 이유를 명확히 남긴다.
 - 새 버그 수정은 같은 PR에 재현 테스트를 추가한다. 특히 IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case는 회귀 테스트 우선순위가 높다.
 - `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`처럼 날짜/시각 경계가 원인인 테스트는 고정 시각 입력으로 안정화한다.
+- 새 flaky가 발견되면 `.github/ISSUE_TEMPLATE/flaky-test.yml`로 CI run, OS, 반복 횟수, isolation/stabilization plan을 남긴다.
+- 회귀 버그는 `.github/ISSUE_TEMPLATE/regression-bug.yml`로 신고하고, 수정 PR에는 실패 재현 테스트를 포함한다.
 
 ### 새 명령 추가 체크리스트
 

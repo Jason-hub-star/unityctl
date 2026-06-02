@@ -1,0 +1,66 @@
+name: Flaky test
+description: Report a test that sometimes fails in PR, nightly, or manual CI.
+title: "[flaky] "
+labels: ["flaky-test", "test-trust"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Flaky tests must be isolated instead of left as "sometimes fails".
+        Include enough evidence to reproduce, quarantine, or stabilize the test.
+  - type: input
+    id: test-name
+    attributes:
+      label: Test name
+      description: Fully qualified test name when available.
+      placeholder: Unityctl.Core.Tests.FlightRecorder.FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries
+    validations:
+      required: true
+  - type: dropdown
+    id: suite
+    attributes:
+      label: Test suite
+      options:
+        - Unityctl.Shared.Tests
+        - Unityctl.Core.Tests
+        - Unityctl.Cli.Tests
+        - Unityctl.Mcp.Tests
+        - Unityctl.Integration.Tests
+        - Unity Integration workflow
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Platforms observed
+      options:
+        - label: Linux
+        - label: macOS
+        - label: Windows
+        - label: Unity 2021.3.11f1
+        - label: Unity 6000.0.64f1
+  - type: textarea
+    id: ci-evidence
+    attributes:
+      label: CI evidence
+      description: Link the GitHub Actions run/job and paste the failing assertion or stack trace.
+      placeholder: https://github.com/Jason-hub-star/unityctl/actions/runs/...
+    validations:
+      required: true
+  - type: textarea
+    id: repeatability
+    attributes:
+      label: Repeatability
+      description: Include rerun count, whether a retry passed, and any timing/path/process/environment clues.
+      placeholder: Failed 1/5 on Windows; passes locally; timeout boundary near 1s.
+    validations:
+      required: true
+  - type: textarea
+    id: isolation-plan
+    attributes:
+      label: Isolation or stabilization plan
+      description: Describe the deterministic fixture, injected clock/delay/platform hook, skip/preflight, or quarantine issue needed.
+    validations:
+      required: true
+

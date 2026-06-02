@@ -253,6 +253,8 @@ public class CommandSyncGuardrailTests
         Assert.Contains("flaky 0개", source);
         Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
         Assert.Contains("IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
 
         Assert.Contains("### 새 명령 추가 체크리스트", source);
         Assert.Contains("WellKnownCommands", source);
@@ -262,6 +264,28 @@ public class CommandSyncGuardrailTests
         Assert.Contains("RunTool", source);
         Assert.Contains("src/Unityctl.Plugin/Editor/Commands/*Handler.cs", source);
         Assert.Contains("CommandSyncGuardrailTests", source);
+    }
+
+    [Fact]
+    public void IssueTemplates_CaptureFlakyAndRegressionEvidence()
+    {
+        var flaky = ReadRepoFile(@".github\ISSUE_TEMPLATE\flaky-test.yml");
+        Assert.Contains("labels: [\"flaky-test\", \"test-trust\"]", flaky);
+        Assert.Contains("Test name", flaky);
+        Assert.Contains("CI evidence", flaky);
+        Assert.Contains("Repeatability", flaky);
+        Assert.Contains("Isolation or stabilization plan", flaky);
+        Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", flaky);
+
+        var regression = ReadRepoFile(@".github\ISSUE_TEMPLATE\regression-bug.yml");
+        Assert.Contains("labels: [\"regression\", \"needs-repro-test\"]", regression);
+        Assert.Contains("IPC timeout", regression);
+        Assert.Contains("AppLocker", regression);
+        Assert.Contains("batch fallback", regression);
+        Assert.Contains("dirty scene policy", regression);
+        Assert.Contains("parser edge case", regression);
+        Assert.Contains("command/schema/plugin drift", regression);
+        Assert.Contains("Required reproduction test", regression);
     }
 
     private static string ReadRepoFile(string relativePath)
