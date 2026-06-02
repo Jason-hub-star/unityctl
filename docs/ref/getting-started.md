@@ -492,7 +492,7 @@ unityctl.slnx
 ├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
 ├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
 ├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-└── tests/*                                 852 PR .NET xUnit tests
+└── tests/*                                 853 PR .NET xUnit tests
 ```
 
 **Dependency direction**: `Shared ← Core ← Cli / Mcp`. Plugin runs inside Unity and shares source files with Shared.

@@ -54,6 +54,32 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void PluginIpcPipeNameHelper_PreservesSharedPathHashAlgorithm()
+    {
+        var shared = ReadRepoFile(@"src\Unityctl.Shared\Constants.cs");
+        var plugin = ReadRepoFile(@"src\Unityctl.Plugin\Editor\Ipc\PipeNameHelper.cs");
+
+        foreach (var sentinel in new[]
+        {
+            "PipePrefix = \"unityctl_\"",
+            "Path.GetFullPath(projectPath)",
+            "ToLowerInvariant()",
+            "Replace('\\\\', '/')",
+            "TrimEnd('/')",
+            "SHA256.Create()",
+            "Encoding.UTF8.GetBytes(normalized)",
+            "Substring(0, 16)"
+        })
+        {
+            Assert.Contains(sentinel, shared);
+            Assert.Contains(sentinel, plugin);
+        }
+
+        Assert.Contains("RuntimeInformation.IsOSPlatform(OSPlatform.Windows)", shared);
+        Assert.Contains("#if UNITY_EDITOR_WIN", plugin);
+    }
+
+    [Fact]
     public void PluginSharedExecExpressionParser_PreservesCoreGrammarSentinels()
     {
         var shared = ReadRepoFile(@"src\Unityctl.Shared\Exec\ExecExpressionParser.cs");
