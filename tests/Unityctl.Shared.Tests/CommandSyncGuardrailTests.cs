@@ -299,6 +299,17 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void CliAndPluginRegistrations_DoNotContainDuplicateCommandNames()
+    {
+        AssertNoDuplicates(
+            ParseCliCommandRegistrations(),
+            "Duplicate CLI app.Add command registration");
+        AssertNoDuplicates(
+            ParsePluginHandlerFieldReferences(),
+            "Duplicate Plugin handler CommandName registration");
+    }
+
+    [Fact]
     public void CodePatterns_DocumentsCommandSyncChecklistAndFlakyPolicy()
     {
         var source = ReadRepoFile(@"docs\ref\code-patterns.md");
@@ -471,13 +482,17 @@ public class CommandSyncGuardrailTests
             .ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
 
     private static HashSet<string> ParsePluginHandlerFieldNames()
+        => ParsePluginHandlerFieldReferences()
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static string[] ParsePluginHandlerFieldReferences()
     {
         var commandsDir = Path.Combine(GetRepoRoot(), "src", "Unityctl.Plugin", "Editor", "Commands");
         var files = Directory.GetFiles(commandsDir, "*Handler.cs", SearchOption.TopDirectoryOnly);
 
         return files
             .SelectMany(path => PluginHandlerRegex.Matches(File.ReadAllText(path)).Select(match => match.Groups[1].Value))
-            .ToHashSet(StringComparer.Ordinal);
+            .ToArray();
     }
 
     private static HashSet<string> ParseWellKnownFieldReferences(string relativePath)
@@ -490,11 +505,27 @@ public class CommandSyncGuardrailTests
     }
 
     private static HashSet<string> ParseCliCommands()
+        => ParseCliCommandRegistrations()
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static string[] ParseCliCommandRegistrations()
     {
         var source = ReadRepoFile(@"src\Unityctl.Cli\Program.cs");
         return AppAddRegex
             .Matches(source)
             .Select(match => match.Groups[1].Value)
-            .ToHashSet(StringComparer.Ordinal);
+            .ToArray();
+    }
+
+    private static void AssertNoDuplicates(string[] values, string message)
+    {
+        var duplicates = values
+            .GroupBy(value => value, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .OrderBy(value => value, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(duplicates.Length == 0, $"{message}: {string.Join(", ", duplicates)}");
     }
 }

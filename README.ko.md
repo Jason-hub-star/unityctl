@@ -13,7 +13,7 @@
 AI 에이전트에 **166개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
 
 ```
-166 CLI 명령 · 12 MCP 도구 · 851 PR .NET 테스트 · Windows / macOS / Linux
+166 CLI 명령 · 12 MCP 도구 · 852 PR .NET 테스트 · Windows / macOS / Linux
 ```
 
 품질 게이트: 모든 PR에서 .NET Shared/Core/Cli/Mcp 테스트를 Windows, macOS, Linux에서 실행합니다. Unity Editor가 필요한 검증은 Unity Integration workflow로 분리하고, nightly/manual 실행에서 `init`, 샘플 프로젝트 `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, `workflow verify` 증거를 artifact로 업로드합니다. Unity Integration에는 `UNITY_LICENSE` 또는 `UNITY_SERIAL` GitHub secret이 필요합니다.
@@ -496,7 +496,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 851 PR .NET xUnit 테스트
++-- tests/*                                 852 PR .NET xUnit 테스트
 ```
 
 ---

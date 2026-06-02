@@ -8,18 +8,18 @@
 |------|--------|------|
 | CLI command count | **166** | published CLI `schema --format json` / `tools --json` smoke |
 | MCP tool count | **12** | README + MCP black-box tests |
-| PR .NET xUnit test inventory | **851** | Shared/Core/Cli/Mcp local Release test output |
+| PR .NET xUnit test inventory | **852** | Shared/Core/Cli/Mcp local Release test output |
 
 ## Synced Public Docs
 
 | 위치 | 현재값 | 상태 |
 |------|--------|------|
-| `README.md` hero / comparison / command heading / architecture | 166 commands, 851 PR .NET tests | ✅ |
-| `README.ko.md` hero / comparison / command heading / architecture | 166 명령, 851 PR .NET 테스트 | ✅ |
+| `README.md` hero / comparison / command heading / architecture | 166 commands, 852 PR .NET tests | ✅ |
+| `README.ko.md` hero / comparison / command heading / architecture | 166 명령, 852 PR .NET 테스트 | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 166 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 166 commands | ✅ |
-| `docs/ref/architecture-mermaid.md` architecture block | 851 PR .NET xUnit tests | ✅ |
-| `docs/ref/getting-started.md` architecture block | 851 PR .NET xUnit tests | ✅ |
+| `docs/ref/architecture-mermaid.md` architecture block | 852 PR .NET xUnit tests | ✅ |
+| `docs/ref/getting-started.md` architecture block | 852 PR .NET xUnit tests | ✅ |
 | `docs/ref/ai-quickstart.md` machine-readable schema note | 166 commands | ✅ |
 
 ## CI Guardrails
@@ -44,7 +44,7 @@ Unity live blocker tracking issue: #17 (`Configure Unity Integration Actions sec
 |------|--------|
 | `dotnet restore` | ✅ |
 | `dotnet build --no-restore -c Release` | ✅ warning 0 / error 0 |
-| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 100 passed |
+| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 101 passed |
 | `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 151 passed |
 | `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 578 passed |
 | `dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release` | ✅ 22 passed |
