@@ -30,7 +30,9 @@
 - CI/release workflows use Node 24-ready action majors for `checkout`, `setup-dotnet`, artifact upload/download, and GitHub Release creation.
 - `.github/workflows/release.yml` runs Shared/Core/Cli/Mcp tests as a hard gate before packaging, NuGet publish, and GitHub Release creation.
 
-Remote CI note: the latest checked PR `CI - dotnet` run for `codex/test-trust-baseline` (run `26797703593`, 2026-06-02) is green on Ubuntu, macOS, and Windows. The previous macOS timeout race in `AsyncCommandRunnerFlightTests.Timeout_ReturnsTestFailedResponse` is covered by the stabilized async timeout path, and the Windows published/tool smoke path now executes through `ProcessStartInfo` to avoid PowerShell native command exit-code drift.
+Remote CI note: the latest checked PR `CI — dotnet` run for `codex/test-trust-baseline` head `8b2230c` (run `26799871375`, 2026-06-02) is green on Ubuntu, macOS, and Windows. The previous macOS timeout race in `AsyncCommandRunnerFlightTests.Timeout_ReturnsTestFailedResponse` is covered by the stabilized async timeout path, and the Windows published/tool smoke path now executes through `ProcessStartInfo` to avoid PowerShell native command exit-code drift.
+
+Unity live note: manual `CI — Unity Integration` run `26799757925` on head `c6fd843` is blocked by missing `UNITY_LICENSE` / `UNITY_SERIAL`, but both Unity matrix jobs uploaded `license-preflight.txt` and `planned-smoke.txt` artifacts. The downloaded planned-smoke artifacts preserve intended coverage for `init`, `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify`.
 
 ## Local Verification Evidence
 
