@@ -97,7 +97,7 @@ jobs:
           ./publish/cli/unityctl init \
             --project unityctl-live-artifacts/init-smoke-project \
             --source src/Unityctl.Plugin > unityctl-live-artifacts/init.txt
-          ./publish/cli/unityctl doctor --project tests/Unityctl.Integration/SampleUnityProject --json > unityctl-live-artifacts/doctor.json || true
+          ./publish/cli/unityctl doctor --project tests/Unityctl.Integration/SampleUnityProject --json > unityctl-live-artifacts/doctor.json
           ./publish/cli/unityctl check --project tests/Unityctl.Integration/SampleUnityProject --type compile --json > unityctl-live-artifacts/check.json
           ./publish/cli/unityctl scene hierarchy \
             --project tests/Unityctl.Integration/SampleUnityProject \
@@ -136,7 +136,7 @@ jobs:
                   raise SystemExit(f"{name} did not report success: {payload}")
               return payload
 
-          load_json("doctor.json")
+          require_response_success("doctor.json")
           require_response_success("check.json")
           require_response_success("scene-hierarchy.json")
           require_response_success("player-settings-set.json")

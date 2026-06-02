@@ -106,13 +106,16 @@ public class WorkflowGuardrailTests
         Assert.Contains("player-settings set/get write-readback smoke", source);
         Assert.Contains("workflow verify projectValidate artifact smoke", source);
         Assert.Contains("Unity Integration requires either the UNITY_LICENSE or UNITY_SERIAL GitHub secret", source);
+        Assert.Contains("unityctl doctor", source);
         Assert.Contains("unityctl check", source);
         Assert.Contains("unityctl scene hierarchy", source);
         Assert.Contains("unityctl player-settings set", source);
         Assert.Contains("unityctl player-settings get", source);
         Assert.Contains("unityctl workflow verify", source);
+        Assert.Contains("require_response_success(\"doctor.json\")", source);
         Assert.Contains("player-settings readback mismatch", source);
         Assert.Contains("workflow verify did not pass", source);
+        Assert.DoesNotContain("doctor.json || true", source);
         Assert.Contains("actions/upload-artifact@v6", source);
     }
 
