@@ -15,6 +15,7 @@ public class WorkflowGuardrailTests
         Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release", source);
         Assert.Contains("fail-fast: false", source);
         Assert.DoesNotContain("continue-on-error", source);
+        AssertDotnetTestCommandsDoNotFilterSuites(source);
     }
 
     [Fact]
@@ -35,6 +36,7 @@ public class WorkflowGuardrailTests
         Assert.Contains("dotnet test tests/Unityctl.Cli.Tests -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests -c Release", source);
         Assert.DoesNotContain("continue-on-error", source);
+        AssertDotnetTestCommandsDoNotFilterSuites(source);
     }
 
     [Fact]
@@ -202,6 +204,19 @@ public class WorkflowGuardrailTests
         Assert.Contains(
             "[![Unity Integration](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml)",
             source);
+    }
+
+    private static void AssertDotnetTestCommandsDoNotFilterSuites(string source)
+    {
+        var filteredCommands = source
+            .Split('\n')
+            .Select(line => line.Trim())
+            .Where(line => line.StartsWith("dotnet test ", StringComparison.Ordinal))
+            .Where(line => line.Contains("--filter", StringComparison.Ordinal)
+                || line.Contains("--list-tests", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.Empty(filteredCommands);
     }
 
     private static string GetRepoRoot()
