@@ -57,3 +57,12 @@ If a PR changes any public surface, update `README.md`, `README.ko.md`, and rele
 Regular PRs run fast .NET tests. Unity Editor-dependent validation lives in the Unity Integration workflow and covers sample-project `init`, `doctor`, `check`, representative read/write commands, and `workflow verify`.
 
 Unity Integration requires either the `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret. When those secrets are unavailable, the workflow fails in a preflight step and uploads `license-preflight.txt` plus `planned-smoke.txt` artifacts instead of hiding the reason or intended live coverage inside GameCI logs.
+
+To prove the live Unity gate after secrets are configured:
+
+1. Add either `UNITY_LICENSE` or `UNITY_SERIAL` under repository Actions secrets.
+2. Run `gh workflow run ci-unity.yml --ref <branch>`.
+3. Watch it with `gh run watch <run-id> --exit-status`.
+4. Download artifacts with `gh run download <run-id> --dir <artifact-dir>` and confirm both Unity versions include the sample-project command evidence.
+
+If the run still stops at preflight, attach the downloaded `license-preflight.txt` and `planned-smoke.txt` artifacts to the PR notes so reviewers can see both the secret failure and the intended Unity live coverage.

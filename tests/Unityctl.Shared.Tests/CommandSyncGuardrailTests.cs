@@ -409,6 +409,9 @@ public class CommandSyncGuardrailTests
         Assert.Contains("UNITY_SERIAL", source);
         Assert.Contains("license-preflight.txt", source);
         Assert.Contains("planned-smoke.txt", source);
+        Assert.Contains("gh workflow run ci-unity.yml --ref <branch>", source);
+        Assert.Contains("gh run watch <run-id> --exit-status", source);
+        Assert.Contains("gh run download <run-id> --dir <artifact-dir>", source);
     }
 
     private static string ReadRepoFile(string relativePath)
