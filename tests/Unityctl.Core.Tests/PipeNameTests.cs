@@ -101,6 +101,18 @@ public class PipeNameTests
     }
 
     [Fact]
+    public void GetPipeName_CaseOnlyPathDifferences_FollowPlatformPolicy()
+    {
+        var lowerPath = Path.Combine(Path.GetTempPath(), "unityctl-case-probe");
+        var upperPath = Path.Combine(Path.GetTempPath(), "UNITYCTL-CASE-PROBE");
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            Assert.Equal(Constants.GetPipeName(lowerPath), Constants.GetPipeName(upperPath));
+        else
+            Assert.NotEqual(Constants.GetPipeName(lowerPath), Constants.GetPipeName(upperPath));
+    }
+
+    [Fact]
     public void GetPipeName_HasCorrectLength()
     {
         var name = Constants.GetPipeName("/some/project");
