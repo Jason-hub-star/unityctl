@@ -128,12 +128,12 @@ public class WorkflowGuardrailTests
             Assert.DoesNotContain("476", source);
         }
 
-        Assert.Contains("851 PR .NET tests", publicDocs[0]);
-        Assert.Contains("851 PR .NET 테스트", publicDocs[1]);
-        Assert.Contains("851 PR .NET xUnit tests", publicDocs[2]);
-        Assert.Contains("851 PR .NET xUnit tests", publicDocs[3]);
-        Assert.Contains("**851**", publicDocs[4]);
-        Assert.Contains("**851개**", publicDocs[5]);
+        Assert.Contains("850 PR .NET tests", publicDocs[0]);
+        Assert.Contains("850 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("850 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("850 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**850**", publicDocs[4]);
+        Assert.Contains("**850개**", publicDocs[5]);
         Assert.Contains("Unity live blocker tracking issue: #17", publicDocs[4]);
         Assert.Contains("Configure Unity Integration Actions secret", publicDocs[4]);
     }
@@ -150,6 +150,42 @@ public class WorkflowGuardrailTests
         Assert.Contains("UNITY_LICENSE", source);
         Assert.Contains("UNITY_SERIAL", source);
         Assert.Contains("ci-unity.yml", source);
+    }
+
+    [Fact]
+    public void PrDotnetSuites_DoNotHideFailuresBehindUndocumentedSkips()
+    {
+        var allowedSkip = "Skip = \"CLI assembly blocked by AppLocker policy. Skipping on restricted environment.\";";
+        var testRoots = new[]
+        {
+            "tests/Unityctl.Shared.Tests",
+            "tests/Unityctl.Core.Tests",
+            "tests/Unityctl.Cli.Tests",
+            "tests/Unityctl.Mcp.Tests",
+        };
+        var currentFile = Path.Combine(
+            GetRepoRoot(),
+            "tests",
+            "Unityctl.Shared.Tests",
+            "WorkflowGuardrailTests.cs");
+
+        var offendingFiles = testRoots
+            .SelectMany(root => Directory.EnumerateFiles(
+                Path.Combine(GetRepoRoot(), root.Replace('/', Path.DirectorySeparatorChar)),
+                "*.cs",
+                SearchOption.AllDirectories))
+            .Where(path => !string.Equals(path, currentFile, StringComparison.Ordinal))
+            .Where(path =>
+            {
+                var source = File.ReadAllText(path);
+                return source.Contains("Skip =", StringComparison.Ordinal)
+                    && !source.Contains(allowedSkip, StringComparison.Ordinal);
+            })
+            .Select(path => Path.GetRelativePath(GetRepoRoot(), path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Empty(offendingFiles);
     }
 
     private static string ReadRepoFile(string relativePath)
