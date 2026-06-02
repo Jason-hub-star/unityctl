@@ -375,6 +375,8 @@ public class CommandSyncGuardrailTests
         Assert.Contains("Unity Reality Check", source);
         Assert.Contains("UNITY_LICENSE", source);
         Assert.Contains("UNITY_SERIAL", source);
+        Assert.Contains("license-preflight.txt", source);
+        Assert.Contains("planned-smoke.txt", source);
     }
 
     [Fact]
@@ -406,6 +408,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains("UNITY_LICENSE", source);
         Assert.Contains("UNITY_SERIAL", source);
         Assert.Contains("license-preflight.txt", source);
+        Assert.Contains("planned-smoke.txt", source);
     }
 
     private static string ReadRepoFile(string relativePath)

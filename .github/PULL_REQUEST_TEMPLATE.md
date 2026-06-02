@@ -29,5 +29,4 @@ For new or changed commands:
 
 - [ ] PR intentionally uses fast .NET tests only, or Unity Integration was run manually/nightly.
 - [ ] If Unity Integration was run, artifacts were uploaded for the sample project validation.
-- [ ] If Unity Integration could not run, note whether `UNITY_LICENSE` or `UNITY_SERIAL` is missing.
-
+- [ ] If Unity Integration could not run, note whether `UNITY_LICENSE` or `UNITY_SERIAL` is missing and attach/check `license-preflight.txt` plus `planned-smoke.txt`.
