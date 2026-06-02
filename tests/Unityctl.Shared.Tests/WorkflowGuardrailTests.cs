@@ -46,6 +46,8 @@ public class WorkflowGuardrailTests
         Assert.Contains("tools --json", source);
         Assert.Contains("> publish/schema.json", source);
         Assert.Contains("> publish/tools.json", source);
+        Assert.Contains("Out-File -FilePath publish/schema.json -Encoding utf8", source);
+        Assert.Contains("Out-File -FilePath publish/tool-schema.json -Encoding utf8", source);
         Assert.Contains("json.load(f)", source);
         Assert.Contains("doctor --project publish/smoke-project --json", source);
         Assert.Contains("check --project publish/smoke-project --type compile --json", source);

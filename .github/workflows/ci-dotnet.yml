@@ -54,8 +54,10 @@ jobs:
         shell: pwsh
         run: |
           ./publish/cli/unityctl.exe --help
-          $schema = ./publish/cli/unityctl.exe schema --format json | ConvertFrom-Json
-          $tools = ./publish/cli/unityctl.exe tools --json | ConvertFrom-Json
+          & ./publish/cli/unityctl.exe schema --format json | Out-File -FilePath publish/schema.json -Encoding utf8
+          & ./publish/cli/unityctl.exe tools --json | Out-File -FilePath publish/tools.json -Encoding utf8
+          $schema = Get-Content publish/schema.json -Raw | ConvertFrom-Json
+          $tools = Get-Content publish/tools.json -Raw | ConvertFrom-Json
           $schemaNames = @($schema.commands | ForEach-Object { $_.name } | Sort-Object)
           $toolNames = @($tools | ForEach-Object { $_.name } | Sort-Object)
           if (($schemaNames -join "`n") -ne ($toolNames -join "`n")) {
@@ -67,34 +69,34 @@ jobs:
             }
           }
           New-Item -ItemType Directory -Force publish/smoke-project/Packages, publish/smoke-project/ProjectSettings | Out-Null
-          '{"dependencies":{}}' | Set-Content -Path publish/smoke-project/Packages/manifest.json
-          'm_EditorVersion: 6000.0.64f1' | Set-Content -Path publish/smoke-project/ProjectSettings/ProjectVersion.txt
-          $doctorText = & ./publish/cli/unityctl.exe doctor --project publish/smoke-project --json
+          '{"dependencies":{}}' | Set-Content -Path publish/smoke-project/Packages/manifest.json -Encoding utf8
+          'm_EditorVersion: 6000.0.64f1' | Set-Content -Path publish/smoke-project/ProjectSettings/ProjectVersion.txt -Encoding utf8
+          & ./publish/cli/unityctl.exe doctor --project publish/smoke-project --json | Out-File -FilePath publish/doctor.json -Encoding utf8
           if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
             throw "doctor smoke exited with unexpected code $LASTEXITCODE"
           }
-          $doctor = $doctorText | ConvertFrom-Json
+          $doctor = Get-Content publish/doctor.json -Raw | ConvertFrom-Json
           foreach ($property in @("editor", "plugin", "ipc", "summary")) {
             if (-not $doctor.PSObject.Properties[$property]) {
               throw "doctor JSON is missing '$property'"
             }
           }
-          $checkText = & ./publish/cli/unityctl.exe check --project publish/smoke-project --type compile --json
+          & ./publish/cli/unityctl.exe check --project publish/smoke-project --type compile --json | Out-File -FilePath publish/check.json -Encoding utf8
           if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
             throw "check smoke exited with unexpected code $LASTEXITCODE"
           }
-          $check = $checkText | ConvertFrom-Json
+          $check = Get-Content publish/check.json -Raw | ConvertFrom-Json
           foreach ($property in @("statusCode", "success", "message")) {
             if (-not $check.PSObject.Properties[$property]) {
               throw "check JSON is missing '$property'"
             }
           }
-          '{"name":"smoke","steps":[{"id":"validate","kind":"projectValidate"}]}' | Set-Content -Path publish/smoke-verify.json
-          $workflowText = & ./publish/cli/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts --json
+          '{"name":"smoke","steps":[{"id":"validate","kind":"projectValidate"}]}' | Set-Content -Path publish/smoke-verify.json -Encoding utf8
+          & ./publish/cli/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts --json | Out-File -FilePath publish/workflow.json -Encoding utf8
           if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
             throw "workflow verify smoke exited with unexpected code $LASTEXITCODE"
           }
-          $workflow = $workflowText | ConvertFrom-Json
+          $workflow = Get-Content publish/workflow.json -Raw | ConvertFrom-Json
           foreach ($property in @("passed", "summary", "steps", "artifacts")) {
             if (-not $workflow.PSObject.Properties[$property]) {
               throw "workflow verify JSON is missing '$property'"
@@ -112,23 +114,25 @@ jobs:
           $version = $Matches[1]
           dotnet tool install unityctl --tool-path publish/tool --add-source publish/packages --version $version --no-cache
           ./publish/tool/unityctl.exe --help
-          ./publish/tool/unityctl.exe schema --format json | ConvertFrom-Json | Out-Null
-          ./publish/tool/unityctl.exe tools --json | ConvertFrom-Json | Out-Null
-          $doctorText = & ./publish/tool/unityctl.exe doctor --project publish/smoke-project --json
+          & ./publish/tool/unityctl.exe schema --format json | Out-File -FilePath publish/tool-schema.json -Encoding utf8
+          & ./publish/tool/unityctl.exe tools --json | Out-File -FilePath publish/tool-tools.json -Encoding utf8
+          Get-Content publish/tool-schema.json -Raw | ConvertFrom-Json | Out-Null
+          Get-Content publish/tool-tools.json -Raw | ConvertFrom-Json | Out-Null
+          & ./publish/tool/unityctl.exe doctor --project publish/smoke-project --json | Out-File -FilePath publish/tool-doctor.json -Encoding utf8
           if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
             throw "installed tool doctor smoke exited with unexpected code $LASTEXITCODE"
           }
-          $doctorText | ConvertFrom-Json | Out-Null
-          $checkText = & ./publish/tool/unityctl.exe check --project publish/smoke-project --type compile --json
+          Get-Content publish/tool-doctor.json -Raw | ConvertFrom-Json | Out-Null
+          & ./publish/tool/unityctl.exe check --project publish/smoke-project --type compile --json | Out-File -FilePath publish/tool-check.json -Encoding utf8
           if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
             throw "installed tool check smoke exited with unexpected code $LASTEXITCODE"
           }
-          $checkText | ConvertFrom-Json | Out-Null
-          $workflowText = & ./publish/tool/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts-tool --json
+          Get-Content publish/tool-check.json -Raw | ConvertFrom-Json | Out-Null
+          & ./publish/tool/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts-tool --json | Out-File -FilePath publish/tool-workflow.json -Encoding utf8
           if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
             throw "installed tool workflow verify smoke exited with unexpected code $LASTEXITCODE"
           }
-          $workflowText | ConvertFrom-Json | Out-Null
+          Get-Content publish/tool-workflow.json -Raw | ConvertFrom-Json | Out-Null
 
       - name: Smoke published CLI (Unix)
         if: runner.os != 'Windows'
