@@ -95,7 +95,10 @@ public class WorkflowGuardrailTests
     {
         var source = ReadRepoFile(".github/workflows/ci-unity.yml");
 
+        Assert.Contains("workflow_dispatch:", source);
         Assert.Contains("schedule:", source);
+        Assert.DoesNotContain("push:", source);
+        Assert.DoesNotContain("tags:", source);
         Assert.Contains("fail-fast: false", source);
         Assert.Contains("Verify Unity license secret", source);
         Assert.Contains("UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}", source);
