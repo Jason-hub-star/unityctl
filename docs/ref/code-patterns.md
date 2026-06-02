@@ -110,6 +110,33 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - Mcp.Tests의 `McpBlackBoxTests`는 빌드된 `unityctl-mcp` 바이너리를 프로세스로 띄운다. Debug를 Release보다 먼저 탐색한다 (`dotnet test`의 기본이 Debug이므로 stale Release 바이너리 방지).
 - 테스트 필터: `dotnet test --filter "FullyQualifiedName!~Integration"`
 
+### Flaky 테스트 정책
+
+- PR 대상 Shared/Core/Cli/Mcp 테스트는 flaky 0개를 목표로 한다.
+- "가끔 실패" 상태로 두지 않는다. 시간, 경로, 프로세스, 환경 의존성은 deterministic fixture나 주입 가능한 clock/delay/platform hook으로 고정한다.
+- Unity Editor, AppLocker, 라이선스처럼 PR .NET gate에서 안정적으로 증명할 수 없는 항목은 Integration/Unity workflow로 격리하고 skip/preflight 이유를 명확히 남긴다.
+- 새 버그 수정은 같은 PR에 재현 테스트를 추가한다. 특히 IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case는 회귀 테스트 우선순위가 높다.
+- `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`처럼 날짜/시각 경계가 원인인 테스트는 고정 시각 입력으로 안정화한다.
+
+### 새 명령 추가 체크리스트
+
+새 명령은 한 레이어에만 추가되면 공개 API 신뢰를 깨뜨린다. 아래 경로를 같은 PR에서 모두 확인한다.
+
+1. `WellKnownCommands`: Shared 상수를 추가하고 Plugin `Editor/Shared/WellKnownCommands.cs` 복사본을 동기화한다.
+2. `CommandCatalog`: schema/tools에 노출될 정의, CLI 이름, 파라미터, 예시를 추가하고 `CommandCatalogTests`/`CommandSchemaTests` 기대값을 갱신한다.
+3. CLI 등록: `src/Unityctl.Cli/Program.cs`에 verb를 등록하고 해당 CLI parser/request 테스트를 추가한다.
+4. MCP allowlist/schema: read 명령은 `QueryTool`, write 명령은 `RunTool` allowlist에 넣고 MCP schema/black-box 테스트가 표면을 검증하게 한다.
+5. Plugin handler 등록: `src/Unityctl.Plugin/Editor/Commands/*Handler.cs`에 handler를 추가하고 `CommandRegistry` 자동 등록/handler coverage guardrail을 통과시킨다.
+6. 공개 문서: README, getting-started, quickstart, status 문서가 새 public surface와 검증 범위를 정확히 말하는지 확인한다.
+
+최소 검증 세트:
+
+```bash
+dotnet test tests/Unityctl.Shared.Tests -c Release --filter "CommandCatalogTests|CommandSchemaTests|CommandSyncGuardrailTests"
+dotnet test tests/Unityctl.Cli.Tests -c Release --filter "<새 명령 관련 테스트>"
+dotnet test tests/Unityctl.Mcp.Tests -c Release
+```
+
 ## §8. 파일 위치 규칙
 
 | 유형 | 경로 |

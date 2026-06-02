@@ -244,6 +244,26 @@ public class CommandSyncGuardrailTests
         Assert.Empty(missing);
     }
 
+    [Fact]
+    public void CodePatterns_DocumentsCommandSyncChecklistAndFlakyPolicy()
+    {
+        var source = ReadRepoFile(@"docs\ref\code-patterns.md");
+
+        Assert.Contains("### Flaky 테스트 정책", source);
+        Assert.Contains("flaky 0개", source);
+        Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
+        Assert.Contains("IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case", source);
+
+        Assert.Contains("### 새 명령 추가 체크리스트", source);
+        Assert.Contains("WellKnownCommands", source);
+        Assert.Contains("CommandCatalog", source);
+        Assert.Contains("src/Unityctl.Cli/Program.cs", source);
+        Assert.Contains("QueryTool", source);
+        Assert.Contains("RunTool", source);
+        Assert.Contains("src/Unityctl.Plugin/Editor/Commands/*Handler.cs", source);
+        Assert.Contains("CommandSyncGuardrailTests", source);
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar);
