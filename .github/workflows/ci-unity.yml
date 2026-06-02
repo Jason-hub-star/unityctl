@@ -28,10 +28,23 @@ jobs:
       - name: Build CLI
         run: dotnet build src/Unityctl.Cli -c Release
 
+      - name: Verify Unity license secret
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${UNITY_LICENSE:-}" ] && [ -z "${UNITY_SERIAL:-}" ]; then
+            echo "::error::Unity Integration requires either the UNITY_LICENSE or UNITY_SERIAL GitHub secret before GameCI can run live Editor validation."
+            exit 1
+          fi
+
       # GameCI Unity Test Runner
       - uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: tests/Unityctl.Integration/SampleUnityProject
           unityVersion: ${{ matrix.unityVersion }}

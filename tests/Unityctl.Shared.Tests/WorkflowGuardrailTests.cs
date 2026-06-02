@@ -72,6 +72,10 @@ public class WorkflowGuardrailTests
 
         Assert.Contains("schedule:", source);
         Assert.Contains("fail-fast: false", source);
+        Assert.Contains("Verify Unity license secret", source);
+        Assert.Contains("UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}", source);
+        Assert.Contains("UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}", source);
+        Assert.Contains("Unity Integration requires either the UNITY_LICENSE or UNITY_SERIAL GitHub secret", source);
         Assert.Contains("unityctl check", source);
         Assert.Contains("unityctl scene hierarchy", source);
         Assert.Contains("unityctl player-settings set", source);

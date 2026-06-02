@@ -16,7 +16,7 @@ AI 에이전트에 **166개 명령**을 쥐여주세요. Unity 씬 구성부터 
 166 CLI 명령 · 12 MCP 도구 · 835 PR .NET 테스트 · Windows / macOS / Linux
 ```
 
-품질 게이트: 모든 PR에서 .NET Shared/Core/Cli/Mcp 테스트를 Windows, macOS, Linux에서 실행합니다. Unity Editor가 필요한 검증은 Unity Integration workflow로 분리하고, nightly/manual 실행에서 `init`, 샘플 프로젝트 `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, `workflow verify` 증거를 artifact로 업로드합니다.
+품질 게이트: 모든 PR에서 .NET Shared/Core/Cli/Mcp 테스트를 Windows, macOS, Linux에서 실행합니다. Unity Editor가 필요한 검증은 Unity Integration workflow로 분리하고, nightly/manual 실행에서 `init`, 샘플 프로젝트 `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, `workflow verify` 증거를 artifact로 업로드합니다. Unity Integration에는 `UNITY_LICENSE` 또는 `UNITY_SERIAL` GitHub secret이 필요합니다.
 
 <p align="center">
   <img src="docs/assets/mcp-demo.svg" alt="AI 에이전트가 MCP를 통해 Unity 씬을 구성하는 모습" width="700">
