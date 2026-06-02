@@ -332,7 +332,8 @@ public class CommandSyncGuardrailTests
         Assert.Contains("CI evidence", flaky);
         Assert.Contains("Repeatability", flaky);
         Assert.Contains("Isolation or stabilization plan", flaky);
-        Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", flaky);
+        Assert.Contains("Unityctl.Core.Tests.Namespace.ClassName.TestName", flaky);
+        Assert.DoesNotContain("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", flaky);
 
         var regression = ReadRepoFile(@".github\ISSUE_TEMPLATE\regression-bug.yml");
         Assert.Contains("labels: [\"regression\", \"needs-repro-test\"]", regression);
@@ -391,6 +392,7 @@ public class CommandSyncGuardrailTests
         Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
         Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
+        Assert.Contains("Resolved date/time boundary regressions", source);
 
         Assert.Contains("WellKnownCommands", source);
         Assert.Contains("CommandCatalog", source);

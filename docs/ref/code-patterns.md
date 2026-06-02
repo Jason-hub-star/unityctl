@@ -116,7 +116,7 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - "가끔 실패" 상태로 두지 않는다. 시간, 경로, 프로세스, 환경 의존성은 deterministic fixture나 주입 가능한 clock/delay/platform hook으로 고정한다.
 - Unity Editor, AppLocker, 라이선스처럼 PR .NET gate에서 안정적으로 증명할 수 없는 항목은 Integration/Unity workflow로 격리하고 skip/preflight 이유를 명확히 남긴다.
 - 새 버그 수정은 같은 PR에 재현 테스트를 추가한다. 특히 IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case는 회귀 테스트 우선순위가 높다.
-- `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`처럼 날짜/시각 경계가 원인인 테스트는 고정 시각 입력으로 안정화한다.
+- 안정화된 날짜/시각 경계 회귀(`FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`)는 고정 시각 입력을 유지하고 wall-clock 의존성으로 되돌리지 않는다.
 - 새 flaky가 발견되면 `.github/ISSUE_TEMPLATE/flaky-test.yml`로 CI run, OS, 반복 횟수, isolation/stabilization plan을 남긴다.
 - 회귀 버그는 `.github/ISSUE_TEMPLATE/regression-bug.yml`로 신고하고, 수정 PR에는 실패 재현 테스트를 포함한다.
 - 모든 PR은 `.github/PULL_REQUEST_TEMPLATE.md`의 Test Trust / Contract Safety / README User Path / Unity Reality Check 체크리스트를 따라 검증 범위를 명시한다.
