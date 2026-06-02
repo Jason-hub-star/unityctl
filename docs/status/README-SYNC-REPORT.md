@@ -30,9 +30,9 @@
 - CI/release workflows use Node 24-ready action majors for `checkout`, `setup-dotnet`, artifact upload/download, and GitHub Release creation.
 - `.github/workflows/release.yml` runs Shared/Core/Cli/Mcp tests as a hard gate before packaging, NuGet publish, and GitHub Release creation.
 
-Remote CI evidence: PR `CI — dotnet` run `26800364431` for `codex/test-trust-baseline` passed on Ubuntu, macOS, and Windows on 2026-06-02. The previous macOS timeout race in `AsyncCommandRunnerFlightTests.Timeout_ReturnsTestFailedResponse` is covered by the stabilized async timeout path, and the Windows published/tool smoke path now executes through `ProcessStartInfo` to avoid PowerShell native command exit-code drift.
+Remote CI evidence is tracked on PR #16 so each new documentation commit can point reviewers at the current head instead of pinning this status report to a stale run id. The previous macOS timeout race in `AsyncCommandRunnerFlightTests.Timeout_ReturnsTestFailedResponse` is covered by the stabilized async timeout path, and the Windows published/tool smoke path now executes through `ProcessStartInfo` to avoid PowerShell native command exit-code drift.
 
-Unity live evidence: manual `CI — Unity Integration` run `26800762372` is blocked by missing `UNITY_LICENSE` / `UNITY_SERIAL`, but both Unity matrix jobs uploaded `license-preflight.txt` and `planned-smoke.txt` artifacts. The downloaded planned-smoke artifacts preserve intended coverage for `init`, `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify`.
+Unity live evidence is tracked on issue #17 and PR #16. Current preflight evidence shows the workflow is blocked by missing `UNITY_LICENSE` / `UNITY_SERIAL`, while `license-preflight.txt` and `planned-smoke.txt` artifacts preserve intended coverage for `init`, `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify`.
 
 Unity live blocker tracking issue: #17 (`Configure Unity Integration Actions secret`). Current `gh secret list --repo Jason-hub-star/unityctl` evidence shows only `NUGET_API_KEY`; add `UNITY_LICENSE` or `UNITY_SERIAL`, rerun `ci-unity.yml`, and download artifacts before closing the blocker.
 
