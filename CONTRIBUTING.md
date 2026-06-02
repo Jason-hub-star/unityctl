@@ -15,6 +15,8 @@ dotnet test tests/Unityctl.Mcp.Tests -c Release
 
 For focused changes, run the smallest relevant filter locally first, then rely on CI for the full three-OS matrix. Do not leave a failing or flaky Shared/Core/Cli/Mcp test as "sometimes fails".
 
+The PR workflow must keep its `pull_request` trigger for `main`/`master`, run the `ubuntu-latest`, `windows-latest`, and `macos-latest` matrix with `fail-fast: false`, and avoid `continue-on-error` for the .NET gate. `WorkflowGuardrailTests` watches those invariants so the public PR signal cannot silently shrink.
+
 ## Flaky and regression policy
 
 - Flaky tests must be stabilized or isolated with evidence. Use `.github/ISSUE_TEMPLATE/flaky-test.yml` when a test needs follow-up isolation.

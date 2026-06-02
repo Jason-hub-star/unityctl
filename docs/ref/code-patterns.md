@@ -121,6 +121,7 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - 회귀 버그는 `.github/ISSUE_TEMPLATE/regression-bug.yml`로 신고하고, 수정 PR에는 실패 재현 테스트를 포함한다. 즉시 추가할 수 없으면 PR에서 해당 regression issue를 링크한다.
 - 모든 PR은 `.github/PULL_REQUEST_TEMPLATE.md`의 Test Trust / Contract Safety / README User Path / Unity Reality Check 체크리스트를 따라 검증 범위를 명시한다.
 - 외부 기여자는 루트 `CONTRIBUTING.md`에서 PR .NET gate, 명령 동기화, flaky/regression 처리, Unity live validation 분리를 먼저 확인한다.
+- PR .NET workflow는 `pull_request` 트리거, `main`/`master` 대상, `ubuntu-latest`/`windows-latest`/`macos-latest` matrix, `fail-fast: false`, `continue-on-error` 금지를 유지한다. 이 public gate가 줄어들면 `WorkflowGuardrailTests`가 실패해야 한다.
 - `CommandSyncGuardrailTests`는 Plugin shared copy drift를 막기 위해 `WellKnownCommands`, wire DTO JSON 필드, `StatusCode`, Exec parser grammar sentinels를 검증한다.
 
 ### 새 명령 추가 체크리스트

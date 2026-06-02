@@ -9,6 +9,9 @@ public class WorkflowGuardrailTests
     {
         var source = ReadRepoFile(".github/workflows/ci-dotnet.yml");
 
+        Assert.Contains("pull_request:", source);
+        Assert.Contains("branches: [main, master]", source);
+        Assert.Contains("os: [ubuntu-latest, windows-latest, macos-latest]", source);
         Assert.Contains("dotnet test tests/Unityctl.Shared.Tests --no-build -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Core.Tests --no-build -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Cli.Tests --no-build -c Release", source);

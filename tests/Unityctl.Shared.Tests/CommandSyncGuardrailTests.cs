@@ -404,6 +404,13 @@ public class CommandSyncGuardrailTests
         Assert.Contains("dotnet test tests/Unityctl.Core.Tests -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Cli.Tests -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests -c Release", source);
+        Assert.Contains("pull_request", source);
+        Assert.Contains("main`/`master", source);
+        Assert.Contains("ubuntu-latest", source);
+        Assert.Contains("windows-latest", source);
+        Assert.Contains("macos-latest", source);
+        Assert.Contains("fail-fast: false", source);
+        Assert.Contains("continue-on-error", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
         Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
         Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
