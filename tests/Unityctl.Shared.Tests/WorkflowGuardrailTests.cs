@@ -110,6 +110,32 @@ public class WorkflowGuardrailTests
         Assert.Contains("[CONTRIBUTING.md](CONTRIBUTING.md)", ReadRepoFile("README.ko.md"));
     }
 
+    [Fact]
+    public void PublicTrustDocs_AdvertiseCurrentPrTestInventory()
+    {
+        var publicDocs = new[]
+        {
+            ReadRepoFile("README.md"),
+            ReadRepoFile("README.ko.md"),
+            ReadRepoFile("docs/ref/architecture-mermaid.md"),
+            ReadRepoFile("docs/ref/getting-started.md"),
+            ReadRepoFile("docs/status/README-SYNC-REPORT.md"),
+            ReadRepoFile("docs/status/PROJECT-STATUS.md"),
+        };
+
+        foreach (var source in publicDocs)
+        {
+            Assert.DoesNotContain("476", source);
+        }
+
+        Assert.Contains("850 PR .NET tests", publicDocs[0]);
+        Assert.Contains("850 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("850 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("850 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**850**", publicDocs[4]);
+        Assert.Contains("**850개**", publicDocs[5]);
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var path = Path.Combine(GetRepoRoot(), relativePath.Replace('/', Path.DirectorySeparatorChar));
