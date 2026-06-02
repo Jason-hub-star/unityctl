@@ -86,6 +86,10 @@ public class WorkflowGuardrailTests
         Assert.Contains("installed tool doctor JSON is missing", source);
         Assert.Contains("installed tool check JSON is missing", source);
         Assert.Contains("installed tool workflow verify JSON is missing", source);
+        Assert.Contains("workflow verify JSON is missing expected artifactsDirectory", source);
+        Assert.Contains("workflow verify JSON did not preserve the projectValidate step", source);
+        Assert.Contains("installed tool workflow verify JSON is missing expected artifactsDirectory", source);
+        Assert.Contains("installed tool workflow verify JSON did not preserve the projectValidate step", source);
         Assert.Contains("check JSON is missing", source);
         Assert.Contains("workflow verify JSON is missing", source);
     }

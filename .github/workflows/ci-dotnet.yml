@@ -125,6 +125,13 @@ jobs:
               throw "workflow verify JSON is missing '$property'"
             }
           }
+          if (-not $workflow.PSObject.Properties["artifactsDirectory"] -or -not ($workflow.artifactsDirectory -like "*smoke-artifacts*")) {
+            throw "workflow verify JSON is missing expected artifactsDirectory"
+          }
+          $workflowSteps = @($workflow.steps)
+          if ($workflowSteps.Count -ne 1 -or $workflowSteps[0].id -ne "validate" -or $workflowSteps[0].kind -ne "projectValidate") {
+            throw "workflow verify JSON did not preserve the projectValidate step"
+          }
 
       - name: Smoke local dotnet tool install (Windows)
         if: runner.os == 'Windows'
@@ -203,6 +210,13 @@ jobs:
             if (-not $toolWorkflow.PSObject.Properties[$property]) {
               throw "installed tool workflow verify JSON is missing '$property'"
             }
+          }
+          if (-not $toolWorkflow.PSObject.Properties["artifactsDirectory"] -or -not ($toolWorkflow.artifactsDirectory -like "*smoke-artifacts-tool*")) {
+            throw "installed tool workflow verify JSON is missing expected artifactsDirectory"
+          }
+          $toolWorkflowSteps = @($toolWorkflow.steps)
+          if ($toolWorkflowSteps.Count -ne 1 -or $toolWorkflowSteps[0].id -ne "validate" -or $toolWorkflowSteps[0].kind -ne "projectValidate") {
+            throw "installed tool workflow verify JSON did not preserve the projectValidate step"
           }
 
       - name: Smoke published CLI (Unix)
@@ -284,6 +298,11 @@ jobs:
           for key in ("passed", "summary", "steps", "artifacts"):
               if key not in workflow:
                   raise SystemExit(f"workflow verify JSON is missing '{key}'")
+          if "smoke-artifacts" not in workflow.get("artifactsDirectory", ""):
+              raise SystemExit("workflow verify JSON is missing expected artifactsDirectory")
+          steps = workflow["steps"]
+          if len(steps) != 1 or steps[0].get("id") != "validate" or steps[0].get("kind") != "projectValidate":
+              raise SystemExit("workflow verify JSON did not preserve the projectValidate step")
           PY
 
       - name: Smoke local dotnet tool install (Unix)
@@ -364,4 +383,9 @@ jobs:
           for key in ("passed", "summary", "steps", "artifacts"):
               if key not in workflow:
                   raise SystemExit(f"installed tool workflow verify JSON is missing '{key}'")
+          if "smoke-artifacts-tool" not in workflow.get("artifactsDirectory", ""):
+              raise SystemExit("installed tool workflow verify JSON is missing expected artifactsDirectory")
+          steps = workflow["steps"]
+          if len(steps) != 1 or steps[0].get("id") != "validate" or steps[0].get("kind") != "projectValidate":
+              raise SystemExit("installed tool workflow verify JSON did not preserve the projectValidate step")
           PY
