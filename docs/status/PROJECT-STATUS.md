@@ -409,7 +409,7 @@ PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **849개**다.
 - `Unityctl.Shared.Tests`에 `ExecHandler` 실제 grammar/security/parse contract 테스트 추가
 - `.github/workflows/ci-dotnet.yml`에 published CLI smoke (`--help`, `schema`, `tools --json`, `doctor --json`) 추가. 현재는 schema/tools JSON drift와 `doctor` / `check` / `workflow-verify` / `scene-snapshot` / `scene-diff` / `player-settings` 노출, mini Unity project `doctor` JSON shape까지 검증
 - `.github/workflows/ci-dotnet.yml`에 local nupkg 기반 `dotnet tool install --tool-path` smoke 추가. 현재 PR에서 pack한 `unityctl` 버전을 명시 설치해 installed-tool `schema` / `tools --json` parity, README 핵심 명령 노출, `doctor --json` / `check --json` / `workflow verify --json` shape를 검증
-- `.github/workflows/ci-unity.yml`에 nightly/manual smoke 추가: 별도 미니 프로젝트 `init`, 샘플 프로젝트 `doctor`, `check`, 대표 read `scene hierarchy`, 대표 write/readback `player-settings set/get`, `workflow verify` 결과를 JSON success/readback 검증 후 artifact로 업로드
+- `.github/workflows/ci-unity.yml`에 nightly/manual smoke 추가: 별도 미니 프로젝트 `init`, 샘플 프로젝트 `doctor`, `check`, 대표 read `scene hierarchy`, 대표 write/readback `player-settings set/get`, `workflow verify` 결과를 JSON success/readback 검증 후 artifact로 업로드. secret preflight 실패 시에도 `license-preflight.txt`와 `planned-smoke.txt`로 실패 이유와 예정된 live 검증 범위를 남김
 - `.github/workflows/*.yml`의 first-party/release Actions를 Node 24-ready major로 갱신해 Actions 런타임 deprecation warning 리스크를 낮춤
 - `.github/workflows/release.yml`의 Shared/Core/Cli/Mcp 테스트를 hard gate로 전환해 테스트 실패 상태에서 패키징/NuGet/GitHub Release가 진행되지 않게 함
 - `Unityctl.Shared.Tests`에 workflow guardrail 테스트 추가: PR CI test suite hard gate, release hard gate, published CLI smoke, Unity live smoke/readback evidence가 빠지면 실패

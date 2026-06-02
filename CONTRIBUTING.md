@@ -56,4 +56,4 @@ If a PR changes any public surface, update `README.md`, `README.ko.md`, and rele
 
 Regular PRs run fast .NET tests. Unity Editor-dependent validation lives in the Unity Integration workflow and covers sample-project `init`, `doctor`, `check`, representative read/write commands, and `workflow verify`.
 
-Unity Integration requires either the `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret. When those secrets are unavailable, the workflow fails in a preflight step and uploads `license-preflight.txt` artifacts instead of hiding the reason inside GameCI logs.
+Unity Integration requires either the `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret. When those secrets are unavailable, the workflow fails in a preflight step and uploads `license-preflight.txt` plus `planned-smoke.txt` artifacts instead of hiding the reason or intended live coverage inside GameCI logs.

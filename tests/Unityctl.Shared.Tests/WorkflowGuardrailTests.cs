@@ -81,6 +81,10 @@ public class WorkflowGuardrailTests
         Assert.Contains("UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}", source);
         Assert.Contains("UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}", source);
         Assert.Contains("unityctl-live-artifacts/license-preflight.txt", source);
+        Assert.Contains("unityctl-live-artifacts/planned-smoke.txt", source);
+        Assert.Contains("Planned Unity live validation", source);
+        Assert.Contains("player-settings set/get write-readback smoke", source);
+        Assert.Contains("workflow verify projectValidate artifact smoke", source);
         Assert.Contains("Unity Integration requires either the UNITY_LICENSE or UNITY_SERIAL GitHub secret", source);
         Assert.Contains("unityctl check", source);
         Assert.Contains("unityctl scene hierarchy", source);

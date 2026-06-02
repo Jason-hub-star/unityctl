@@ -37,6 +37,15 @@ jobs:
           set -euo pipefail
           mkdir -p unityctl-live-artifacts
           printf 'Unity license preflight for %s\n' "${{ matrix.unityVersion }}" > unityctl-live-artifacts/license-preflight.txt
+          cat > unityctl-live-artifacts/planned-smoke.txt <<'TXT'
+          Planned Unity live validation:
+          - init smoke project with embedded plugin source
+          - doctor --json on SampleUnityProject
+          - check --type compile --json on SampleUnityProject
+          - scene hierarchy read smoke
+          - player-settings set/get write-readback smoke
+          - workflow verify projectValidate artifact smoke
+          TXT
           if [ -z "${UNITY_LICENSE:-}" ] && [ -z "${UNITY_SERIAL:-}" ]; then
             printf 'Missing UNITY_LICENSE or UNITY_SERIAL GitHub secret.\n' >> unityctl-live-artifacts/license-preflight.txt
             echo "::error::Unity Integration requires either the UNITY_LICENSE or UNITY_SERIAL GitHub secret before GameCI can run live Editor validation."
