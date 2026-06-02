@@ -53,7 +53,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          ./publish/cli/unityctl.exe --help
+          $PSNativeCommandUseErrorActionPreference = $false
+          & ./publish/cli/unityctl.exe --help
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "published CLI help smoke exited with unexpected code $LASTEXITCODE"
+          }
           & ./publish/cli/unityctl.exe schema --format json | Out-File -FilePath publish/schema.json -Encoding utf8
           & ./publish/cli/unityctl.exe tools --json | Out-File -FilePath publish/tools.json -Encoding utf8
           $schema = Get-Content publish/schema.json -Raw | ConvertFrom-Json
@@ -107,13 +111,17 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $PSNativeCommandUseErrorActionPreference = $false
           $package = Get-ChildItem publish/packages/unityctl.*.nupkg | Select-Object -First 1
           if (-not ($package.BaseName -match '^unityctl\.(.+)$')) {
             throw "Could not infer unityctl package version from $($package.Name)"
           }
           $version = $Matches[1]
           dotnet tool install unityctl --tool-path publish/tool --add-source publish/packages --version $version --no-cache
-          ./publish/tool/unityctl.exe --help
+          & ./publish/tool/unityctl.exe --help
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "installed tool help smoke exited with unexpected code $LASTEXITCODE"
+          }
           & ./publish/tool/unityctl.exe schema --format json | Out-File -FilePath publish/tool-schema.json -Encoding utf8
           & ./publish/tool/unityctl.exe tools --json | Out-File -FilePath publish/tool-tools.json -Encoding utf8
           Get-Content publish/tool-schema.json -Raw | ConvertFrom-Json | Out-Null

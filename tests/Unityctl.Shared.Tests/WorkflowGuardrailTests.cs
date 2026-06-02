@@ -46,6 +46,9 @@ public class WorkflowGuardrailTests
         Assert.Contains("tools --json", source);
         Assert.Contains("> publish/schema.json", source);
         Assert.Contains("> publish/tools.json", source);
+        Assert.Contains("$PSNativeCommandUseErrorActionPreference = $false", source);
+        Assert.Contains("published CLI help smoke exited with unexpected code", source);
+        Assert.Contains("installed tool help smoke exited with unexpected code", source);
         Assert.Contains("Out-File -FilePath publish/schema.json -Encoding utf8", source);
         Assert.Contains("Out-File -FilePath publish/tool-schema.json -Encoding utf8", source);
         Assert.Contains("json.load(f)", source);
