@@ -214,17 +214,17 @@ public sealed class FlightLogRobustnessTests : IDisposable
     [Fact]
     public void Query_FilterByUntil_ExcludesNewerEntries()
     {
-        var now = DateTimeOffset.UtcNow;
+        var todayNoonUtc = new DateTimeOffset(DateTime.UtcNow.Date.AddHours(12), TimeSpan.Zero);
         _log.Record(new FlightEntry
         {
-            Timestamp = now.AddHours(-3).ToUnixTimeMilliseconds(),
+            Timestamp = todayNoonUtc.AddHours(-3).ToUnixTimeMilliseconds(),
             Operation = "old",
             Level = "info",
             V = "0.2.0"
         });
         _log.Record(new FlightEntry
         {
-            Timestamp = now.ToUnixTimeMilliseconds(),
+            Timestamp = todayNoonUtc.ToUnixTimeMilliseconds(),
             Operation = "new",
             Level = "info",
             V = "0.2.0"
@@ -232,7 +232,7 @@ public sealed class FlightLogRobustnessTests : IDisposable
 
         var results = _log.Query(new FlightQuery
         {
-            Until = now.AddHours(-1),
+            Until = todayNoonUtc.AddHours(-1),
             Last = 10
         });
 

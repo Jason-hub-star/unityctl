@@ -4,16 +4,19 @@
 
 [![NuGet](https://img.shields.io/nuget/v/unityctl?label=unityctl)](https://www.nuget.org/packages/unityctl)
 [![NuGet](https://img.shields.io/nuget/v/unityctl-mcp?label=unityctl-mcp)](https://www.nuget.org/packages/unityctl-mcp)
-[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions)
+[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml)
+[![Unity Integration](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-unity.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ### AI가 게임을 만들 수 있게 해주는 실행 레이어.
 
-AI 에이전트에 **133개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
+AI 에이전트에 **166개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
 
 ```
-133 CLI 명령 · 12 MCP 도구 · 689 테스트 · Windows / macOS / Linux
+166 CLI 명령 · 12 MCP 도구 · 835 PR .NET 테스트 · Windows / macOS / Linux
 ```
+
+품질 게이트: 모든 PR에서 .NET Shared/Core/Cli/Mcp 테스트를 Windows, macOS, Linux에서 실행합니다. Unity Editor가 필요한 검증은 Unity Integration workflow로 분리하고, nightly/manual 실행에서 `init`, 샘플 프로젝트 `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, `workflow verify` 증거를 artifact로 업로드합니다.
 
 <p align="center">
   <img src="docs/assets/mcp-demo.svg" alt="AI 에이전트가 MCP를 통해 Unity 씬을 구성하는 모습" width="700">
@@ -144,7 +147,7 @@ unityctl을 공개적으로 보여주고 싶다면, 마인크래프트부터 시
 | **연결 안정성** | Named Pipe — Domain Reload에서도 끊기지 않음 | WebSocket 끊김, 수동 재연결 필요 |
 | **CI/CD** | `check` / `test` / `build --dry-run` 헤드리스 지원 | 에디터를 열어야만 동작 |
 | **진단** | `doctor`가 실패를 분류하고 다음 조치를 안내 | "Connection failed"만 출력 |
-| **명령 수** | **133** (읽기 + 쓰기 + 검증 + 진단) | ~34-200 |
+| **명령 수** | **166** (읽기 + 쓰기 + 검증 + 진단) | ~34-200 |
 | **감사 추적** | 모든 명령의 NDJSON 플라이트 레코더 | 이력 없음 |
 | **런타임** | 네이티브 .NET — Python/TS 브릿지 불필요 | 브릿지 오버헤드 있음 |
 | **설치** | `dotnet tool install -g unityctl` | Node.js + npm + 포트 설정 |
@@ -158,7 +161,7 @@ AI 에이전트 비용의 대부분은 매 턴 전송되는 도구 스키마에�
   <img src="docs/assets/token-efficiency.svg" alt="실측 토큰 비용: unityctl via Bash = 오버헤드 0, CoplayDev MCP 대비 6.8배 저렴" width="620">
 </p>
 
-12개 MCP 도구가 `unityctl_query`(읽기), `unityctl_run`(쓰기), `unityctl_schema`(조회)를 통해 133개 명령 전체를 커버합니다.
+12개 MCP 도구가 `unityctl_query`(읽기), `unityctl_run`(쓰기), `unityctl_schema`(조회)를 통해 166개 명령 전체를 커버합니다.
 
 #### 실측: Claude Code 토큰 비용 (2026-03-20)
 
@@ -295,7 +298,7 @@ Claude Code / Cursor / VS Code MCP 설정에 추가:
 
 ---
 
-## 명령어 (133)
+## 명령어 (166)
 
 ### 코어 (13)
 
@@ -473,7 +476,7 @@ Claude Code / Cursor / VS Code MCP 설정에 추가:
 
 ```
 AI 에이전트 (LLM)            unityctl-mcp              unityctl CLI             Unity Editor
-Claude / GPT / Gemini         12 MCP 도구               131 명령                 플러그인 (IPC)
+Claude / GPT / Gemini         12 MCP 도구               166 명령                 플러그인 (IPC)
         |                          |                          |                       |
         |--- MCP (stdio) -------->|                          |                       |
         |                          |--- CLI 호출 ----------->|                       |
@@ -491,7 +494,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 633 xUnit 테스트
++-- tests/*                                 835 PR .NET xUnit 테스트
 ```
 
 ---
@@ -520,7 +523,7 @@ unityctl.slnx
 </p>
 
 <p align="center">
-  <img src="docs/assets/tools.svg" alt="unityctl tools — 9개 카테고리 133개 명령" width="654">
+  <img src="docs/assets/tools.svg" alt="unityctl tools — 9개 카테고리 166개 명령" width="654">
 </p>
 
 ## 문서

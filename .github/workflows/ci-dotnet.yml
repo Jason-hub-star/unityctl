@@ -14,10 +14,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
@@ -41,13 +41,93 @@ jobs:
           --self-contained false
           -o publish/cli
 
+      - name: Pack CLI tool
+        run: >
+          dotnet pack src/Unityctl.Cli/Unityctl.Cli.csproj
+          -c Release
+          --no-build
+          -o publish/packages
+
       - name: Smoke published CLI (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           ./publish/cli/unityctl.exe --help
-          ./publish/cli/unityctl.exe schema --format json | Out-Null
-          ./publish/cli/unityctl.exe tools --json | Out-Null
+          $schema = ./publish/cli/unityctl.exe schema --format json | ConvertFrom-Json
+          $tools = ./publish/cli/unityctl.exe tools --json | ConvertFrom-Json
+          $schemaNames = @($schema.commands | ForEach-Object { $_.name } | Sort-Object)
+          $toolNames = @($tools | ForEach-Object { $_.name } | Sort-Object)
+          if (($schemaNames -join "`n") -ne ($toolNames -join "`n")) {
+            throw "schema and tools command names drifted"
+          }
+          foreach ($required in @("doctor", "check", "workflow-verify", "scene-snapshot", "scene-diff", "player-settings")) {
+            if ($schemaNames -notcontains $required) {
+              throw "published CLI schema is missing required command '$required'"
+            }
+          }
+          New-Item -ItemType Directory -Force publish/smoke-project/Packages, publish/smoke-project/ProjectSettings | Out-Null
+          '{"dependencies":{}}' | Set-Content -Path publish/smoke-project/Packages/manifest.json
+          'm_EditorVersion: 6000.0.64f1' | Set-Content -Path publish/smoke-project/ProjectSettings/ProjectVersion.txt
+          $doctorText = & ./publish/cli/unityctl.exe doctor --project publish/smoke-project --json
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "doctor smoke exited with unexpected code $LASTEXITCODE"
+          }
+          $doctor = $doctorText | ConvertFrom-Json
+          foreach ($property in @("editor", "plugin", "ipc", "summary")) {
+            if (-not $doctor.PSObject.Properties[$property]) {
+              throw "doctor JSON is missing '$property'"
+            }
+          }
+          $checkText = & ./publish/cli/unityctl.exe check --project publish/smoke-project --type compile --json
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "check smoke exited with unexpected code $LASTEXITCODE"
+          }
+          $check = $checkText | ConvertFrom-Json
+          foreach ($property in @("statusCode", "success", "message")) {
+            if (-not $check.PSObject.Properties[$property]) {
+              throw "check JSON is missing '$property'"
+            }
+          }
+          '{"name":"smoke","steps":[{"id":"validate","kind":"projectValidate"}]}' | Set-Content -Path publish/smoke-verify.json
+          $workflowText = & ./publish/cli/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts --json
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "workflow verify smoke exited with unexpected code $LASTEXITCODE"
+          }
+          $workflow = $workflowText | ConvertFrom-Json
+          foreach ($property in @("passed", "summary", "steps", "artifacts")) {
+            if (-not $workflow.PSObject.Properties[$property]) {
+              throw "workflow verify JSON is missing '$property'"
+            }
+          }
+
+      - name: Smoke local dotnet tool install (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $package = Get-ChildItem publish/packages/unityctl.*.nupkg | Select-Object -First 1
+          if (-not ($package.BaseName -match '^unityctl\.(.+)$')) {
+            throw "Could not infer unityctl package version from $($package.Name)"
+          }
+          $version = $Matches[1]
+          dotnet tool install unityctl --tool-path publish/tool --add-source publish/packages --version $version --no-cache
+          ./publish/tool/unityctl.exe --help
+          ./publish/tool/unityctl.exe schema --format json | ConvertFrom-Json | Out-Null
+          ./publish/tool/unityctl.exe tools --json | ConvertFrom-Json | Out-Null
+          $doctorText = & ./publish/tool/unityctl.exe doctor --project publish/smoke-project --json
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "installed tool doctor smoke exited with unexpected code $LASTEXITCODE"
+          }
+          $doctorText | ConvertFrom-Json | Out-Null
+          $checkText = & ./publish/tool/unityctl.exe check --project publish/smoke-project --type compile --json
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "installed tool check smoke exited with unexpected code $LASTEXITCODE"
+          }
+          $checkText | ConvertFrom-Json | Out-Null
+          $workflowText = & ./publish/tool/unityctl.exe workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts-tool --json
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 1) {
+            throw "installed tool workflow verify smoke exited with unexpected code $LASTEXITCODE"
+          }
+          $workflowText | ConvertFrom-Json | Out-Null
 
       - name: Smoke published CLI (Unix)
         if: runner.os != 'Windows'
@@ -55,5 +135,130 @@ jobs:
         run: |
           chmod +x ./publish/cli/unityctl
           ./publish/cli/unityctl --help
-          ./publish/cli/unityctl schema --format json >/dev/null
-          ./publish/cli/unityctl tools --json >/dev/null
+          schema_json="$(./publish/cli/unityctl schema --format json)"
+          tools_json="$(./publish/cli/unityctl tools --json)"
+          SCHEMA_JSON="$schema_json" TOOLS_JSON="$tools_json" python3 - <<'PY'
+          import json
+          import os
+
+          schema = json.loads(os.environ["SCHEMA_JSON"])
+          tools = json.loads(os.environ["TOOLS_JSON"])
+          schema_names = sorted(command["name"] for command in schema["commands"])
+          tool_names = sorted(command["name"] for command in tools)
+
+          if schema_names != tool_names:
+              raise SystemExit("schema and tools command names drifted")
+
+          for required in ("doctor", "check", "workflow-verify", "scene-snapshot", "scene-diff", "player-settings"):
+              if required not in schema_names:
+                  raise SystemExit(f"published CLI schema is missing required command '{required}'")
+          PY
+          mkdir -p publish/smoke-project/Packages publish/smoke-project/ProjectSettings
+          printf '{"dependencies":{}}\n' > publish/smoke-project/Packages/manifest.json
+          printf 'm_EditorVersion: 6000.0.64f1\n' > publish/smoke-project/ProjectSettings/ProjectVersion.txt
+          set +e
+          doctor_json="$(./publish/cli/unityctl doctor --project publish/smoke-project --json)"
+          doctor_exit=$?
+          set -e
+          if [ "$doctor_exit" -ne 0 ] && [ "$doctor_exit" -ne 1 ]; then
+            echo "doctor smoke exited with unexpected code $doctor_exit" >&2
+            exit 1
+          fi
+          DOCTOR_JSON="$doctor_json" python3 - <<'PY'
+          import json
+          import os
+
+          doctor = json.loads(os.environ["DOCTOR_JSON"])
+          for key in ("editor", "plugin", "ipc", "summary"):
+              if key not in doctor:
+                  raise SystemExit(f"doctor JSON is missing '{key}'")
+          PY
+          set +e
+          check_json="$(./publish/cli/unityctl check --project publish/smoke-project --type compile --json)"
+          check_exit=$?
+          set -e
+          if [ "$check_exit" -ne 0 ] && [ "$check_exit" -ne 1 ]; then
+            echo "check smoke exited with unexpected code $check_exit" >&2
+            exit 1
+          fi
+          CHECK_JSON="$check_json" python3 - <<'PY'
+          import json
+          import os
+
+          check = json.loads(os.environ["CHECK_JSON"])
+          for key in ("statusCode", "success", "message"):
+              if key not in check:
+                  raise SystemExit(f"check JSON is missing '{key}'")
+          PY
+          printf '{"name":"smoke","steps":[{"id":"validate","kind":"projectValidate"}]}\n' > publish/smoke-verify.json
+          set +e
+          workflow_json="$(./publish/cli/unityctl workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts --json)"
+          workflow_exit=$?
+          set -e
+          if [ "$workflow_exit" -ne 0 ] && [ "$workflow_exit" -ne 1 ]; then
+            echo "workflow verify smoke exited with unexpected code $workflow_exit" >&2
+            exit 1
+          fi
+          WORKFLOW_JSON="$workflow_json" python3 - <<'PY'
+          import json
+          import os
+
+          workflow = json.loads(os.environ["WORKFLOW_JSON"])
+          for key in ("passed", "summary", "steps", "artifacts"):
+              if key not in workflow:
+                  raise SystemExit(f"workflow verify JSON is missing '{key}'")
+          PY
+
+      - name: Smoke local dotnet tool install (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          package="$(find publish/packages -maxdepth 1 -name 'unityctl.*.nupkg' | head -n 1)"
+          version="$(basename "$package" .nupkg)"
+          version="${version#unityctl.}"
+          dotnet tool install unityctl --tool-path publish/tool --add-source publish/packages --version "$version" --no-cache
+          ./publish/tool/unityctl --help >/dev/null
+          ./publish/tool/unityctl schema --format json >/dev/null
+          ./publish/tool/unityctl tools --json >/dev/null
+          set +e
+          doctor_json="$(./publish/tool/unityctl doctor --project publish/smoke-project --json)"
+          doctor_exit=$?
+          set -e
+          if [ "$doctor_exit" -ne 0 ] && [ "$doctor_exit" -ne 1 ]; then
+            echo "installed tool doctor smoke exited with unexpected code $doctor_exit" >&2
+            exit 1
+          fi
+          DOCTOR_JSON="$doctor_json" python3 - <<'PY'
+          import json
+          import os
+
+          json.loads(os.environ["DOCTOR_JSON"])
+          PY
+          set +e
+          check_json="$(./publish/tool/unityctl check --project publish/smoke-project --type compile --json)"
+          check_exit=$?
+          set -e
+          if [ "$check_exit" -ne 0 ] && [ "$check_exit" -ne 1 ]; then
+            echo "installed tool check smoke exited with unexpected code $check_exit" >&2
+            exit 1
+          fi
+          CHECK_JSON="$check_json" python3 - <<'PY'
+          import json
+          import os
+
+          json.loads(os.environ["CHECK_JSON"])
+          PY
+          set +e
+          workflow_json="$(./publish/tool/unityctl workflow verify --file publish/smoke-verify.json --project publish/smoke-project --artifacts-dir publish/smoke-artifacts-tool --json)"
+          workflow_exit=$?
+          set -e
+          if [ "$workflow_exit" -ne 0 ] && [ "$workflow_exit" -ne 1 ]; then
+            echo "installed tool workflow verify smoke exited with unexpected code $workflow_exit" >&2
+            exit 1
+          fi
+          WORKFLOW_JSON="$workflow_json" python3 - <<'PY'
+          import json
+          import os
+
+          json.loads(os.environ["WORKFLOW_JSON"])
+          PY

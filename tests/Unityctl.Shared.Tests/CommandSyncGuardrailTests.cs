@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Unityctl.Shared.Commands;
 using Unityctl.Shared.Protocol;
 using Xunit;
 
@@ -179,6 +180,68 @@ public class CommandSyncGuardrailTests
 
         var pluginHandlers = ParsePluginHandlerFieldNames();
         Assert.Contains(nameof(WellKnownCommands.TestResult), pluginHandlers);
+    }
+
+    [Fact]
+    public void McpAllowlists_ReferenceSchemaDiscoverableCatalogCommands()
+    {
+        var catalogNames = CommandCatalog.All
+            .Select(command => command.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var wellKnownConstants = GetSharedWellKnownConstants();
+        var allowlistFields = ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\QueryTool.cs")
+            .Concat(ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\RunTool.cs"))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        foreach (var field in allowlistFields)
+        {
+            Assert.True(
+                wellKnownConstants.TryGetValue(field, out var commandName),
+                $"MCP allowlist references unknown WellKnownCommands.{field}");
+            Assert.Contains(commandName!, catalogNames);
+        }
+    }
+
+    [Fact]
+    public void PluginTransportHandlers_AreSchemaDiscoverableCatalogCommands()
+    {
+        var catalogNames = CommandCatalog.All
+            .Select(command => command.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var wellKnownConstants = GetSharedWellKnownConstants();
+        var handlerFields = ParsePluginHandlerFieldNames()
+            .Where(field => field is not nameof(WellKnownCommands.BuildProfileSetActiveResult)
+                and not nameof(WellKnownCommands.BuildTargetSwitchResult)
+                and not nameof(WellKnownCommands.AssetRefreshResult)
+                and not nameof(WellKnownCommands.ScriptValidateResult)
+                and not nameof(WellKnownCommands.LightingBakeResult))
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        foreach (var field in handlerFields)
+        {
+            Assert.True(
+                wellKnownConstants.TryGetValue(field, out var commandName),
+                $"Plugin handler references unknown WellKnownCommands.{field}");
+            Assert.Contains(commandName!, catalogNames);
+        }
+    }
+
+    [Fact]
+    public void CatalogCliNames_AreRegisteredInProgram()
+    {
+        var cliCommands = ParseCliCommands();
+        var missing = CommandCatalog.All
+            .Select(command => command.CliName ?? command.Name)
+            .Where(commandName => !commandName.Contains('<', StringComparison.Ordinal)
+                && commandName is not "player-settings")
+            .Where(commandName => !cliCommands.Contains(commandName))
+            .OrderBy(commandName => commandName, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Empty(missing);
     }
 
     private static string ReadRepoFile(string relativePath)

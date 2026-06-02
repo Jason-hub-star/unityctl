@@ -2,6 +2,8 @@ name: CI — Unity Integration
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 18 * * *'
   push:
     tags: ['v*']
 
@@ -15,10 +17,10 @@ jobs:
           - 6000.0.64f1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
@@ -34,3 +36,97 @@ jobs:
           unityVersion: ${{ matrix.unityVersion }}
           testMode: editmode
           customParameters: -nographics
+
+      - name: Publish CLI
+        run: >
+          dotnet publish src/Unityctl.Cli/Unityctl.Cli.csproj
+          -c Release
+          --self-contained false
+          -o publish/cli
+
+      - name: Smoke sample project commands
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./publish/cli/unityctl
+          mkdir -p unityctl-live-artifacts
+          mkdir -p unityctl-live-artifacts/init-smoke-project/Packages unityctl-live-artifacts/init-smoke-project/ProjectSettings
+          cat > unityctl-live-artifacts/init-smoke-project/Packages/manifest.json <<'JSON'
+          {
+            "dependencies": {}
+          }
+          JSON
+          cat > unityctl-live-artifacts/init-smoke-project/ProjectSettings/ProjectVersion.txt <<'TXT'
+          m_EditorVersion: 6000.0.64f1
+          TXT
+          cat > unityctl-live-artifacts/project-validate.verify.json <<'JSON'
+          {
+            "name": "sample-project-validate",
+            "steps": [
+              { "id": "validate", "kind": "projectValidate" }
+            ]
+          }
+          JSON
+          ./publish/cli/unityctl init \
+            --project unityctl-live-artifacts/init-smoke-project \
+            --source src/Unityctl.Plugin > unityctl-live-artifacts/init.txt
+          ./publish/cli/unityctl doctor --project tests/Unityctl.Integration/SampleUnityProject --json > unityctl-live-artifacts/doctor.json || true
+          ./publish/cli/unityctl check --project tests/Unityctl.Integration/SampleUnityProject --type compile --json > unityctl-live-artifacts/check.json
+          ./publish/cli/unityctl scene hierarchy \
+            --project tests/Unityctl.Integration/SampleUnityProject \
+            --summary \
+            --max-depth 1 \
+            --json > unityctl-live-artifacts/scene-hierarchy.json
+          ./publish/cli/unityctl player-settings set \
+            --project tests/Unityctl.Integration/SampleUnityProject \
+            --key productName \
+            --value "unityctl-ci-${{ matrix.unityVersion }}" \
+            --json > unityctl-live-artifacts/player-settings-set.json
+          ./publish/cli/unityctl player-settings get \
+            --project tests/Unityctl.Integration/SampleUnityProject \
+            --key productName \
+            --json > unityctl-live-artifacts/player-settings-get.json
+          ./publish/cli/unityctl workflow verify \
+            --file unityctl-live-artifacts/project-validate.verify.json \
+            --project tests/Unityctl.Integration/SampleUnityProject \
+            --artifacts-dir unityctl-live-artifacts/verification \
+            --json > unityctl-live-artifacts/workflow-verify.json
+          EXPECTED_PRODUCT_NAME="unityctl-ci-${{ matrix.unityVersion }}" python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          artifacts = Path("unityctl-live-artifacts")
+
+          def load_json(name):
+              path = artifacts / name
+              with path.open(encoding="utf-8") as handle:
+                  return json.load(handle)
+
+          def require_response_success(name):
+              payload = load_json(name)
+              if payload.get("success") is not True:
+                  raise SystemExit(f"{name} did not report success: {payload}")
+              return payload
+
+          load_json("doctor.json")
+          require_response_success("check.json")
+          require_response_success("scene-hierarchy.json")
+          require_response_success("player-settings-set.json")
+          player_settings = require_response_success("player-settings-get.json")
+          expected = os.environ["EXPECTED_PRODUCT_NAME"]
+          actual = player_settings.get("data", {}).get("value")
+          if actual != expected:
+              raise SystemExit(f"player-settings readback mismatch: expected {expected!r}, got {actual!r}")
+
+          workflow = load_json("workflow-verify.json")
+          if workflow.get("passed") is not True:
+              raise SystemExit(f"workflow verify did not pass: {workflow}")
+          PY
+
+      - name: Upload unityctl live artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: unityctl-live-${{ matrix.unityVersion }}
+          path: unityctl-live-artifacts

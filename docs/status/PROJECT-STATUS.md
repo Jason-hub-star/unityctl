@@ -386,28 +386,37 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Debug` | ✅ | 71 통과 |
-| `dotnet test tests/Unityctl.Core.Tests -c Release` | ⚠️ | 새 slice targeted tests는 통과. full suite는 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` 1건 flaky failure 확인 |
-| `dotnet test tests/Unityctl.Cli.Tests -c Debug` | ✅ | 393 통과 |
-| `dotnet test tests/Unityctl.Mcp.Tests -c Debug` | ✅ | 22 통과 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 89 통과. workflow hard-gate/smoke/README badge guardrail 추가 |
+| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 146 통과. `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` flaky 원인(UTC 날짜/entry timestamp 경계)을 고정 시각 테스트로 안정화. path/pipe normalization, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
+| `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 578 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, dirty scene policy normalization, batch command parser edge regression 추가 |
+| `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 22 통과 |
 | `dotnet test unityctl.slnx -c Release` | ⚠️ | Integration/환경 락, AppLocker 등 워크스테이션 조건에 따라 개별 프로젝트 실행이 더 안정적 |
 
 | 프로젝트 | 통과 |
 |----------|------|
-| Unityctl.Shared.Tests | 71 |
-| Unityctl.Core.Tests | 129 |
-| Unityctl.Cli.Tests | 444 |
+| Unityctl.Shared.Tests | 89 |
+| Unityctl.Core.Tests | 143 |
+| Unityctl.Cli.Tests | 576 |
 | Unityctl.Mcp.Tests | 22 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-테스트 인벤토리 기준 합계는 **689개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **835개**다.
 
 신규 자동 검증:
 
 - `Unityctl.Mcp.Tests`에 built `unityctl-mcp.exe` 기준 `initialize` / `tools/list` / `unityctl_schema` / `unityctl_run` allowlist/parameters / invalid tool / missing arg black-box 테스트 추가 (16개)
 - `Unityctl.Integration.Tests`에 repo-contained `SampleUnityProject` 기반 closed-editor `status` / `check` / `test --mode edit` / `build --dry-run` 검증 추가
 - `Unityctl.Shared.Tests`에 `ExecHandler` 실제 grammar/security/parse contract 테스트 추가
-- `.github/workflows/ci-dotnet.yml`에 published CLI smoke (`--help`, `schema`, `tools --json`) 추가
+- `.github/workflows/ci-dotnet.yml`에 published CLI smoke (`--help`, `schema`, `tools --json`, `doctor --json`) 추가. 현재는 schema/tools JSON drift와 `doctor` / `check` / `workflow-verify` / `scene-snapshot` / `scene-diff` / `player-settings` 노출, mini Unity project `doctor` JSON shape까지 검증
+- `.github/workflows/ci-dotnet.yml`에 local nupkg 기반 `dotnet tool install --tool-path` smoke 추가. 현재 PR에서 pack한 `unityctl` 버전을 명시 설치해 `schema` / `tools --json` / `doctor --json` 경로를 검증
+- `.github/workflows/ci-unity.yml`에 nightly/manual smoke 추가: 별도 미니 프로젝트 `init`, 샘플 프로젝트 `doctor`, `check`, 대표 read `scene hierarchy`, 대표 write/readback `player-settings set/get`, `workflow verify` 결과를 JSON success/readback 검증 후 artifact로 업로드
+- `.github/workflows/*.yml`의 first-party/release Actions를 Node 24-ready major로 갱신해 Actions 런타임 deprecation warning 리스크를 낮춤
+- `.github/workflows/release.yml`의 Shared/Core/Cli/Mcp 테스트를 hard gate로 전환해 테스트 실패 상태에서 패키징/NuGet/GitHub Release가 진행되지 않게 함
+- `Unityctl.Shared.Tests`에 workflow guardrail 테스트 추가: PR CI test suite hard gate, release hard gate, published CLI smoke, Unity live smoke/readback evidence가 빠지면 실패
+- `Unityctl.Shared.Tests` workflow guardrail이 README/README.ko CI badge를 정확한 `ci-dotnet.yml` / `ci-unity.yml` workflow URL에 고정
+- `Unityctl.Cli.Tests`에 Unity discovery/platform regression 추가: CRLF/indent ProjectVersion parsing, Unity Hub `Location` casing, interactive/headless process classification
+- `Unityctl.Cli.Tests`에 dirty scene policy normalization regression 추가: `scene open/create --dirty-policy` 대소문자/공백 입력을 CLI 요청 단계에서 안정화
+- `Unityctl.Core.Tests`에 BatchTransport readiness regression 추가: interactive editor lock, headless batch lock, stale lockfile guidance를 Unity 실행 없이 검증
 
 > 이전 실측 상세/경쟁 분석 아카이브 → `docs/internal/DEVELOPMENT.md` "라이브 검증 아카이브" 섹션 참조.
 

@@ -192,13 +192,13 @@ public static class CommandCatalog
         Parameter("no-color", "bool", "Disable colored output", required: false));
 
     public static readonly CommandDefinition SceneSnapshot = Define(
-        "scene snapshot",
+        WellKnownCommands.SceneSnapshot,
         "Capture a snapshot of all scene objects and their serialized properties",
         "query",
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("scenePath", "string", "Filter to a specific scene path", required: false),
         Parameter("includeInactive", "bool", "Include inactive GameObjects in the snapshot", required: false),
-        Parameter("json", "bool", "Output as JSON", required: false));
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene snapshot");
 
     public static readonly CommandDefinition SceneHierarchy = Define(
         WellKnownCommands.SceneHierarchy,
@@ -212,7 +212,7 @@ public static class CommandCatalog
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene hierarchy");
 
     public static readonly CommandDefinition SceneDiff = Define(
-        "scene diff",
+        WellKnownCommands.SceneDiff,
         "Compare two scene snapshots and report property-level changes",
         "query",
         Parameter("snap1", "string", "Path to base snapshot JSON file", required: false),
@@ -220,7 +220,7 @@ public static class CommandCatalog
         Parameter("project", "string", "Path to Unity project (for --live mode)", required: false),
         Parameter("live", "bool", "Compare current scene against last snapshot", required: false),
         Parameter("epsilon", "double", "Float comparison threshold (default: 1e-6)", required: false),
-        Parameter("json", "bool", "Output as JSON", required: false));
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene diff");
 
     public static readonly CommandDefinition Schema = Define(
         WellKnownCommands.Schema,
@@ -291,6 +291,16 @@ public static class CommandCatalog
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("action", "string", "Play mode action: start, stop, pause", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("play <start|stop|pause>");
+
+    public static readonly CommandDefinition PlayerSettings = Define(
+        WellKnownCommands.PlayerSettings,
+        "Get or set a PlayerSettings property via the transport command used by CLI get/set wrappers",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("action", "string", "Action: get or set", required: true),
+        Parameter("key", "string", "PlayerSettings key, such as companyName, productName, or bundleVersion", required: true),
+        Parameter("value", "string", "Value for set action", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false));
 
     public static readonly CommandDefinition PlayerSettingsGet = Define(
         "player-settings-get",
@@ -1530,6 +1540,7 @@ public static class CommandCatalog
         WorkflowVerify,
         BatchExecute,
         PlayMode,
+        PlayerSettings,
         PlayerSettingsGet,
         PlayerSettingsSet,
         AssetRefresh,

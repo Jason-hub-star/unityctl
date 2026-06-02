@@ -116,6 +116,16 @@ public sealed class SceneCommandTests
     }
 
     [CliTestFact]
+    public void CreateOpenRequest_NormalizesExplicitDirtyPolicy()
+    {
+        var request = SceneCommand.CreateOpenRequest(
+            "Assets/Scenes/Main.unity",
+            dirtyPolicy: " SAVE ");
+
+        Assert.Equal("save", request.Parameters!["dirtyPolicy"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
     public void CreateOpenRequest_EmptyPath_Throws()
     {
         Assert.Throws<ArgumentException>(() => SceneCommand.CreateOpenRequest(""));
@@ -134,6 +144,16 @@ public sealed class SceneCommandTests
         Assert.Equal("empty", request.Parameters["template"]?.GetValue<string>());
         Assert.Equal("additive", request.Parameters["mode"]?.GetValue<string>());
         Assert.Equal("fail", request.Parameters["dirtyPolicy"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void CreateCreateRequest_NormalizesExplicitDirtyPolicy()
+    {
+        var request = SceneCommand.CreateCreateRequest(
+            "Assets/Scenes/NewScene.unity",
+            dirtyPolicy: " Discard ");
+
+        Assert.Equal("discard", request.Parameters!["dirtyPolicy"]?.GetValue<string>());
     }
 
     [CliTestFact]

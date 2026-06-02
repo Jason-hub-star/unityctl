@@ -1,5 +1,6 @@
 using Unityctl.Shared;
 using Xunit;
+using System.Runtime.InteropServices;
 
 namespace Unityctl.Core.Tests;
 
@@ -43,6 +44,40 @@ public class PipeNameTests
     {
         var normalized = Constants.NormalizeProjectPath("/some/project");
         Assert.DoesNotContain("\\", normalized);
+    }
+
+    [Fact]
+    public void NormalizeProjectPath_ConvertsBackslashesToForwardSlashes()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "unityctl-path-test");
+        var withBackslashes = path.Replace(Path.DirectorySeparatorChar, '\\');
+
+        var normalized = Constants.NormalizeProjectPath(withBackslashes);
+
+        Assert.DoesNotContain("\\", normalized);
+    }
+
+    [Fact]
+    public void GetPipeName_IgnoresTrailingSlashDifferences()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "unityctl-pipe-test");
+        var withSlash = path + Path.DirectorySeparatorChar;
+        var withMultipleSlashes = path + new string(Path.DirectorySeparatorChar, 3);
+
+        Assert.Equal(Constants.GetPipeName(path), Constants.GetPipeName(withSlash));
+        Assert.Equal(Constants.GetPipeName(path), Constants.GetPipeName(withMultipleSlashes));
+    }
+
+    [Fact]
+    public void NormalizeProjectPath_CaseBehavior_IsPlatformExplicit()
+    {
+        const string projectPath = "UnityctlCaseProbe";
+        var normalized = Constants.NormalizeProjectPath(projectPath);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            Assert.Equal(normalized.ToLowerInvariant(), normalized);
+        else
+            Assert.Contains(projectPath, normalized, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -14,7 +14,7 @@
     </g>
   <foreignObject x="16" y="44" width="622" height="516">
     <div xmlns="http://www.w3.org/1999/xhtml" class="terminal" style="color: #cdd6f4; line-height: 19px; white-space: pre-wrap; word-break: break-all;">
-<b>unityctl</b> — 131 commands · 12 MCP tools
+<b>unityctl</b> — 166 commands · 12 MCP tools
 
 <span style="color:#6c7086">  Core (13)</span>
   <span style="color:#94e2d5">ping</span>               Verify connectivity to Unity
