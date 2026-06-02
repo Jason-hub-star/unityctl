@@ -117,6 +117,26 @@ public class WorkflowGuardrailTests
     }
 
     [Fact]
+    public void UnityIntegration_UploadsPreflightArtifactsEvenWhenLicenseGateFails()
+    {
+        var source = ReadRepoFile(".github/workflows/ci-unity.yml");
+        var preflightIndex = source.IndexOf("- name: Verify Unity license secret", StringComparison.Ordinal);
+        var gameCiIndex = source.IndexOf("game-ci/unity-test-runner@v4", StringComparison.Ordinal);
+        var uploadIndex = source.IndexOf("- name: Upload unityctl live artifacts", StringComparison.Ordinal);
+
+        Assert.True(preflightIndex >= 0, "Unity Integration must keep an explicit license preflight step.");
+        Assert.True(gameCiIndex > preflightIndex, "GameCI must run after the license preflight writes artifacts.");
+        Assert.True(uploadIndex > preflightIndex, "Artifact upload must run after preflight artifacts are created.");
+        Assert.Contains("- name: Upload unityctl live artifacts", source);
+        Assert.Contains("if: always()", source);
+        Assert.Contains("name: unityctl-live-${{ matrix.unityVersion }}", source);
+        Assert.Contains("path: unityctl-live-artifacts", source);
+        Assert.Contains("Missing UNITY_LICENSE or UNITY_SERIAL GitHub secret.", source);
+        Assert.Contains("unityctl-live-artifacts/license-preflight.txt", source);
+        Assert.Contains("unityctl-live-artifacts/planned-smoke.txt", source);
+    }
+
+    [Fact]
     public void ReadmeBadges_LinkToExactWorkflowPages()
     {
         AssertReadmeBadges(ReadRepoFile("README.md"));
@@ -148,12 +168,12 @@ public class WorkflowGuardrailTests
             Assert.DoesNotContain("476", source);
         }
 
-        Assert.Contains("860 PR .NET tests", publicDocs[0]);
-        Assert.Contains("860 PR .NET 테스트", publicDocs[1]);
-        Assert.Contains("860 PR .NET xUnit tests", publicDocs[2]);
-        Assert.Contains("860 PR .NET xUnit tests", publicDocs[3]);
-        Assert.Contains("**860**", publicDocs[4]);
-        Assert.Contains("**860개**", publicDocs[5]);
+        Assert.Contains("861 PR .NET tests", publicDocs[0]);
+        Assert.Contains("861 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("861 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("861 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**861**", publicDocs[4]);
+        Assert.Contains("**861개**", publicDocs[5]);
         Assert.Contains("Unity live blocker tracking issue: #17", publicDocs[4]);
         Assert.Contains("Configure Unity Integration Actions secret", publicDocs[4]);
     }

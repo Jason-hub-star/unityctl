@@ -386,7 +386,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 104 통과. workflow hard-gate/smoke/README badge/public trust inventory/Unity blocker tracking/PR skip guardrail, CLI/Plugin duplicate registration guardrail 추가 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 105 통과. workflow hard-gate/smoke/README badge/public trust inventory/Unity blocker tracking/PR skip guardrail, CLI/Plugin duplicate registration guardrail 추가 |
 | `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 152 통과. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`를 고정 시각 테스트로 안정화. slash/backslash/case policy path/pipe normalization, UnityProcessDetector slash/case process matching, CommandExecutor headless lock no-batch-fallback, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 579 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, running project path case policy, dirty scene policy normalization, batch command parser edge regression 추가 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
@@ -394,13 +394,13 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 
 | 프로젝트 | 통과 |
 |----------|------|
-| Unityctl.Shared.Tests | 104 |
+| Unityctl.Shared.Tests | 105 |
 | Unityctl.Core.Tests | 152 |
 | Unityctl.Cli.Tests | 579 |
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **860개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **861개**다.
 
 신규 자동 검증:
 
