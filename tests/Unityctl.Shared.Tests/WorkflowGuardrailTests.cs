@@ -13,6 +13,7 @@ public class WorkflowGuardrailTests
         Assert.Contains("dotnet test tests/Unityctl.Core.Tests --no-build -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Cli.Tests --no-build -c Release", source);
         Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release", source);
+        Assert.Contains("fail-fast: false", source);
         Assert.DoesNotContain("continue-on-error", source);
     }
 
@@ -43,6 +44,9 @@ public class WorkflowGuardrailTests
 
         Assert.Contains("schema --format json", source);
         Assert.Contains("tools --json", source);
+        Assert.Contains("> publish/schema.json", source);
+        Assert.Contains("> publish/tools.json", source);
+        Assert.Contains("json.load(f)", source);
         Assert.Contains("doctor --project publish/smoke-project --json", source);
         Assert.Contains("check --project publish/smoke-project --type compile --json", source);
         Assert.Contains("workflow verify --file publish/smoke-verify.json --project publish/smoke-project", source);

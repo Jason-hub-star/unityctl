@@ -9,6 +9,7 @@ on:
 jobs:
   build-and-test:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -135,14 +136,15 @@ jobs:
         run: |
           chmod +x ./publish/cli/unityctl
           ./publish/cli/unityctl --help
-          schema_json="$(./publish/cli/unityctl schema --format json)"
-          tools_json="$(./publish/cli/unityctl tools --json)"
-          SCHEMA_JSON="$schema_json" TOOLS_JSON="$tools_json" python3 - <<'PY'
+          ./publish/cli/unityctl schema --format json > publish/schema.json
+          ./publish/cli/unityctl tools --json > publish/tools.json
+          python3 - <<'PY'
           import json
-          import os
 
-          schema = json.loads(os.environ["SCHEMA_JSON"])
-          tools = json.loads(os.environ["TOOLS_JSON"])
+          with open("publish/schema.json", encoding="utf-8") as f:
+              schema = json.load(f)
+          with open("publish/tools.json", encoding="utf-8") as f:
+              tools = json.load(f)
           schema_names = sorted(command["name"] for command in schema["commands"])
           tool_names = sorted(command["name"] for command in tools)
 
