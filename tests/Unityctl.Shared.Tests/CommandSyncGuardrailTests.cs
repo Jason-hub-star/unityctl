@@ -363,6 +363,29 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void PublicDocs_DoNotAdvertiseResolvedFlightLogRegressionAsActiveFlaky()
+    {
+        var sources = new[]
+        {
+            ReadRepoFile("CONTRIBUTING.md"),
+            ReadRepoFile(@"docs\ref\code-patterns.md"),
+            ReadRepoFile(@"docs\status\PROJECT-STATUS.md")
+        };
+
+        Assert.Contains(
+            "해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`",
+            sources[2]);
+
+        foreach (var source in sources)
+        {
+            Assert.DoesNotContain("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` flaky", source);
+            Assert.DoesNotContain("flaky 원인", source);
+            Assert.DoesNotContain("active flaky", source, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("currently flaky", source, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
     public void IssueTemplates_CaptureFlakyAndRegressionEvidence()
     {
         var flaky = ReadRepoFile(@".github\ISSUE_TEMPLATE\flaky-test.yml");
