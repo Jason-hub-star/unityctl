@@ -71,6 +71,7 @@ public class WorkflowGuardrailTests
         var source = ReadRepoFile(".github/workflows/ci-unity.yml");
 
         Assert.Contains("schedule:", source);
+        Assert.Contains("fail-fast: false", source);
         Assert.Contains("unityctl check", source);
         Assert.Contains("unityctl scene hierarchy", source);
         Assert.Contains("unityctl player-settings set", source);

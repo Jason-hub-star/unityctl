@@ -11,6 +11,7 @@ jobs:
   unity-test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         unityVersion:
           - 2021.3.11f1
