@@ -15,9 +15,9 @@ public class CommandCatalogTests
              "build-profile-list", "build-profile-get-active", "build-profile-set-active", "build-target-switch",
              "test", "test-result", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",
-             "scene snapshot", "scene-hierarchy", "scene diff",
+             "scene-snapshot", "scene-hierarchy", "scene-diff",
              "schema", "exec", "exec-list-callables", "exec-invoke", "workflow", "workflow-verify", "batch-execute",
-             "play-mode", "player-settings-get", "player-settings-set", "asset-refresh",
+             "play-mode", "player-settings", "player-settings-get", "player-settings-set", "asset-refresh",
              "asset-find", "asset-get-info", "asset-get-dependencies", "asset-reference-graph",
               "build-settings-get-scenes", "gameobject-find", "gameobject-get", "component-get",
               "gameobject-create", "gameobject-delete", "gameobject-set-active",
@@ -86,7 +86,9 @@ public class CommandCatalogTests
              // Animation Workflow Extension — Phase H
              "animation-list-clips", "animation-get-clip", "animation-get-controller", "animation-add-curve",
              // Asset Import/Export Extension — Phase G
-             "asset-export", "model-get-import-settings", "audio-get-import-settings"],
+             "asset-export", "model-get-import-settings", "audio-get-import-settings",
+             // Phase C: describe-type
+             "describe-type"],
             names);
     }
 
@@ -126,7 +128,7 @@ public class CommandCatalogTests
     [Fact]
     public void SceneSnapshot_HasProjectParameter_AsRequired()
     {
-        var sceneSnapshot = CommandCatalog.All.Single(command => command.Name == "scene snapshot");
+        var sceneSnapshot = CommandCatalog.All.Single(command => command.Name == "scene-snapshot");
 
         Assert.Contains(sceneSnapshot.Parameters, p => p.Name == "project" && p.Required);
         Assert.Contains(sceneSnapshot.Parameters, p => p.Name == "scenePath" && !p.Required);
@@ -156,7 +158,7 @@ public class CommandCatalogTests
     [Fact]
     public void SceneDiff_HasEpsilonParameter_AsOptional()
     {
-        var sceneDiff = CommandCatalog.All.Single(command => command.Name == "scene diff");
+        var sceneDiff = CommandCatalog.All.Single(command => command.Name == "scene-diff");
 
         Assert.Contains(sceneDiff.Parameters, p => p.Name == "epsilon");
         Assert.DoesNotContain(sceneDiff.Parameters, p => p.Name == "epsilon" && p.Required);
@@ -165,7 +167,7 @@ public class CommandCatalogTests
     [Fact]
     public void SceneDiff_HasLiveParameter_AsOptional()
     {
-        var sceneDiff = CommandCatalog.All.Single(command => command.Name == "scene diff");
+        var sceneDiff = CommandCatalog.All.Single(command => command.Name == "scene-diff");
 
         Assert.Contains(sceneDiff.Parameters, p => p.Name == "live");
         Assert.DoesNotContain(sceneDiff.Parameters, p => p.Name == "live" && p.Required);

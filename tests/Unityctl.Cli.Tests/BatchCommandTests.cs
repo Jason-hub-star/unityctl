@@ -84,6 +84,22 @@ public sealed class BatchCommandTests
     }
 
     [CliTestFact]
+    public void ParseCommands_RejectsEmptyJson()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => BatchCommand.ParseCommands("   "));
+
+        Assert.Contains("must not be empty", ex.Message);
+    }
+
+    [CliTestFact]
+    public void ParseCommands_RejectsMalformedJson()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => BatchCommand.ParseCommands("[{\"command\":\"ping\"}"));
+
+        Assert.Contains("commands JSON is invalid", ex.Message);
+    }
+
+    [CliTestFact]
     public void AllRequests_HaveRequestId()
     {
         var request = BatchCommand.CreateExecuteRequest(

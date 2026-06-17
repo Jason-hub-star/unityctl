@@ -192,13 +192,13 @@ public static class CommandCatalog
         Parameter("no-color", "bool", "Disable colored output", required: false));
 
     public static readonly CommandDefinition SceneSnapshot = Define(
-        "scene snapshot",
+        WellKnownCommands.SceneSnapshot,
         "Capture a snapshot of all scene objects and their serialized properties",
         "query",
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("scenePath", "string", "Filter to a specific scene path", required: false),
         Parameter("includeInactive", "bool", "Include inactive GameObjects in the snapshot", required: false),
-        Parameter("json", "bool", "Output as JSON", required: false));
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene snapshot");
 
     public static readonly CommandDefinition SceneHierarchy = Define(
         WellKnownCommands.SceneHierarchy,
@@ -212,7 +212,7 @@ public static class CommandCatalog
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene hierarchy");
 
     public static readonly CommandDefinition SceneDiff = Define(
-        "scene diff",
+        WellKnownCommands.SceneDiff,
         "Compare two scene snapshots and report property-level changes",
         "query",
         Parameter("snap1", "string", "Path to base snapshot JSON file", required: false),
@@ -220,7 +220,7 @@ public static class CommandCatalog
         Parameter("project", "string", "Path to Unity project (for --live mode)", required: false),
         Parameter("live", "bool", "Compare current scene against last snapshot", required: false),
         Parameter("epsilon", "double", "Float comparison threshold (default: 1e-6)", required: false),
-        Parameter("json", "bool", "Output as JSON", required: false));
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("scene diff");
 
     public static readonly CommandDefinition Schema = Define(
         WellKnownCommands.Schema,
@@ -291,6 +291,16 @@ public static class CommandCatalog
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("action", "string", "Play mode action: start, stop, pause", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("play <start|stop|pause>");
+
+    public static readonly CommandDefinition PlayerSettings = Define(
+        WellKnownCommands.PlayerSettings,
+        "Get or set a PlayerSettings property via the transport command used by CLI get/set wrappers",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("action", "string", "Action: get or set", required: true),
+        Parameter("key", "string", "PlayerSettings key, such as companyName, productName, or bundleVersion", required: true),
+        Parameter("value", "string", "Value for set action", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false));
 
     public static readonly CommandDefinition PlayerSettingsGet = Define(
         "player-settings-get",
@@ -1493,6 +1503,17 @@ public static class CommandCatalog
         Parameter("path", "string", "Audio asset path (e.g. Assets/Audio/bgm.wav)", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("audio get-import-settings");
 
+    // Phase C: describe-type
+    public static readonly CommandDefinition DescribeTypeCmd = Define(
+        WellKnownCommands.DescribeType,
+        "Reflect a live C# type from the Unity Editor and return its members, Unity specifics, and documentation link",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("typeName", "string", "Fully-qualified or simple type name (e.g. UnityEngine.Rigidbody or Rigidbody)", required: true),
+        Parameter("full", "bool", "Return full member signatures instead of summary (default: false)", required: false),
+        Parameter("maxMembers", "int", "Cap members per category (default: no limit)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("type describe");
+
     public static CommandDefinition[] All { get; } =
     [
         Init,
@@ -1530,6 +1551,7 @@ public static class CommandCatalog
         WorkflowVerify,
         BatchExecute,
         PlayMode,
+        PlayerSettings,
         PlayerSettingsGet,
         PlayerSettingsSet,
         AssetRefresh,
@@ -1688,7 +1710,9 @@ public static class CommandCatalog
         // Asset Import/Export Extension — Phase G
         AssetExportCmd,
         ModelGetImportSettingsCmd,
-        AudioGetImportSettingsCmd
+        AudioGetImportSettingsCmd,
+        // Phase C: describe-type
+        DescribeTypeCmd
     ];
 
     private static CommandDefinition Define(

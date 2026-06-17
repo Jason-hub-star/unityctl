@@ -62,11 +62,13 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - Token Optimization (status state 구분, hierarchy summary/maxDepth, component get summary, console get-entries dedupe): Done
 - CLI Enhancement (profiler rendering stats, component add --name, component enable/disable, profiler --detailed): Done
 - Exec Security Relaxation (BlockedPatterns-only, project code allowed): Done
+- IPC Reload Resilience (heartbeat state 파일 + 클라이언트 reload-aware 재시도 + batch 폴백 억제): Done
+- Type Introspection (`type describe` — 라이브 타입 리플렉션 + Unity Manual 링크, summary-by-default): Done
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
+- IPC Reload Resilience + Type Introspection (2026-06-17, v0.4.0): 플러그인이 `Library/Unityctl/ipc-state.json`에 ready/reloading/stopped 기록 → 클라이언트가 도메인 리로드 공백을 최대 60초 대기·자동 재연결(상태 파일 없으면 기존 동작 보존). `type describe` 신규 명령(헤라 describe_type 차용). 응답 크기 규율(`code-patterns.md §10`). 887 테스트 통과.
 - CLI Enhancement (2026-03-23): profiler get-stats에 FPS/batches/drawCalls/triangles/vertices 추가, component add --name 폴백, component enable/disable 단축 명령, profiler --detailed GC 통계. 755 테스트 통과.
 - Token Optimization (2026-03-20): status state 구분 (Playing/PlayingPaused/EnteringPlayMode), hierarchy summary+maxDepth, component get summary, console get-entries dedupe.
-- CLI Feedback Fixes (2026-03-20): prefab instantiate, asset copy 외부 경로, IPC 메시지 타임아웃. Unity 6 라이브 테스트 통과.
 
 ## 실행 규칙 (MUST)
 1. 기존 코드/타입/유틸 우선 재사용, 중복 구현 금지

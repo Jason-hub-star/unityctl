@@ -4,16 +4,21 @@
 
 [![NuGet](https://img.shields.io/nuget/v/unityctl?label=unityctl)](https://www.nuget.org/packages/unityctl)
 [![NuGet](https://img.shields.io/nuget/v/unityctl-mcp?label=unityctl-mcp)](https://www.nuget.org/packages/unityctl-mcp)
-[![CI](https://github.com/kimjuyoung1127/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/kimjuyoung1127/unityctl/actions)
+[![CI](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-dotnet.yml)
+[![Unity Integration](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml/badge.svg)](https://github.com/Jason-hub-star/unityctl/actions/workflows/ci-unity.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ### The execution layer for AI-driven game development.
 
-Give your AI agent **133 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
+Give your AI agent **166 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-133 CLI commands · 12 MCP tools · 689 tests · Windows / macOS / Linux
+166 CLI commands · 12 MCP tools · 864 PR .NET tests · Windows / macOS / Linux
 ```
+
+Quality gates: every PR runs the .NET Shared/Core/Cli/Mcp test suites on Windows, macOS, and Linux. Unity Editor-dependent validation is separated into the Unity Integration workflow, with `init`, sample-project `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify` evidence uploaded from nightly/manual runs. Unity Integration requires either a `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret.
+
+Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) for the test trust checklist, flaky-test policy, command sync checklist, and Unity live-validation split.
 
 <p align="center">
   <img src="docs/assets/mcp-demo.svg" alt="AI agent building a Unity scene via MCP" width="700">
@@ -149,7 +154,7 @@ See [Showcase Roadmap](docs/ref/showcase-roadmap.md) for:
 | **Connection stability** | Named Pipe — survives Domain Reload | WebSocket drops, reconnect needed |
 | **CI/CD** | `check` / `test` / `build --dry-run` work headless | Editor must be open |
 | **Diagnostics** | `doctor` classifies failures + suggests next steps | "Connection failed" |
-| **Commands** | **133** (read + write + validate + diagnose) | ~34-200 tools |
+| **Commands** | **166** (read + write + validate + diagnose) | ~34-200 tools |
 | **Audit trail** | NDJSON flight recorder for every command | No history |
 | **Runtime** | Native .NET — no Python/TS bridge | Bridge overhead |
 | **Install** | `dotnet tool install -g unityctl` | Node.js + npm + port config |
@@ -163,7 +168,7 @@ AI agent costs are dominated by tool schemas sent every turn. unityctl uses **on
   <img src="docs/assets/token-efficiency.svg" alt="Measured token cost: unityctl via Bash = 0 overhead, 6.8x cheaper than CoplayDev MCP" width="620">
 </p>
 
-The 12 MCP tools cover the full 131-command surface through `unityctl_query` (read), `unityctl_run` (write), and `unityctl_schema` (lookup).
+The 12 MCP tools cover the full 166-command surface through `unityctl_query` (read), `unityctl_run` (write), and `unityctl_schema` (lookup).
 
 #### Measured: Claude Code Token Cost (2026-03-20)
 
@@ -219,7 +224,7 @@ dotnet tool install -g unityctl-mcp
 ```
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2`
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6`
 - GitHub Release CLI archives are framework-dependent (not self-contained) today.
 
 ### Apple Silicon macOS Validation
@@ -246,7 +251,7 @@ Project compatibility note: if a Unity project or third-party package is pinned 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/kimjuyoung1127/unityctl.git?path=/src/Unityctl.Plugin#v0.3.2"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json
@@ -300,7 +305,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 
 ---
 
-## Commands (133)
+## Commands (167)
 
 ### Core (13)
 
@@ -377,7 +382,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 </details>
 
 <details>
-<summary><strong>Scripting & Code Analysis</strong> (10)</summary>
+<summary><strong>Scripting & Code Analysis</strong> (11)</summary>
 
 | Command | Description |
 |---------|-------------|
@@ -390,6 +395,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 | `script get-errors` | Structured compile errors (file/line/column/code) |
 | `script find-refs` | Find symbol references across all scripts |
 | `script rename-symbol` | Rename symbol across all scripts (with `--dry-run`) |
+| `type describe` | Reflect a live C# type (members, Unity specifics, Manual link); summary-by-default, `--full` for signatures |
 | `exec` | Execute C# expression in Unity |
 
 </details>
@@ -478,7 +484,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 
 ```
 AI Agent (LLM)                unityctl-mcp              unityctl CLI             Unity Editor
-Claude / GPT / Gemini         12 MCP tools              133 commands             Plugin (IPC)
+Claude / GPT / Gemini         12 MCP tools              166 commands             Plugin (IPC)
         |                          |                          |                       |
         |--- MCP (stdio) -------->|                          |                       |
         |                          |--- CLI invocation ----->|                       |
@@ -496,7 +502,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI shell
 +-- src/Unityctl.Mcp      (net10.0)         MCP server
 +-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 633 xUnit tests
++-- tests/*                                 864 PR .NET xUnit tests
 ```
 
 ---
@@ -525,7 +531,7 @@ unityctl.slnx
 </p>
 
 <p align="center">
-  <img src="docs/assets/tools.svg" alt="unityctl tools — 133 commands across 9 categories" width="654">
+  <img src="docs/assets/tools.svg" alt="unityctl tools — 166 commands across 9 categories" width="654">
 </p>
 
 ## Documentation
@@ -538,7 +544,7 @@ unityctl.slnx
 
 ## Changelog
 
-See [GitHub Releases](https://github.com/kimjuyoung1127/unityctl/releases) for version history.
+See [GitHub Releases](https://github.com/Jason-hub-star/unityctl/releases) for version history.
 
 ## License
 

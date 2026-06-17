@@ -17,7 +17,9 @@ public class StatusCommandTests
             {
                 probeCount++;
                 return Task.FromResult(true); // IPC ready on first try
-            });
+            },
+            isInteractiveEditorRunning: _ => true,
+            delayAsync: (_, _) => Task.CompletedTask);
 
         // Should have probed exactly once (immediate success)
         Assert.Equal(1, probeCount);
@@ -35,7 +37,9 @@ public class StatusCommandTests
             {
                 probeCount++;
                 return Task.FromResult(false);
-            });
+            },
+            isInteractiveEditorRunning: _ => true,
+            delayAsync: (_, _) => Task.CompletedTask);
 
         // Should probe once, see unlocked, and fall through
         Assert.Equal(1, probeCount);
@@ -53,7 +57,9 @@ public class StatusCommandTests
             {
                 probeCount++;
                 return Task.FromResult(probeCount >= 3); // Ready on 3rd attempt
-            });
+            },
+            isInteractiveEditorRunning: _ => true,
+            delayAsync: (_, _) => Task.CompletedTask);
 
         Assert.Equal(3, probeCount);
     }
@@ -70,7 +76,9 @@ public class StatusCommandTests
             {
                 probeCount++;
                 return Task.FromResult(false);
-            });
+            },
+            isInteractiveEditorRunning: _ => true,
+            delayAsync: (_, _) => Task.CompletedTask);
 
         // Should stop after lockfile disappears (2 probes)
         Assert.Equal(2, probeCount);

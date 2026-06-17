@@ -1,9 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Microsoft.Extensions.Logging;
+using Unityctl.Shared.Commands;
+using Unityctl.Shared.Serialization;
 using Xunit;
 
 namespace Unityctl.Mcp.Tests;
@@ -64,6 +67,29 @@ public class McpBlackBoxTests
     }
 
     [Fact]
+    public async Task SchemaTool_ReturnsCompleteCommandCatalog()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+
+        var result = await harness.Client.CallToolAsync(
+            "unityctl_schema",
+            arguments: new Dictionary<string, object?>(),
+            progress: null,
+            options: new RequestOptions(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.NotEqual(true, result.IsError);
+        var payload = GetToolResultText(result);
+        var schema = JsonSerializer.Deserialize(payload, UnityctlJsonContext.Default.CommandSchema);
+
+        Assert.NotNull(schema);
+        Assert.Equal(CommandCatalog.All.Length, schema!.Commands.Length);
+        Assert.Equal(
+            CommandCatalog.All.Select(command => command.Name).OrderBy(name => name),
+            schema.Commands.Select(command => command.Name).OrderBy(name => name));
+    }
+
+    [Fact]
     public async Task SchemaToolWithCategory_ReturnsFilteredResults()
     {
         await using var harness = await UnityctlMcpHarness.StartAsync();
@@ -82,6 +108,35 @@ public class McpBlackBoxTests
         Assert.Contains("\"commands\"", payload);
         // query category should contain status, ping, etc.
         Assert.Contains("status", payload);
+    }
+
+    [Fact]
+    public async Task SchemaToolWithCategory_ReturnsOnlyMatchingCatalogCommands()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+
+        var result = await harness.Client.CallToolAsync(
+            "unityctl_schema",
+            arguments: new Dictionary<string, object?> { ["category"] = "query" },
+            progress: null,
+            options: new RequestOptions(),
+            cancellationToken: CancellationToken.None);
+
+        Assert.NotEqual(true, result.IsError);
+        var payload = GetToolResultText(result);
+        var schema = JsonSerializer.Deserialize(payload, UnityctlJsonContext.Default.CommandSchema);
+        var expected = CommandCatalog.All
+            .Where(command => command.Category.Equals("query", StringComparison.OrdinalIgnoreCase))
+            .Select(command => command.Name)
+            .OrderBy(name => name)
+            .ToArray();
+
+        Assert.NotNull(schema);
+        Assert.NotEmpty(schema!.Commands);
+        Assert.All(schema.Commands, command => Assert.Equal("query", command.Category));
+        Assert.Equal(
+            expected,
+            schema.Commands.Select(command => command.Name).OrderBy(name => name).ToArray());
     }
 
     [Fact]
@@ -147,6 +202,36 @@ public class McpBlackBoxTests
         Assert.Contains("\"name\"", payload);
         Assert.Contains("gameobject-create", payload);
         Assert.DoesNotContain("\"commands\"", payload);
+    }
+
+    [Fact]
+    public async Task SchemaToolWithCommand_ReturnsCatalogDefinitionForNameAndCliAlias()
+    {
+        await using var harness = await UnityctlMcpHarness.StartAsync();
+        var expected = CommandCatalog.All.Single(command => command.Name == "scene-hierarchy");
+
+        foreach (var commandName in new[] { expected.Name, expected.CliName! })
+        {
+            var result = await harness.Client.CallToolAsync(
+                "unityctl_schema",
+                arguments: new Dictionary<string, object?> { ["command"] = commandName },
+                progress: null,
+                options: new RequestOptions(),
+                cancellationToken: CancellationToken.None);
+
+            Assert.NotEqual(true, result.IsError);
+            var payload = GetToolResultText(result);
+            var actual = JsonSerializer.Deserialize(payload, UnityctlJsonContext.Default.CommandDefinition);
+
+            Assert.NotNull(actual);
+            Assert.Equal(expected.Name, actual!.Name);
+            Assert.Equal(expected.CliName, actual.CliName);
+            Assert.Equal(expected.Category, actual.Category);
+            Assert.Equal(expected.Description, actual.Description);
+            Assert.Equal(
+                expected.Parameters.Select(parameter => parameter.Name).OrderBy(name => name),
+                actual.Parameters.Select(parameter => parameter.Name).OrderBy(name => name));
+        }
     }
 
     [Fact]

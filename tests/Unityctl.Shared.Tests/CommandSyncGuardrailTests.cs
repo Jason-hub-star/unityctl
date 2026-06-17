@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Unityctl.Shared.Commands;
 using Unityctl.Shared.Protocol;
 using Xunit;
 
@@ -11,6 +12,9 @@ public class CommandSyncGuardrailTests
     private static readonly Regex WellKnownRefRegex = new(@"WellKnownCommands\.(\w+)", RegexOptions.Compiled);
     private static readonly Regex PluginConstRegex = new(@"public const string (\w+) = ""([^""]+)"";", RegexOptions.Compiled);
     private static readonly Regex PluginHandlerRegex = new(@"CommandName\s*=>\s*WellKnownCommands\.(\w+)", RegexOptions.Compiled);
+    private static readonly Regex SharedJsonPropertyRegex = new(@"\[JsonPropertyName\(""([^""]+)""\)\]\s*public\s+[^{};]+?\s+(\w+)\s*\{", RegexOptions.Compiled);
+    private static readonly Regex PluginJsonPropertyRegex = new(@"\[JsonProperty\(""([^""]+)""\)\]\s*public\s+[^;]+?\s+(\w+)\s*(?:;|=)", RegexOptions.Compiled);
+    private static readonly Regex EnumMemberRegex = new(@"^\s*(\w+)\s*=\s*(-?\d+)\s*,?", RegexOptions.Compiled | RegexOptions.Multiline);
 
     [Fact]
     public void PluginSharedWellKnownCommands_CopyMatchesSharedDefinition()
@@ -22,6 +26,83 @@ public class CommandSyncGuardrailTests
         var pluginCopy = ParsePluginWellKnownConstants();
 
         Assert.Equal(expected, pluginCopy);
+    }
+
+    [Fact]
+    public void PluginSharedWireDtoFields_MatchSharedJsonContracts()
+    {
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\CommandRequest.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\CommandRequest.cs"));
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\CommandResponse.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\CommandResponse.cs"));
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\EventEnvelope.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\EventEnvelope.cs"));
+        Assert.Equal(
+            ParseSharedJsonPropertyNames(@"src\Unityctl.Shared\Protocol\PreflightCheck.cs"),
+            ParsePluginJsonPropertyNames(@"src\Unityctl.Plugin\Editor\Shared\PreflightCheck.cs"));
+    }
+
+    [Fact]
+    public void PluginSharedStatusCode_CopyMatchesSharedDefinition()
+    {
+        Assert.Equal(
+            ParseEnumMembers(@"src\Unityctl.Shared\Protocol\StatusCode.cs"),
+            ParseEnumMembers(@"src\Unityctl.Plugin\Editor\Shared\StatusCode.cs"));
+    }
+
+    [Fact]
+    public void PluginIpcPipeNameHelper_PreservesSharedPathHashAlgorithm()
+    {
+        var shared = ReadRepoFile(@"src\Unityctl.Shared\Constants.cs");
+        var plugin = ReadRepoFile(@"src\Unityctl.Plugin\Editor\Ipc\PipeNameHelper.cs");
+
+        foreach (var sentinel in new[]
+        {
+            "PipePrefix = \"unityctl_\"",
+            "Path.GetFullPath(projectPath)",
+            "ToLowerInvariant()",
+            "Replace('\\\\', '/')",
+            "TrimEnd('/')",
+            "SHA256.Create()",
+            "Encoding.UTF8.GetBytes(normalized)",
+            "Substring(0, 16)"
+        })
+        {
+            Assert.Contains(sentinel, shared);
+            Assert.Contains(sentinel, plugin);
+        }
+
+        Assert.Contains("RuntimeInformation.IsOSPlatform(OSPlatform.Windows)", shared);
+        Assert.Contains("#if UNITY_EDITOR_WIN", plugin);
+    }
+
+    [Fact]
+    public void PluginSharedExecExpressionParser_PreservesCoreGrammarSentinels()
+    {
+        var shared = ReadRepoFile(@"src\Unityctl.Shared\Exec\ExecExpressionParser.cs");
+        var plugin = ReadRepoFile(@"src\Unityctl.Plugin\Editor\Shared\ExecExpressionParser.cs");
+
+        foreach (var sentinel in new[]
+        {
+            "expression must not be empty.",
+            "expected a member path before '='.",
+            "expected a value after '='.",
+            "expected 'TypeName.MemberName'.",
+            "unterminated string or bracketed expression.",
+            "unterminated string or bracketed argument.",
+            "empty arguments are not allowed.",
+            "FindTopLevelAssignment",
+            "FindInvocationOpenParen",
+            "SplitArguments",
+            "LastTopLevelOpenParenIndex"
+        })
+        {
+            Assert.Contains(sentinel, shared);
+            Assert.Contains(sentinel, plugin);
+        }
     }
 
     [Fact]
@@ -181,6 +262,289 @@ public class CommandSyncGuardrailTests
         Assert.Contains(nameof(WellKnownCommands.TestResult), pluginHandlers);
     }
 
+    [Fact]
+    public void McpAllowlists_ReferenceSchemaDiscoverableCatalogCommands()
+    {
+        var catalogNames = CommandCatalog.All
+            .Select(command => command.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var wellKnownConstants = GetSharedWellKnownConstants();
+        var allowlistFields = ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\QueryTool.cs")
+            .Concat(ParseWellKnownFieldReferences(@"src\Unityctl.Mcp\Tools\RunTool.cs"))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        foreach (var field in allowlistFields)
+        {
+            Assert.True(
+                wellKnownConstants.TryGetValue(field, out var commandName),
+                $"MCP allowlist references unknown WellKnownCommands.{field}");
+            Assert.Contains(commandName!, catalogNames);
+        }
+    }
+
+    [Fact]
+    public void PluginTransportHandlers_AreSchemaDiscoverableCatalogCommands()
+    {
+        var catalogNames = CommandCatalog.All
+            .Select(command => command.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var wellKnownConstants = GetSharedWellKnownConstants();
+        var handlerFields = ParsePluginHandlerFieldNames()
+            .Where(field => field is not nameof(WellKnownCommands.BuildProfileSetActiveResult)
+                and not nameof(WellKnownCommands.BuildTargetSwitchResult)
+                and not nameof(WellKnownCommands.AssetRefreshResult)
+                and not nameof(WellKnownCommands.ScriptValidateResult)
+                and not nameof(WellKnownCommands.LightingBakeResult))
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        foreach (var field in handlerFields)
+        {
+            Assert.True(
+                wellKnownConstants.TryGetValue(field, out var commandName),
+                $"Plugin handler references unknown WellKnownCommands.{field}");
+            Assert.Contains(commandName!, catalogNames);
+        }
+    }
+
+    [Fact]
+    public void CatalogCommandsWithoutWellKnownNames_AreDocumentedLocalCliSurfaces()
+    {
+        var wellKnownNames = GetSharedWellKnownConstants()
+            .Values
+            .ToHashSet(StringComparer.Ordinal);
+        var localCliCommands = CommandCatalog.All
+            .Where(command => !wellKnownNames.Contains(command.Name))
+            .Select(command => command.Name)
+            .OrderBy(command => command, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                "await-ready",
+                "detach",
+                "doctor",
+                "editor current",
+                "editor instances",
+                "editor list",
+                "editor select",
+                "init",
+                "log",
+                "package resolve",
+                "player-settings-get",
+                "player-settings-set",
+                "session clean",
+                "session list",
+                "session stop",
+                "tools",
+                "workflow-verify"
+            ],
+            localCliCommands);
+    }
+
+    [Fact]
+    public void CatalogWellKnownCommands_AreMcpReachableOrExplicitlyDocumentedAsSpecialCases()
+    {
+        var catalogFields = ParseCommandCatalogWellKnownFieldReferences();
+        var mcpFields = ParseMcpToolWellKnownFieldReferences();
+        var specialCases = catalogFields
+            .Where(field => !mcpFields.Contains(field))
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(
+            [
+                nameof(WellKnownCommands.BuildProfileSetActive),
+                nameof(WellKnownCommands.BuildTargetSwitch),
+                nameof(WellKnownCommands.Schema),
+                nameof(WellKnownCommands.TestResult),
+                nameof(WellKnownCommands.Watch),
+                nameof(WellKnownCommands.Workflow)
+            ],
+            specialCases);
+    }
+
+    [Fact]
+    public void CatalogCliNames_AreRegisteredInProgram()
+    {
+        var cliCommands = ParseCliCommands();
+        var missing = CommandCatalog.All
+            .Select(command => command.CliName ?? command.Name)
+            .Where(commandName => !commandName.Contains('<', StringComparison.Ordinal)
+                && commandName is not "player-settings")
+            .Where(commandName => !cliCommands.Contains(commandName))
+            .OrderBy(commandName => commandName, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Empty(missing);
+    }
+
+    [Fact]
+    public void CliAndPluginRegistrations_DoNotContainDuplicateCommandNames()
+    {
+        AssertNoDuplicates(
+            ParseCliCommandRegistrations(),
+            "Duplicate CLI app.Add command registration");
+        AssertNoDuplicates(
+            ParsePluginHandlerFieldReferences(),
+            "Duplicate Plugin handler CommandName registration");
+    }
+
+    [Fact]
+    public void CodePatterns_DocumentsCommandSyncChecklistAndFlakyPolicy()
+    {
+        var source = ReadRepoFile(@"docs\ref\code-patterns.md");
+
+        Assert.Contains("### Flaky 테스트 정책", source);
+        Assert.Contains("flaky 0개", source);
+        Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
+        Assert.Contains("IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains("regression issue를 링크", source);
+        Assert.Contains(".github/PULL_REQUEST_TEMPLATE.md", source);
+        Assert.Contains("CONTRIBUTING.md", source);
+        Assert.Contains("Plugin shared copy drift", source);
+        Assert.Contains("shadow", source);
+
+        Assert.Contains("### 새 명령 추가 체크리스트", source);
+        Assert.Contains("WellKnownCommands", source);
+        Assert.Contains("CommandCatalog", source);
+        Assert.Contains("src/Unityctl.Cli/Program.cs", source);
+        Assert.Contains("QueryTool", source);
+        Assert.Contains("RunTool", source);
+        Assert.Contains("src/Unityctl.Plugin/Editor/Commands/*Handler.cs", source);
+        Assert.Contains("CommandSyncGuardrailTests", source);
+    }
+
+    [Fact]
+    public void PublicDocs_DoNotAdvertiseResolvedFlightLogRegressionAsActiveFlaky()
+    {
+        var sources = new[]
+        {
+            ReadRepoFile("CONTRIBUTING.md"),
+            ReadRepoFile(@"docs\ref\code-patterns.md"),
+            ReadRepoFile(@"docs\status\PROJECT-STATUS.md")
+        };
+
+        Assert.Contains(
+            "해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`",
+            sources[2]);
+
+        foreach (var source in sources)
+        {
+            Assert.DoesNotContain("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` flaky", source);
+            Assert.DoesNotContain("flaky 원인", source);
+            Assert.DoesNotContain("active flaky", source, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("currently flaky", source, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public void IssueTemplates_CaptureFlakyAndRegressionEvidence()
+    {
+        var flaky = ReadRepoFile(@".github\ISSUE_TEMPLATE\flaky-test.yml");
+        Assert.Contains("labels: [\"flaky-test\", \"test-trust\"]", flaky);
+        Assert.Contains("Test name", flaky);
+        Assert.Contains("CI evidence", flaky);
+        Assert.Contains("Repeatability", flaky);
+        Assert.Contains("Isolation or stabilization plan", flaky);
+        Assert.Contains("Unityctl.Core.Tests.Namespace.ClassName.TestName", flaky);
+        Assert.DoesNotContain("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", flaky);
+
+        var regression = ReadRepoFile(@".github\ISSUE_TEMPLATE\regression-bug.yml");
+        Assert.Contains("labels: [\"regression\", \"needs-repro-test\"]", regression);
+        Assert.Contains("IPC timeout", regression);
+        Assert.Contains("AppLocker", regression);
+        Assert.Contains("batch fallback", regression);
+        Assert.Contains("dirty scene policy", regression);
+        Assert.Contains("parser edge case", regression);
+        Assert.Contains("command/schema/plugin drift", regression);
+        Assert.Contains("Required reproduction test", regression);
+    }
+
+    [Fact]
+    public void PullRequestTemplate_CapturesTrustBaselineChecklist()
+    {
+        var source = ReadRepoFile(@".github\PULL_REQUEST_TEMPLATE.md");
+
+        Assert.Contains("Test Trust Checklist", source);
+        Assert.Contains("Shared/Core/Cli/Mcp on Linux, macOS, and Windows", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains("link a `.github/ISSUE_TEMPLATE/regression-bug.yml` issue", source);
+
+        Assert.Contains("Contract Safety Checklist", source);
+        Assert.Contains("WellKnownCommands", source);
+        Assert.Contains("CommandCatalog", source);
+        Assert.Contains("src/Unityctl.Cli/Program.cs", source);
+        Assert.Contains("QueryTool", source);
+        Assert.Contains("RunTool", source);
+        Assert.Contains("Plugin handler", source);
+        Assert.Contains("duplicate or shadow", source);
+        Assert.Contains("CommandSyncGuardrailTests", source);
+
+        Assert.Contains("README User Path", source);
+        Assert.Contains("dotnet tool install", source);
+        Assert.Contains("unityctl tools --json", source);
+        Assert.Contains("unityctl schema", source);
+        Assert.Contains("doctor", source);
+        Assert.Contains("check", source);
+        Assert.Contains("workflow verify", source);
+
+        Assert.Contains("Unity Reality Check", source);
+        Assert.Contains("UNITY_LICENSE", source);
+        Assert.Contains("UNITY_SERIAL", source);
+        Assert.Contains("license-preflight.txt", source);
+        Assert.Contains("planned-smoke.txt", source);
+    }
+
+    [Fact]
+    public void ContributingGuide_CapturesPublicTestTrustPolicy()
+    {
+        var source = ReadRepoFile("CONTRIBUTING.md");
+
+        Assert.Contains("dotnet test tests/Unityctl.Shared.Tests -c Release", source);
+        Assert.Contains("dotnet test tests/Unityctl.Core.Tests -c Release", source);
+        Assert.Contains("dotnet test tests/Unityctl.Cli.Tests -c Release", source);
+        Assert.Contains("dotnet test tests/Unityctl.Mcp.Tests -c Release", source);
+        Assert.Contains("pull_request", source);
+        Assert.Contains("main`/`master", source);
+        Assert.Contains("ubuntu-latest", source);
+        Assert.Contains("windows-latest", source);
+        Assert.Contains("macos-latest", source);
+        Assert.Contains("fail-fast: false", source);
+        Assert.Contains("continue-on-error", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/flaky-test.yml", source);
+        Assert.Contains(".github/ISSUE_TEMPLATE/regression-bug.yml", source);
+        Assert.Contains("FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries", source);
+        Assert.Contains("Resolved date/time boundary regressions", source);
+
+        Assert.Contains("WellKnownCommands", source);
+        Assert.Contains("CommandCatalog", source);
+        Assert.Contains("src/Unityctl.Cli/Program.cs", source);
+        Assert.Contains("QueryTool", source);
+        Assert.Contains("RunTool", source);
+        Assert.Contains("src/Unityctl.Plugin/Editor/Commands", source);
+        Assert.Contains("CommandSyncGuardrailTests", source);
+        Assert.Contains("Plugin shared copy drift", source);
+        Assert.Contains("shadow a public command", source);
+
+        Assert.Contains("dotnet tool install", source);
+        Assert.Contains("unityctl tools --json", source);
+        Assert.Contains("unityctl schema", source);
+        Assert.Contains("workflow verify", source);
+        Assert.Contains("UNITY_LICENSE", source);
+        Assert.Contains("UNITY_SERIAL", source);
+        Assert.Contains("license-preflight.txt", source);
+        Assert.Contains("planned-smoke.txt", source);
+        Assert.Contains("gh workflow run ci-unity.yml --ref <branch>", source);
+        Assert.Contains("gh run watch <run-id> --exit-status", source);
+        Assert.Contains("gh run download <run-id> --dir <artifact-dir>", source);
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar);
@@ -215,13 +579,50 @@ public class CommandSyncGuardrailTests
             .ToDictionary(item => item.Field, item => item.Value, StringComparer.Ordinal);
     }
 
+    private static string[] ParseSharedJsonPropertyNames(string relativePath)
+        => SharedJsonPropertyRegex
+            .Matches(ReadRepoFile(relativePath))
+            .Select(match => match.Groups[1].Value)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string[] ParsePluginJsonPropertyNames(string relativePath)
+        => PluginJsonPropertyRegex
+            .Matches(ReadRepoFile(relativePath))
+            .Select(match => match.Groups[1].Value)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+    private static Dictionary<string, int> ParseEnumMembers(string relativePath)
+        => EnumMemberRegex
+            .Matches(ReadRepoFile(relativePath))
+            .Select(match => (Name: match.Groups[1].Value, Value: int.Parse(match.Groups[2].Value)))
+            .ToDictionary(item => item.Name, item => item.Value, StringComparer.Ordinal);
+
     private static HashSet<string> ParsePluginHandlerFieldNames()
+        => ParsePluginHandlerFieldReferences()
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static string[] ParsePluginHandlerFieldReferences()
     {
         var commandsDir = Path.Combine(GetRepoRoot(), "src", "Unityctl.Plugin", "Editor", "Commands");
         var files = Directory.GetFiles(commandsDir, "*Handler.cs", SearchOption.TopDirectoryOnly);
 
         return files
             .SelectMany(path => PluginHandlerRegex.Matches(File.ReadAllText(path)).Select(match => match.Groups[1].Value))
+            .ToArray();
+    }
+
+    private static string[] ParseCommandCatalogWellKnownFieldReferences()
+        => ParseWellKnownFieldReferences(@"src\Unityctl.Shared\Commands\CommandCatalog.cs")
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+    private static HashSet<string> ParseMcpToolWellKnownFieldReferences()
+    {
+        var toolsDir = Path.Combine(GetRepoRoot(), "src", "Unityctl.Mcp", "Tools");
+        return Directory.GetFiles(toolsDir, "*.cs", SearchOption.TopDirectoryOnly)
+            .SelectMany(path => WellKnownRefRegex.Matches(File.ReadAllText(path)).Select(match => match.Groups[1].Value))
             .ToHashSet(StringComparer.Ordinal);
     }
 
@@ -235,11 +636,27 @@ public class CommandSyncGuardrailTests
     }
 
     private static HashSet<string> ParseCliCommands()
+        => ParseCliCommandRegistrations()
+            .ToHashSet(StringComparer.Ordinal);
+
+    private static string[] ParseCliCommandRegistrations()
     {
         var source = ReadRepoFile(@"src\Unityctl.Cli\Program.cs");
         return AppAddRegex
             .Matches(source)
             .Select(match => match.Groups[1].Value)
-            .ToHashSet(StringComparer.Ordinal);
+            .ToArray();
+    }
+
+    private static void AssertNoDuplicates(string[] values, string message)
+    {
+        var duplicates = values
+            .GroupBy(value => value, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .OrderBy(value => value, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(duplicates.Length == 0, $"{message}: {string.Join(", ", duplicates)}");
     }
 }

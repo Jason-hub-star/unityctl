@@ -1,6 +1,8 @@
 using System.IO.Pipes;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using Unityctl.Core.Platform;
 using Unityctl.Core.Transport;
 using Unityctl.Shared;
 using Unityctl.Shared.Protocol;
@@ -132,6 +134,52 @@ public class IpcTransportTests
         // This confirms: CommandExecutor would fall through to batch transport
     }
 
+    [Fact]
+    public void TimeoutMessage_WithInteractiveProcess_NamesInteractivePid()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"unityctl-ipc-timeout-{Guid.NewGuid():N}");
+        var transport = new IpcTransport(projectPath, new FakePlatform(new UnityProcessInfo
+        {
+            ProcessId = 1201,
+            ProjectPath = projectPath,
+            HasMainWindow = true
+        }));
+
+        var message = BuildTimeoutMessage(transport);
+
+        Assert.Contains("interactive Unity Editor pid 1201", message);
+        Assert.Contains("frozen or mid reload", message);
+    }
+
+    [Fact]
+    public void TimeoutMessage_WithHeadlessProcess_NamesHeadlessPid()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"unityctl-ipc-timeout-{Guid.NewGuid():N}");
+        var transport = new IpcTransport(projectPath, new FakePlatform(new UnityProcessInfo
+        {
+            ProcessId = 1404,
+            ProjectPath = projectPath,
+            IsBatchMode = true
+        }));
+
+        var message = BuildTimeoutMessage(transport);
+
+        Assert.Contains("headless Unity process pid 1404", message);
+        Assert.Contains("will not become ready until that process exits", message);
+    }
+
+    [Fact]
+    public void TimeoutMessage_WithoutMatchingProcess_UsesGenericRecovery()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"unityctl-ipc-timeout-{Guid.NewGuid():N}");
+        var transport = new IpcTransport(projectPath, new FakePlatform());
+
+        var message = BuildTimeoutMessage(transport);
+
+        Assert.Contains("IPC message timed out", message);
+        Assert.Contains("Try again", message);
+    }
+
     private static async Task ReadExactAsync(Stream stream, byte[] buffer)
     {
         int totalRead = 0;
@@ -141,5 +189,37 @@ public class IpcTransportTests
             if (read == 0) throw new EndOfStreamException();
             totalRead += read;
         }
+    }
+
+    private static string BuildTimeoutMessage(IpcTransport transport)
+    {
+        var method = typeof(IpcTransport).GetMethod("BuildTimeoutMessage", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        return Assert.IsType<string>(method!.Invoke(transport, []));
+    }
+
+    private sealed class FakePlatform : IPlatformServices
+    {
+        private readonly IReadOnlyList<UnityProcessInfo> _processes;
+
+        public FakePlatform(params UnityProcessInfo[] processes)
+        {
+            _processes = processes;
+        }
+
+        public string GetUnityHubEditorsJsonPath() => Path.Combine(Path.GetTempPath(), "missing-editors.json");
+
+        public IEnumerable<string> GetDefaultEditorSearchPaths() => [];
+
+        public string GetUnityExecutablePath(string editorBasePath) => Path.Combine(editorBasePath, "Unity");
+
+        public IEnumerable<UnityProcessInfo> FindRunningUnityProcesses() => _processes;
+
+        public bool IsProjectLocked(string projectPath) => false;
+
+        public Stream CreateIpcClientStream(string projectPath) => throw new NotSupportedException();
+
+        public string GetTempResponseFilePath()
+            => Path.Combine(Path.GetTempPath(), $"unityctl-ipc-timeout-{Guid.NewGuid():N}.json");
     }
 }

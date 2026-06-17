@@ -37,12 +37,14 @@ public static class StatusCommand
         Func<string, bool>? isProjectLocked = null,
         Func<string, CancellationToken, Task<bool>>? probeIpcAsync = null,
         Func<string, bool>? isInteractiveEditorRunning = null,
+        Func<TimeSpan, CancellationToken, Task>? delayAsync = null,
         CancellationToken ct = default)
     {
         var platform = PlatformFactory.Create();
         var lockCheck = isProjectLocked ?? (path => platform.IsProjectLocked(path));
         var probe = probeIpcAsync ?? DefaultProbeIpcAsync;
         var interactiveCheck = isInteractiveEditorRunning ?? (path => new UnityProcessDetector(platform).IsInteractiveEditorRunning(path));
+        var delay = delayAsync ?? Task.Delay;
 
         // Phase 1: wait for IPC to become ready (handles domain reloads)
         for (var attempt = 0; attempt < DomainReloadMaxAttempts; attempt++)
@@ -72,7 +74,7 @@ public static class StatusCommand
             {
                 Console.Error.WriteLine(
                     $"[unityctl] Waiting for Unity IPC... ({attempt + 1}/{DomainReloadMaxAttempts})");
-                await Task.Delay(DomainReloadDelayMs, ct).ConfigureAwait(false);
+                await delay(TimeSpan.FromMilliseconds(DomainReloadDelayMs), ct).ConfigureAwait(false);
             }
         }
 

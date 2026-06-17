@@ -220,8 +220,8 @@ public sealed class UnityEditorDiscovery
             editor.RunningProjectPaths = matches
                 .Where(process => !string.IsNullOrWhiteSpace(process.ProjectPath))
                 .Select(process => Unityctl.Shared.Constants.NormalizeProjectPath(process.ProjectPath!))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(path => path, StringComparer.Ordinal)
                 .ToList();
         }
     }

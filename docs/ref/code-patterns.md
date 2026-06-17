@@ -110,6 +110,40 @@ path.Replace('\\', Path.DirectorySeparatorChar);
 - Mcp.Tests의 `McpBlackBoxTests`는 빌드된 `unityctl-mcp` 바이너리를 프로세스로 띄운다. Debug를 Release보다 먼저 탐색한다 (`dotnet test`의 기본이 Debug이므로 stale Release 바이너리 방지).
 - 테스트 필터: `dotnet test --filter "FullyQualifiedName!~Integration"`
 
+### Flaky 테스트 정책
+
+- PR 대상 Shared/Core/Cli/Mcp 테스트는 flaky 0개를 목표로 한다.
+- "가끔 실패" 상태로 두지 않는다. 시간, 경로, 프로세스, 환경 의존성은 deterministic fixture나 주입 가능한 clock/delay/platform hook으로 고정한다.
+- Unity Editor, AppLocker, 라이선스처럼 PR .NET gate에서 안정적으로 증명할 수 없는 항목은 Integration/Unity workflow로 격리하고 skip/preflight 이유를 명확히 남긴다.
+- 새 버그 수정은 같은 PR에 재현 테스트를 추가한다. 특히 IPC timeout, AppLocker, batch fallback, dirty scene policy, parser edge case는 회귀 테스트 우선순위가 높다.
+- 안정화된 날짜/시각 경계 회귀(`FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`)는 고정 시각 입력을 유지하고 wall-clock 의존성으로 되돌리지 않는다.
+- 새 flaky가 발견되면 `.github/ISSUE_TEMPLATE/flaky-test.yml`로 CI run, OS, 반복 횟수, isolation/stabilization plan을 남긴다.
+- 회귀 버그는 `.github/ISSUE_TEMPLATE/regression-bug.yml`로 신고하고, 수정 PR에는 실패 재현 테스트를 포함한다. 즉시 추가할 수 없으면 PR에서 해당 regression issue를 링크한다.
+- 모든 PR은 `.github/PULL_REQUEST_TEMPLATE.md`의 Test Trust / Contract Safety / README User Path / Unity Reality Check 체크리스트를 따라 검증 범위를 명시한다.
+- 외부 기여자는 루트 `CONTRIBUTING.md`에서 PR .NET gate, 명령 동기화, flaky/regression 처리, Unity live validation 분리를 먼저 확인한다.
+- PR .NET workflow는 `pull_request` 트리거, `main`/`master` 대상, `ubuntu-latest`/`windows-latest`/`macos-latest` matrix, `fail-fast: false`, `continue-on-error` 금지를 유지한다. 이 public gate가 줄어들면 `WorkflowGuardrailTests`가 실패해야 한다.
+- `CommandSyncGuardrailTests`는 Plugin shared copy drift를 막기 위해 `WellKnownCommands`, wire DTO JSON 필드, `StatusCode`, Exec parser grammar sentinels를 검증한다.
+
+### 새 명령 추가 체크리스트
+
+새 명령은 한 레이어에만 추가되면 공개 API 신뢰를 깨뜨린다. 아래 경로를 같은 PR에서 모두 확인한다.
+
+1. `WellKnownCommands`: Shared 상수를 추가하고 Plugin `Editor/Shared/WellKnownCommands.cs` 복사본을 동기화한다.
+2. `CommandCatalog`: schema/tools에 노출될 정의, CLI 이름, 파라미터, 예시를 추가하고 `CommandCatalogTests`/`CommandSchemaTests` 기대값을 갱신한다.
+3. CLI 등록: `src/Unityctl.Cli/Program.cs`에 verb를 등록하고 해당 CLI parser/request 테스트를 추가한다.
+4. MCP allowlist/schema: read 명령은 `QueryTool`, write 명령은 `RunTool` allowlist에 넣고 MCP schema/black-box 테스트가 표면을 검증하게 한다.
+5. Plugin handler 등록: `src/Unityctl.Plugin/Editor/Commands/*Handler.cs`에 handler를 추가하고 `CommandRegistry` 자동 등록/handler coverage guardrail을 통과시킨다.
+6. 중복 등록 방지: CLI `app.Add(...)` verb와 Plugin handler `CommandName`이 기존 명령을 shadow하지 않는지 `CommandSyncGuardrailTests`로 확인한다.
+7. 공개 문서: README, getting-started, quickstart, status 문서가 새 public surface와 검증 범위를 정확히 말하는지 확인한다.
+
+최소 검증 세트:
+
+```bash
+dotnet test tests/Unityctl.Shared.Tests -c Release --filter "CommandCatalogTests|CommandSchemaTests|CommandSyncGuardrailTests"
+dotnet test tests/Unityctl.Cli.Tests -c Release --filter "<새 명령 관련 테스트>"
+dotnet test tests/Unityctl.Mcp.Tests -c Release
+```
+
 ## §8. 파일 위치 규칙
 
 | 유형 | 경로 |
@@ -133,3 +167,17 @@ IPC 실패(statusCode 201) 시 디버깅 절차:
 - Plugin `.cs` 파일에 `touch` 명령 사용 금지 (파일 내용이 비워질 수 있음)
 - `.asmdef` 파일 수정/삭제 금지 (Plugin 전체 로드 불가)
 - Bee 캐시(`Library/Bee/`) 삭제는 최후 수단으로만
+
+## §10. 응답 크기 규율 (초경량 응답)
+
+에이전트 컨텍스트 토큰을 아끼기 위해, 새 read 명령은 **summary-by-default**로 설계한다. 큰 페이로드를 기본으로 흘리지 않는다.
+
+| 원칙 | 적용 |
+|------|------|
+| **summary 기본 / `--full` opt-in** | 기본은 카운트 + 이름/요약, 상세 값은 `--full`일 때만. 예: `component get`(`ComponentGetHandler`), `describe-type`(`DescribeTypeHandler`) |
+| **배열은 count + 대표값** | 전체 배열 대신 `xxxCount` + `xxxNames`(또는 상위 N개). 깊이/개수 상한은 `maxDepth`/`maxMembers` 파라미터로 노출 |
+| **truncation 표식** | 상한에 걸리면 `xxxTruncated: true`로 잘림을 명시 (조용한 절단 금지) |
+| **중복 dedupe** | 반복 항목은 `count` + `firstIndex`/`lastIndex`로 접는다. 예: `console get-entries`(`ConsoleGetEntriesHandler`) |
+| **계층 요약** | 트리는 `summary`/`maxDepth`로 leaf 상세를 접는다. 예: `SceneExplorationUtility.CreateHierarchyNode` |
+
+신규 명령 리뷰 시: "이 응답이 `--full` 없이도 작은가? 배열이 무한정 커질 수 있는가?"를 점검한다.

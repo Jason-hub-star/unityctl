@@ -105,7 +105,7 @@ public static class AsyncCommandRunner
                 await Task.Delay(PollIntervalMs, linkedCts.Token);
             }
         }
-        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !ct.IsCancellationRequested)
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
             sw.Stop();
             var timeoutResponse = CommandResponse.Fail(

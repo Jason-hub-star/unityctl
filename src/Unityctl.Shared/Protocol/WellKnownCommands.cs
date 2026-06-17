@@ -224,4 +224,7 @@ public static class WellKnownCommands
     public const string AssetExport = "asset-export";
     public const string ModelGetImportSettings = "model-get-import-settings";
     public const string AudioGetImportSettings = "audio-get-import-settings";
+
+    // Phase C: describe-type
+    public const string DescribeType = "describe-type";
 }

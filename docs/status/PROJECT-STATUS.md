@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-04-06 (KST)
+최종 업데이트: 2026-06-17 (KST) — v0.4.0
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
@@ -23,6 +23,8 @@
 - **Read API P0 Slice 3 (asset reference graph v1)**: 완료
 - **Build Profile / Build Target Control (`build-profile *`, `build-target switch`)**: 완료
 - **P3 Screenshot / Visual Feedback**: 완료
+- **IPC Reload Resilience (heartbeat state 파일 + reload-aware 재시도 + batch 폴백 억제)**: 완료 (v0.4.0)
+- **Type Introspection (`type describe` 라이브 리플렉션 + Unity Manual 링크)**: 완료 (v0.4.0)
 - **P2 Batch Execute / Transaction (`batch execute`)**: 완료
 - **Tags & Layers + Editor Utility (tag/layer/console/define-symbols 10개 명령)**: 완료
 - **Lighting & NavMesh (lighting 5개 + navmesh 3개 = 8개 명령)**: 완료
@@ -386,28 +388,39 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Debug` | ✅ | 71 통과 |
-| `dotnet test tests/Unityctl.Core.Tests -c Release` | ⚠️ | 새 slice targeted tests는 통과. full suite는 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries` 1건 flaky failure 확인 |
-| `dotnet test tests/Unityctl.Cli.Tests -c Debug` | ✅ | 393 통과 |
-| `dotnet test tests/Unityctl.Mcp.Tests -c Debug` | ✅ | 22 통과 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 107 통과. workflow hard-gate/smoke/README badge/public trust inventory/Unity blocker tracking/PR skip guardrail, CLI/Plugin duplicate registration guardrail, catalog↔WellKnown↔MCP reachability guardrail 추가 |
+| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 153 통과. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`를 고정 시각 테스트로 안정화. slash/backslash/case policy path/pipe normalization, UnityProcessDetector slash/case process matching, CommandExecutor headless/interactive lock no-batch-fallback, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
+| `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 579 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, running project path case policy, dirty scene policy normalization, batch command parser edge regression 추가 |
+| `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
 | `dotnet test unityctl.slnx -c Release` | ⚠️ | Integration/환경 락, AppLocker 등 워크스테이션 조건에 따라 개별 프로젝트 실행이 더 안정적 |
 
 | 프로젝트 | 통과 |
 |----------|------|
-| Unityctl.Shared.Tests | 71 |
-| Unityctl.Core.Tests | 129 |
-| Unityctl.Cli.Tests | 444 |
-| Unityctl.Mcp.Tests | 22 |
+| Unityctl.Shared.Tests | 107 |
+| Unityctl.Core.Tests | 153 |
+| Unityctl.Cli.Tests | 579 |
+| Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-테스트 인벤토리 기준 합계는 **689개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **864개**다.
 
 신규 자동 검증:
 
-- `Unityctl.Mcp.Tests`에 built `unityctl-mcp.exe` 기준 `initialize` / `tools/list` / `unityctl_schema` / `unityctl_run` allowlist/parameters / invalid tool / missing arg black-box 테스트 추가 (16개)
+- `Unityctl.Mcp.Tests`에 built `unityctl-mcp.exe` 기준 `initialize` / `tools/list` / `unityctl_schema` 전체 CommandCatalog/category/command parity / `unityctl_run` allowlist/parameters / invalid tool / missing arg black-box 테스트 추가 (19개)
 - `Unityctl.Integration.Tests`에 repo-contained `SampleUnityProject` 기반 closed-editor `status` / `check` / `test --mode edit` / `build --dry-run` 검증 추가
 - `Unityctl.Shared.Tests`에 `ExecHandler` 실제 grammar/security/parse contract 테스트 추가
-- `.github/workflows/ci-dotnet.yml`에 published CLI smoke (`--help`, `schema`, `tools --json`) 추가
+- `.github/workflows/ci-dotnet.yml`에 published CLI smoke (`--help`, `schema`, `tools --json`, `doctor --json`) 추가. 현재는 schema/tools JSON drift와 `doctor` / `check` / `workflow-verify` / `scene-snapshot` / `scene-diff` / `player-settings` 노출, mini Unity project `doctor` JSON shape까지 검증
+- `.github/workflows/ci-dotnet.yml`에 local nupkg 기반 `dotnet tool install --tool-path` smoke 추가. 현재 PR에서 pack한 `unityctl` 버전을 명시 설치해 installed-tool `schema` / `tools --json` parity, README 핵심 명령 노출, `doctor --json` / `check --json` / `workflow verify --json` shape를 검증
+- `.github/workflows/ci-unity.yml`에 nightly/manual smoke 추가: 별도 미니 프로젝트 `init`, 샘플 프로젝트 `doctor`, `check`, 대표 read `scene hierarchy`, 대표 write/readback `player-settings set/get`, `workflow verify` 결과를 JSON success/readback 검증 후 artifact로 업로드. secret preflight 실패 시에도 `license-preflight.txt`와 `planned-smoke.txt`로 실패 이유와 예정된 live 검증 범위를 남김
+- `.github/workflows/*.yml`의 first-party/release Actions를 Node 24-ready major로 갱신해 Actions 런타임 deprecation warning 리스크를 낮춤
+- `.github/workflows/release.yml`의 Shared/Core/Cli/Mcp 테스트를 hard gate로 전환해 테스트 실패 상태에서 패키징/NuGet/GitHub Release가 진행되지 않게 함
+- `Unityctl.Shared.Tests`에 workflow guardrail 테스트 추가: PR CI test suite hard gate, release hard gate, published CLI smoke, Unity live smoke/readback evidence가 빠지면 실패
+- `Unityctl.Shared.Tests` workflow guardrail이 README/README.ko CI badge를 정확한 `ci-dotnet.yml` / `ci-unity.yml` workflow URL에 고정
+- `Unityctl.Cli.Tests`에 Unity discovery/platform regression 추가: CRLF/indent ProjectVersion parsing, Unity Hub `Location` casing, interactive/headless process classification
+- `Unityctl.Cli.Tests`에 dirty scene policy normalization regression 추가: `scene open/create --dirty-policy` 대소문자/공백 입력을 CLI 요청 단계에서 안정화
+- `Unityctl.Core.Tests`에 slash/backslash project path normalization regression 추가: 같은 프로젝트 경로의 separator/trailing slash 차이가 pipe name을 바꾸지 않음을 Unity 실행 없이 검증
+- `Unityctl.Core.Tests`에 CommandExecutor headless/interactive lock regression 추가: headless Unity lock 상태와 interactive Editor IPC-not-ready 상태에서 `check`가 batch fallback으로 내려가지 않고 Busy + target metadata를 반환함을 Unity 실행 없이 검증
+- `Unityctl.Core.Tests`에 BatchTransport readiness regression 추가: interactive editor lock, headless batch lock, stale lockfile guidance를 Unity 실행 없이 검증
 
 > 이전 실측 상세/경쟁 분석 아카이브 → `docs/internal/DEVELOPMENT.md` "라이브 검증 아카이브" 섹션 참조.
 
