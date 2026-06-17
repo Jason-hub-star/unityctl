@@ -1503,6 +1503,17 @@ public static class CommandCatalog
         Parameter("path", "string", "Audio asset path (e.g. Assets/Audio/bgm.wav)", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("audio get-import-settings");
 
+    // Phase C: describe-type
+    public static readonly CommandDefinition DescribeTypeCmd = Define(
+        WellKnownCommands.DescribeType,
+        "Reflect a live C# type from the Unity Editor and return its members, Unity specifics, and documentation link",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("typeName", "string", "Fully-qualified or simple type name (e.g. UnityEngine.Rigidbody or Rigidbody)", required: true),
+        Parameter("full", "bool", "Return full member signatures instead of summary (default: false)", required: false),
+        Parameter("maxMembers", "int", "Cap members per category (default: no limit)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("type describe");
+
     public static CommandDefinition[] All { get; } =
     [
         Init,
@@ -1699,7 +1710,9 @@ public static class CommandCatalog
         // Asset Import/Export Extension — Phase G
         AssetExportCmd,
         ModelGetImportSettingsCmd,
-        AudioGetImportSettingsCmd
+        AudioGetImportSettingsCmd,
+        // Phase C: describe-type
+        DescribeTypeCmd
     ];
 
     private static CommandDefinition Define(

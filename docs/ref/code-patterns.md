@@ -167,3 +167,17 @@ IPC 실패(statusCode 201) 시 디버깅 절차:
 - Plugin `.cs` 파일에 `touch` 명령 사용 금지 (파일 내용이 비워질 수 있음)
 - `.asmdef` 파일 수정/삭제 금지 (Plugin 전체 로드 불가)
 - Bee 캐시(`Library/Bee/`) 삭제는 최후 수단으로만
+
+## §10. 응답 크기 규율 (초경량 응답)
+
+에이전트 컨텍스트 토큰을 아끼기 위해, 새 read 명령은 **summary-by-default**로 설계한다. 큰 페이로드를 기본으로 흘리지 않는다.
+
+| 원칙 | 적용 |
+|------|------|
+| **summary 기본 / `--full` opt-in** | 기본은 카운트 + 이름/요약, 상세 값은 `--full`일 때만. 예: `component get`(`ComponentGetHandler`), `describe-type`(`DescribeTypeHandler`) |
+| **배열은 count + 대표값** | 전체 배열 대신 `xxxCount` + `xxxNames`(또는 상위 N개). 깊이/개수 상한은 `maxDepth`/`maxMembers` 파라미터로 노출 |
+| **truncation 표식** | 상한에 걸리면 `xxxTruncated: true`로 잘림을 명시 (조용한 절단 금지) |
+| **중복 dedupe** | 반복 항목은 `count` + `firstIndex`/`lastIndex`로 접는다. 예: `console get-entries`(`ConsoleGetEntriesHandler`) |
+| **계층 요약** | 트리는 `summary`/`maxDepth`로 leaf 상세를 접는다. 예: `SceneExplorationUtility.CreateHierarchyNode` |
+
+신규 명령 리뷰 시: "이 응답이 `--full` 없이도 작은가? 배열이 무한정 커질 수 있는가?"를 점검한다.

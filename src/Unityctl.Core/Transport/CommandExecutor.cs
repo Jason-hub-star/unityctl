@@ -3,6 +3,7 @@ using Unityctl.Core.Platform;
 using Unityctl.Core.Retry;
 using Unityctl.Shared.Protocol;
 using Unityctl.Shared.Transport;
+using Unityctl.Shared;
 using System.Text.Json.Nodes;
 using Unityctl.Shared.Models;
 
@@ -21,13 +22,22 @@ public sealed class CommandExecutor
     private readonly UnityEditorDiscovery _discovery;
     private readonly RetryPolicy _retryPolicy;
     private readonly UnityProcessDetector _processDetector;
+    private readonly IIpcStateReader _stateReader;
+    private readonly Func<int, CancellationToken, Task> _delayAsync;
 
-    public CommandExecutor(IPlatformServices platform, UnityEditorDiscovery discovery, RetryPolicy? retryPolicy = null)
+    public CommandExecutor(
+        IPlatformServices platform,
+        UnityEditorDiscovery discovery,
+        RetryPolicy? retryPolicy = null,
+        IIpcStateReader? stateReader = null,
+        Func<int, CancellationToken, Task>? delayAsync = null)
     {
         _platform = platform;
         _discovery = discovery;
         _retryPolicy = retryPolicy ?? new RetryPolicy();
         _processDetector = new UnityProcessDetector(_platform);
+        _stateReader = stateReader ?? new IpcStateReader();
+        _delayAsync = delayAsync ?? ((ms, ct) => Task.Delay(ms, ct));
     }
 
     /// <summary>
@@ -65,7 +75,34 @@ public sealed class CommandExecutor
         if (await ipc.ProbeAsync(ct))
         {
             var response = await ipc.SendAsync(request, ct);
+
+            // SendAsync failure: if transient (Busy) and state says reloading, retry once after wait
+            if (!response.Success && response.StatusCode == StatusCode.Busy)
+            {
+                var state = _stateReader.Read(projectPath);
+                if (state != null && state.IsReloadingFresh())
+                {
+                    // Wait for reload to complete, then retry send once
+                    await RunReloadWaitLoopAsync(ipc, ct);
+                    var retried = await ipc.SendAsync(request, ct);
+                    return AttachTargetMetadata(retried, projectPath, "ipc", editor, process, projectLocked, "ipc-retried-after-reload");
+                }
+            }
+
             return AttachTargetMetadata(response, projectPath, "ipc", editor, process, projectLocked, null);
+        }
+
+        // Probe failed: check if editor is reloading using state file
+        var ipcState = _stateReader.Read(projectPath);
+        if (ipcState != null && (ipcState.IsReloadingFresh() || ipcState.IsStartingFresh()))
+        {
+            // Editor is in reload/starting: wait for it to become ready
+            if (await RunReloadWaitLoopAsync(ipc, ct))
+            {
+                var response = await ipc.SendAsync(request, ct);
+                return AttachTargetMetadata(response, projectPath, "ipc", editor, process, projectLocked, "ipc-became-ready-after-reload");
+            }
+            // Loop exhausted: fall through to existing LockedProject logic or batch fallback
         }
 
         if (projectLocked && interactiveProcess != null)
@@ -94,6 +131,22 @@ public sealed class CommandExecutor
         await using var batch = new BatchTransport(_platform, _discovery, projectPath);
         var batchResponse = await batch.SendAsync(request, ct);
         return AttachTargetMetadata(batchResponse, projectPath, "batch", editor, process, projectLocked, "ipc-probe-failed");
+    }
+
+    /// <summary>
+    /// Wait for IPC to become ready by polling the probe with a fixed interval.
+    /// Returns true if probe succeeds before timeout, false if loop exhausts.
+    /// </summary>
+    private async Task<bool> RunReloadWaitLoopAsync(IpcTransport ipc, CancellationToken ct)
+    {
+        var maxAttempts = Constants.IpcReloadWaitMs / Constants.IpcReloadPollMs;
+        for (int i = 0; i < maxAttempts; i++)
+        {
+            await _delayAsync(Constants.IpcReloadPollMs, ct);
+            if (await ipc.ProbeAsync(ct))
+                return true;
+        }
+        return false;
     }
 
     internal static CommandResponse AttachTargetMetadata(

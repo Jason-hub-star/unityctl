@@ -595,6 +595,10 @@ app.Add("model get-import-settings", (string project, string path, bool json = f
 app.Add("audio get-import-settings", (string project, string path, bool json = false) =>
     AudioCommand.GetImportSettings(project, path, json));
 
+// Phase C: describe-type
+app.Add("type describe", (string project, string typeName, bool full = false, int? maxMembers = null, bool json = false) =>
+    TypeCommand.Describe(project, typeName, full, maxMembers, json));
+
 // Screenshot / Visual Feedback — P3
 app.Add("screenshot capture", (
         string project,

@@ -54,6 +54,7 @@ namespace Unityctl.Shared.Serialization;
 [JsonSerializable(typeof(Unityctl.Shared.Models.UnityEditorInfo[]))]
 [JsonSerializable(typeof(Unityctl.Shared.Models.UnityEditorInstanceInfo))]
 [JsonSerializable(typeof(Unityctl.Shared.Models.UnityEditorInstanceInfo[]))]
+[JsonSerializable(typeof(Unityctl.Shared.Models.IpcState))]
 [JsonSerializable(typeof(VerificationDefinition))]
 [JsonSerializable(typeof(VerificationStep))]
 [JsonSerializable(typeof(VerificationStep[]))]

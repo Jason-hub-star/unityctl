@@ -55,6 +55,10 @@ namespace Unityctl.Plugin.Editor.Ipc
         private readonly ConcurrentQueue<PendingWork> _mainThreadQueue = new ConcurrentQueue<PendingWork>();
         private long _lastExpectedConnectionWarningTicks;
 
+        // IPC state file heartbeat throttle
+        private int _lastStateFileHeartbeatMs;
+        private const int StateFileHeartbeatThrottleMs = 2000;
+
         // Watch session state
         private readonly ConcurrentQueue<EventEnvelope> _watchQueue = new ConcurrentQueue<EventEnvelope>();
         private volatile int _watchQueueCount;
@@ -109,6 +113,11 @@ namespace Unityctl.Plugin.Editor.Ipc
                 EditorApplication.quitting += OnQuitting;
 
                 IsRunning = true;
+                _lastStateFileHeartbeatMs = Environment.TickCount;
+
+                // Write initial "ready" state to disk
+                IpcStateFile.Write(_projectPath, _pipeName, IpcStateFile.IpcStateValues.Ready);
+
                 Debug.Log($"[unityctl] IPC server started on pipe: {_pipeName}");
             }
         }
@@ -195,11 +204,21 @@ namespace Unityctl.Plugin.Editor.Ipc
 
         private void OnBeforeAssemblyReload()
         {
+            // Signal reloading state BEFORE stopping the server
+            if (IsRunning && _projectPath != null && _pipeName != null)
+            {
+                IpcStateFile.Write(_projectPath, _pipeName, IpcStateFile.IpcStateValues.Reloading);
+            }
             Stop();
         }
 
         private void OnQuitting()
         {
+            // Signal stopped state BEFORE exiting
+            if (IsRunning && _projectPath != null && _pipeName != null)
+            {
+                IpcStateFile.Write(_projectPath, _pipeName, IpcStateFile.IpcStateValues.Stopped);
+            }
             StopForEditorQuit();
         }
 
@@ -525,6 +544,17 @@ namespace Unityctl.Plugin.Editor.Ipc
         /// </summary>
         private void PumpMainThreadQueue()
         {
+            // Throttled heartbeat: refresh updatedAtUtc liveness without changing state.
+            if (!_stopping && _projectPath != null)
+            {
+                var nowMs = Environment.TickCount;
+                if (nowMs - _lastStateFileHeartbeatMs >= StateFileHeartbeatThrottleMs)
+                {
+                    _lastStateFileHeartbeatMs = nowMs;
+                    IpcStateFile.Touch(_projectPath);
+                }
+            }
+
             while (_mainThreadQueue.TryDequeue(out var pending))
             {
                 if (_stopping)

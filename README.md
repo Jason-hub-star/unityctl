@@ -305,7 +305,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 
 ---
 
-## Commands (166)
+## Commands (167)
 
 ### Core (13)
 
@@ -382,7 +382,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 </details>
 
 <details>
-<summary><strong>Scripting & Code Analysis</strong> (10)</summary>
+<summary><strong>Scripting & Code Analysis</strong> (11)</summary>
 
 | Command | Description |
 |---------|-------------|
@@ -395,6 +395,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 | `script get-errors` | Structured compile errors (file/line/column/code) |
 | `script find-refs` | Find symbol references across all scripts |
 | `script rename-symbol` | Rename symbol across all scripts (with `--dry-run`) |
+| `type describe` | Reflect a live C# type (members, Unity specifics, Manual link); summary-by-default, `--full` for signatures |
 | `exec` | Execute C# expression in Unity |
 
 </details>

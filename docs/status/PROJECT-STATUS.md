@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-04-06 (KST)
+최종 업데이트: 2026-06-17 (KST) — v0.4.0
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
@@ -23,6 +23,8 @@
 - **Read API P0 Slice 3 (asset reference graph v1)**: 완료
 - **Build Profile / Build Target Control (`build-profile *`, `build-target switch`)**: 완료
 - **P3 Screenshot / Visual Feedback**: 완료
+- **IPC Reload Resilience (heartbeat state 파일 + reload-aware 재시도 + batch 폴백 억제)**: 완료 (v0.4.0)
+- **Type Introspection (`type describe` 라이브 리플렉션 + Unity Manual 링크)**: 완료 (v0.4.0)
 - **P2 Batch Execute / Transaction (`batch execute`)**: 완료
 - **Tags & Layers + Editor Utility (tag/layer/console/define-symbols 10개 명령)**: 완료
 - **Lighting & NavMesh (lighting 5개 + navmesh 3개 = 8개 명령)**: 완료

@@ -25,6 +25,10 @@ public static class Constants
     public const string SessionHistoryFile = "history.ndjson";
     public const int SessionTtlDays = 7;
     public const string FlightLogDirectory = "flight-log";
+    public const string IpcStateFileRelativePath = "Library/Unityctl/ipc-state.json";
+    public const int IpcReloadWaitMs = 60_000;
+    public const int IpcReloadPollMs = 750;
+    public const int IpcStateStalenessMs = 15_000;
 
     /// <summary>
     /// Normalize a project path for deterministic pipe name generation.

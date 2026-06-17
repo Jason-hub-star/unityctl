@@ -86,7 +86,9 @@ public class CommandCatalogTests
              // Animation Workflow Extension — Phase H
              "animation-list-clips", "animation-get-clip", "animation-get-controller", "animation-add-curve",
              // Asset Import/Export Extension — Phase G
-             "asset-export", "model-get-import-settings", "audio-get-import-settings"],
+             "asset-export", "model-get-import-settings", "audio-get-import-settings",
+             // Phase C: describe-type
+             "describe-type"],
             names);
     }
 

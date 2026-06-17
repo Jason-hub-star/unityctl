@@ -83,7 +83,9 @@ internal sealed class QueryTool(CommandExecutor executor)
         WellKnownCommands.BuildProfileGetActive,
         WellKnownCommands.PackageList,
         WellKnownCommands.ProjectSettingsGet,
-        WellKnownCommands.MaterialGet
+        WellKnownCommands.MaterialGet,
+        // Phase C: describe-type
+        WellKnownCommands.DescribeType
     };
 
     [McpServerTool(Name = "unityctl_query")]
