@@ -75,17 +75,21 @@ public static class IpcStateExtensions
     }
 
     /// <summary>
-    /// Check if state is reloading and fresh.
+    /// Check if state is reloading and fresh. Uses the reload staleness window
+    /// (not the 15s liveness window) because a reloading editor cannot heartbeat
+    /// its state file — its timestamp is frozen at reload start for the whole reload.
     /// </summary>
-    public static bool IsReloadingFresh(this IpcState state, int stalenessMs = Constants.IpcStateStalenessMs)
+    public static bool IsReloadingFresh(this IpcState state, int stalenessMs = Constants.IpcReloadStaleMs)
     {
         return state.State == IpcStateValues.Reloading && state.IsFresh(stalenessMs);
     }
 
     /// <summary>
-    /// Check if state is starting and fresh.
+    /// Check if state is starting and fresh. Uses the reload staleness window
+    /// for the same reason as <see cref="IsReloadingFresh"/> — a starting editor
+    /// has not begun heartbeating yet.
     /// </summary>
-    public static bool IsStartingFresh(this IpcState state, int stalenessMs = Constants.IpcStateStalenessMs)
+    public static bool IsStartingFresh(this IpcState state, int stalenessMs = Constants.IpcReloadStaleMs)
     {
         return state.State == IpcStateValues.Starting && state.IsFresh(stalenessMs);
     }

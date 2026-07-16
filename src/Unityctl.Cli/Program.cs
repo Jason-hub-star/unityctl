@@ -139,6 +139,9 @@ app.Add("play stop", (string project, bool json = false) =>
 app.Add("play pause", (string project, bool json = false) =>
     PlayModeCommand.Execute(project, "pause", json));
 
+app.Add("play step", (string project, int frames = 1, bool json = false) =>
+    PlayModeCommand.Step(project, frames, json));
+
 app.Add("player-settings get", (string project, string key, bool json = false) =>
     PlayerSettingsCommand.Get(project, key, json));
 
@@ -373,8 +376,8 @@ app.Add("script list", (string project, string? folder = null, string? filter = 
     ScriptCommand.List(project, folder, filter, limit, json));
 
 // Script Editing v1
-app.Add("script create", (string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", bool json = false) =>
-    ScriptCommand.Create(project, path, className, ns, baseType, json));
+app.Add("script create", (string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", string? content = null, string? contentFile = null, bool json = false) =>
+    ScriptCommand.Create(project, path, className, ns, baseType, content, contentFile, json));
 
 app.Add("script edit", (string project, string path, string? content = null, string? contentFile = null, bool json = false) =>
     ScriptCommand.Edit(project, path, content, contentFile, json));
@@ -488,6 +491,12 @@ app.Add("camera list", (string project, bool includeInactive = false, bool json 
 
 app.Add("camera get", (string project, string id, bool json = false) =>
     CameraCommand.Get(project, id, json));
+
+app.Add("spatial describe", (string project, string target, bool full = false, bool json = false) =>
+    SpatialCommand.Describe(project, target, full, json));
+
+app.Add("spatial check", (string project, string subject, string predicate, string target, bool json = false) =>
+    SpatialCommand.Check(project, subject, predicate, target, json));
 
 // Texture Import
 app.Add("texture get-import-settings", (string project, string path, bool json = false) =>

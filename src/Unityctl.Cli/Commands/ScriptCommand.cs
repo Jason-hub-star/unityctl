@@ -12,7 +12,7 @@ public static class ScriptCommand
     private const int InteractiveScriptProbeAttempts = 12;
     private const int InteractiveScriptProbeDelayMs = 1000;
 
-    public static void Create(string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", bool json = false)
+    public static void Create(string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", string? content = null, string? contentFile = null, bool json = false)
     {
         // CLI-side validation: filename must match className
         var fileNameWithoutExt = Path.GetFileNameWithoutExtension(path);
@@ -23,7 +23,32 @@ public static class ScriptCommand
             return;
         }
 
-        var request = CreateCreateRequest(path, className, ns, baseType);
+        // Optional initial content: --content-file reads a file, --content is inline.
+        // When neither is given, the plugin generates a template (existing behavior).
+        if (content != null && contentFile != null)
+        {
+            Console.Error.WriteLine("Error: --content and --content-file are mutually exclusive");
+            Environment.Exit(1);
+            return;
+        }
+        if (contentFile != null)
+        {
+            if (!File.Exists(contentFile))
+            {
+                Console.Error.WriteLine($"Error: content file not found: {contentFile}");
+                Environment.Exit(1);
+                return;
+            }
+            content = File.ReadAllText(contentFile);
+        }
+        if (content != null && content.Length > 9 * 1024 * 1024)
+        {
+            Console.Error.WriteLine("Error: content exceeds maximum size (9MB)");
+            Environment.Exit(1);
+            return;
+        }
+
+        var request = CreateCreateRequest(path, className, ns, baseType, content);
         CommandRunner.Execute(project, request, json);
     }
 
@@ -134,7 +159,7 @@ public static class ScriptCommand
         };
     }
 
-    internal static CommandRequest CreateCreateRequest(string path, string className, string? ns, string baseType)
+    internal static CommandRequest CreateCreateRequest(string path, string className, string? ns, string baseType, string? content = null)
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("path must not be empty", nameof(path));
@@ -148,6 +173,7 @@ public static class ScriptCommand
             ["baseType"] = baseType
         };
         if (!string.IsNullOrEmpty(ns)) parameters["namespace"] = ns;
+        if (!string.IsNullOrEmpty(content)) parameters["content"] = content;
 
         return new CommandRequest
         {

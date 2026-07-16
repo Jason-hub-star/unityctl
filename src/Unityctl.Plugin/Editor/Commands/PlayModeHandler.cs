@@ -39,9 +39,26 @@ namespace Unityctl.Plugin.Editor.Commands
                         ["isPaused"] = paused
                     });
 
+                case "step":
+                    // Deterministic, focus-independent frame advance so an agent can
+                    // verify time-based gameplay without the unfocused play-mode throttle.
+                    if (!UnityEditor.EditorApplication.isPlaying)
+                        return InvalidParameters("play step requires play mode. Run 'play start' first.");
+                    var frames = request.GetParam<int>("frames");
+                    if (frames <= 0) frames = 1;
+                    UnityEditor.EditorApplication.isPaused = true;
+                    for (int i = 0; i < frames; i++)
+                        UnityEditor.EditorApplication.Step();
+                    return Ok($"Stepped {frames} frame(s)", new JObject
+                    {
+                        ["isPlaying"] = true,
+                        ["isPaused"] = UnityEditor.EditorApplication.isPaused,
+                        ["framesRequested"] = frames
+                    });
+
                 default:
                     return InvalidParameters(
-                        $"Unknown action: '{action}'. Valid actions: start, stop, pause");
+                        $"Unknown action: '{action}'. Valid actions: start, stop, pause, step");
             }
 #else
             return NotInEditor();

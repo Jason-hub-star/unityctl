@@ -49,8 +49,12 @@ namespace Unityctl.Plugin.Editor.Commands
                     path)))
                 return Fail(StatusCode.InvalidParameters, $"File already exists: {path}");
 
-            // Generate source
-            var source = GenerateSource(className, ns, baseType);
+            // Use caller-provided content if given (one command = one domain reload),
+            // otherwise generate a template (existing behavior).
+            var content = request.GetParam("content", null);
+            var source = !string.IsNullOrEmpty(content)
+                ? content
+                : GenerateSource(className, ns, baseType);
 
             // Ensure directory exists
             var fullPath = System.IO.Path.Combine(

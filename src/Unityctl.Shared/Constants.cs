@@ -30,6 +30,14 @@ public static class Constants
     public const int IpcReloadPollMs = 750;
     public const int IpcStateStalenessMs = 15_000;
 
+    // A reloading/starting editor cannot refresh its state file while its managed
+    // code is being torn down and rebuilt, so updatedAtUtc is frozen at reload start.
+    // Trust the reloading/starting state for the whole reload budget (plus margin)
+    // instead of the 15s liveness window used for a ready editor. Otherwise any domain
+    // reload longer than 15s is misread as a dead editor and the client drops IPC to
+    // spawn a batch process mid-reload. Must stay above IpcReloadWaitMs.
+    public const int IpcReloadStaleMs = 90_000;
+
     /// <summary>
     /// Normalize a project path for deterministic pipe name generation.
     /// Handles drive letter case, slash direction, trailing slashes.

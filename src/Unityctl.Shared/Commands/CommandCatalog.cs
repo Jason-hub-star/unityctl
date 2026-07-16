@@ -286,11 +286,12 @@ public static class CommandCatalog
 
     public static readonly CommandDefinition PlayMode = Define(
         WellKnownCommands.PlayMode,
-        "Control Unity play mode (start, stop, pause)",
+        "Control Unity play mode (start, stop, pause, step). action=step advances N frames deterministically even when the Editor is unfocused — for verifying time-based gameplay",
         "action",
         Parameter("project", "string", "Path to Unity project", required: true),
-        Parameter("action", "string", "Play mode action: start, stop, pause", required: true),
-        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("play <start|stop|pause>");
+        Parameter("action", "string", "Play mode action: start, stop, pause, step", required: true),
+        Parameter("frames", "int", "For action=step: number of frames to advance (default 1)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("play <start|stop|pause|step>");
 
     public static readonly CommandDefinition PlayerSettings = Define(
         WellKnownCommands.PlayerSettings,
@@ -830,6 +831,8 @@ public static class CommandCatalog
         Parameter("className", "string", "C# class name (must match filename)", required: true),
         Parameter("namespace", "string", "C# namespace", required: false),
         Parameter("baseType", "string", "Base class (default: MonoBehaviour). Known: MonoBehaviour, ScriptableObject, Editor, EditorWindow", required: false),
+        Parameter("content", "string", "Initial file content (inline). Skips the template — one command, one domain reload", required: false),
+        Parameter("contentFile", "string", "Path to a file whose text becomes the script. Skips the template", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script create");
 
     public static readonly CommandDefinition ScriptEditCmd = Define(
@@ -1204,6 +1207,26 @@ public static class CommandCatalog
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("id", "string", "GlobalObjectId of the Camera component or its GameObject", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("camera get");
+
+    // Spatial — measured scene grounding (world AABB / orientation / predicates), not screenshots
+    public static readonly CommandDefinition SpatialDescribeCmd = Define(
+        WellKnownCommands.SpatialDescribe,
+        "Describe a GameObject's world bounds, true dimensions, thin/long axis, surface normal, and pivot offset (summary-by-default; --full for min/max and per-renderer)",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("target", "string", "GlobalObjectId, hierarchy path, or name of the GameObject", required: true),
+        Parameter("full", "bool", "Include min/max, per-renderer breakdown, rotation, and scale", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("spatial describe");
+
+    public static readonly CommandDefinition SpatialCheckCmd = Define(
+        WellKnownCommands.SpatialCheck,
+        "Check a spatial predicate (covers|inside|on-top-of|overlaps|aligned) between two GameObjects with numeric reasons (footprint, gap, rotation error, overlap)",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("subject", "string", "GlobalObjectId, path, or name of the subject GameObject", required: true),
+        Parameter("predicate", "string", "One of: covers, inside, on-top-of, overlaps, aligned", required: true),
+        Parameter("target", "string", "GlobalObjectId, path, or name of the reference GameObject", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("spatial check");
 
     // Texture Import
     public static readonly CommandDefinition TextureGetImportSettingsCmd = Define(
@@ -1669,6 +1692,9 @@ public static class CommandCatalog
         // Camera
         CameraListCmd,
         CameraGetCmd,
+        // Spatial
+        SpatialDescribeCmd,
+        SpatialCheckCmd,
         // Texture Import
         TextureGetImportSettingsCmd,
         TextureSetImportSettingsCmd,

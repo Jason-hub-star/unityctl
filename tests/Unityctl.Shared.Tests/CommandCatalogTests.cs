@@ -67,6 +67,8 @@ public class CommandCatalogTests
              "project-validate",
              // Camera
              "camera-list", "camera-get",
+             // Spatial
+             "spatial-describe", "spatial-check",
              // Texture Import
              "texture-get-import-settings", "texture-set-import-settings",
              // ScriptableObject

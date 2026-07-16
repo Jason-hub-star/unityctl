@@ -28,8 +28,15 @@ namespace Unityctl.Plugin.Editor.Commands
                 return InvalidParameters("Scene path must end with '.unity'.");
 
             var directory = Path.GetDirectoryName(path)?.Replace('\\', '/');
-            if (string.IsNullOrWhiteSpace(directory) || !UnityEditor.AssetDatabase.IsValidFolder(directory))
-                return InvalidParameters($"Scene directory does not exist: {directory}");
+            if (string.IsNullOrWhiteSpace(directory))
+                return InvalidParameters("Scene path must include a folder under Assets/ (e.g. Assets/Scenes/Game.unity).");
+            if (!directory.Equals("Assets", StringComparison.Ordinal)
+                && !directory.StartsWith("Assets/", StringComparison.Ordinal))
+                return InvalidParameters($"Scene directory must be under Assets/: {directory}");
+            // mkdir -p: agents organize scenes into folders, so create missing parents
+            // instead of failing (Unity's AssetDatabase requires each segment to exist).
+            if (!UnityEditor.AssetDatabase.IsValidFolder(directory))
+                EnsureAssetFolder(directory);
 
             if (UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.SceneAsset>(path) != null)
                 return InvalidParameters($"Scene already exists: {path}");
@@ -96,6 +103,21 @@ namespace Unityctl.Plugin.Editor.Commands
         }
 
 #if UNITY_EDITOR
+        private static void EnsureAssetFolder(string folder)
+        {
+            // folder like "Assets/VampireSurvivors/Scenes" — create each missing segment.
+            var parts = folder.Split('/');
+            var current = parts[0]; // "Assets"
+            for (int i = 1; i < parts.Length; i++)
+            {
+                if (string.IsNullOrEmpty(parts[i])) continue;
+                var next = current + "/" + parts[i];
+                if (!UnityEditor.AssetDatabase.IsValidFolder(next))
+                    UnityEditor.AssetDatabase.CreateFolder(current, parts[i]);
+                current = next;
+            }
+        }
+
         private static bool TryParseSceneSetup(string? template, out NewSceneSetup setup)
         {
             if (string.Equals(template, "empty", StringComparison.OrdinalIgnoreCase))

@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-06-17 (KST) — v0.4.0
+최종 업데이트: 2026-07-17 (KST) — v0.5.0 (Spatial Grounding + Agent Fleet + Play Step + dogfood 개선)
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
@@ -48,6 +48,8 @@
 - **Phase D: Volume/PostProcessing (volume-list/get/set-override/get-overrides, renderer-feature-list — 5개 명령)**: 구현 완료
 - **Phase E: Cinemachine (cinemachine-list/get/set-property — 3개 명령, capability gating)**: 구현 완료
 - **Phase I-2: UI Toolkit (uitk-find/get/set-value/click — 4개 명령, runtime capability check)**: 구현 완료
+- **Spatial Grounding (`spatial describe`/`spatial check` — 월드 AABB·true dimensions·표면 법선·covers/inside/on-top-of/overlaps/aligned 술어 판정, 스크린샷 없는 공간 그라운딩)**: 구현 완료 (.NET 표면 green + Unity 6000.3.16f1 라이브 IPC e2e 검증 — 천장 참사 covers FAIL→수정 PASS 재현)
+- **Agent Fleet (IPC `MaxServerInstances` 4→32)**: 구현 완료 — Unity 공식 MCP의 "Capacity Limit"과 달리 로컬 상한이라 자유 조정. Unity 6000.3.16f1에서 16개 동시 에이전트 `spatial check` 100% 성공(0 busy/timeout) 실측. 명령은 메인 스레드에서 직렬 실행되어 안전.
 
 - **MCP Prompts (create_game_scene, debug_game, iterate_gameplay, setup_project — 4개 AI 워크플로우 프롬프트)**: 구현 완료
 - **CLI Feedback Fixes (CLI-012 prefab-instantiate, CLI-014 asset copy 외부 경로, CLI-000 IPC 30초 메시지 타임아웃)**: 구현 완료. Unity 6 라이브 테스트 통과.

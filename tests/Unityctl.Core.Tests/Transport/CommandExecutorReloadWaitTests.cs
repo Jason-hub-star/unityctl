@@ -104,8 +104,10 @@ public sealed class CommandExecutorReloadWaitTests : IDisposable
     [Fact]
     public async Task ExecuteAsync_ProbeFailsAndStateStale_SkipsReloadWait()
     {
-        // Setup: state file exists but is stale (updated >15s ago)
-        var staleTime = DateTime.UtcNow.AddSeconds(-20);
+        // Setup: state file exists but is stale beyond the reload window (a genuinely
+        // dead editor, not a slow reload). A reloading state is now trusted for the
+        // whole reload budget, so "stale" must exceed IpcReloadStaleMs to skip the wait.
+        var staleTime = DateTime.UtcNow.AddMilliseconds(-(Constants.IpcReloadStaleMs + 10_000));
         WriteStateFile(IpcStateValues.Reloading, staleTime);
 
         var mockStateReader = new MockIpcStateReader(

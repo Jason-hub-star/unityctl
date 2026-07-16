@@ -73,6 +73,23 @@ namespace Unityctl.Plugin.Editor.Commands
         }
 
 #if UNITY_EDITOR
+        // Accept the array form [x,y,z] for vector/color values, consistent with
+        // mesh create-primitive's --position/--scale. Agents naturally reuse that
+        // format, so support it alongside the {"x":..,"y":..} object form.
+        private static bool TryReadFloatArray(JToken token, int count, out float[] vals)
+        {
+            vals = null;
+            if (token is JArray arr && arr.Count >= count)
+            {
+                var parsed = new float[count];
+                for (int i = 0; i < count; i++)
+                    parsed[i] = arr[i].Value<float>();
+                vals = parsed;
+                return true;
+            }
+            return false;
+        }
+
         private static bool SetPropertyValue(UnityEditor.SerializedProperty prop, string valueStr)
         {
             try
@@ -133,6 +150,12 @@ namespace Unityctl.Plugin.Editor.Commands
                                 colorObj.Value<float>("a"));
                             return true;
                         }
+                        if (TryReadFloatArray(jsonValue, 3, out var colArr))
+                        {
+                            var a = jsonValue is JArray ca && ca.Count >= 4 ? ca[3].Value<float>() : 1f;
+                            prop.colorValue = new UnityEngine.Color(colArr[0], colArr[1], colArr[2], a);
+                            return true;
+                        }
                         return false;
 
                     case UnityEditor.SerializedPropertyType.Vector2:
@@ -141,6 +164,11 @@ namespace Unityctl.Plugin.Editor.Commands
                             prop.vector2Value = new UnityEngine.Vector2(
                                 v2Obj.Value<float>("x"),
                                 v2Obj.Value<float>("y"));
+                            return true;
+                        }
+                        if (TryReadFloatArray(jsonValue, 2, out var v2Arr))
+                        {
+                            prop.vector2Value = new UnityEngine.Vector2(v2Arr[0], v2Arr[1]);
                             return true;
                         }
                         return false;
@@ -152,6 +180,11 @@ namespace Unityctl.Plugin.Editor.Commands
                                 v3Obj.Value<float>("x"),
                                 v3Obj.Value<float>("y"),
                                 v3Obj.Value<float>("z"));
+                            return true;
+                        }
+                        if (TryReadFloatArray(jsonValue, 3, out var v3Arr))
+                        {
+                            prop.vector3Value = new UnityEngine.Vector3(v3Arr[0], v3Arr[1], v3Arr[2]);
                             return true;
                         }
                         return false;
@@ -166,6 +199,11 @@ namespace Unityctl.Plugin.Editor.Commands
                                 v4Obj.Value<float>("w"));
                             return true;
                         }
+                        if (TryReadFloatArray(jsonValue, 4, out var v4Arr))
+                        {
+                            prop.vector4Value = new UnityEngine.Vector4(v4Arr[0], v4Arr[1], v4Arr[2], v4Arr[3]);
+                            return true;
+                        }
                         return false;
 
                     case UnityEditor.SerializedPropertyType.Quaternion:
@@ -176,6 +214,11 @@ namespace Unityctl.Plugin.Editor.Commands
                                 qObj.Value<float>("y"),
                                 qObj.Value<float>("z"),
                                 qObj.Value<float>("w"));
+                            return true;
+                        }
+                        if (TryReadFloatArray(jsonValue, 4, out var qArr))
+                        {
+                            prop.quaternionValue = new UnityEngine.Quaternion(qArr[0], qArr[1], qArr[2], qArr[3]);
                             return true;
                         }
                         return false;

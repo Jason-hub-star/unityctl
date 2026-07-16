@@ -9,10 +9,14 @@ internal static class CliCommandSuggestions
 {
     private static readonly string[] KnownCommands = CommandCatalog.All
         .Select(command => command.CliName ?? command.Name)
+        // Play verbs are listed here because the catalog exposes them under a single
+        // placeholder CliName ("play <start|stop|pause>"). Any new "play <verb>" must be
+        // added here too, or this gate rejects it before ConsoleAppFramework dispatches.
         .Concat([
             "play start",
             "play stop",
-            "play pause"
+            "play pause",
+            "play step"
         ])
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(command => command, StringComparer.OrdinalIgnoreCase)

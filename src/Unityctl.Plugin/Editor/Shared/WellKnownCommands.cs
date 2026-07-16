@@ -171,6 +171,10 @@ namespace Unityctl.Plugin.Editor.Shared
         public const string CameraList = "camera-list";
         public const string CameraGet = "camera-get";
 
+        // Spatial (measured scene grounding — bounds/orientation instead of screenshots)
+        public const string SpatialDescribe = "spatial-describe";
+        public const string SpatialCheck = "spatial-check";
+
         // Texture Import
         public const string TextureGetImportSettings = "texture-get-import-settings";
         public const string TextureSetImportSettings = "texture-set-import-settings";
