@@ -35,7 +35,7 @@ namespace Unityctl.Plugin.Editor.Commands
             result["subject"] = a.name;
             result["target"] = b.name;
 
-            var pass = result["pass"] != null && result["pass"].Value<bool>();
+            var pass = result.Value<bool>("pass");
             return Ok($"{a.name} {normalized} {b.name}: {(pass ? "PASS" : "FAIL")}", result);
         }
     }

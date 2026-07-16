@@ -72,7 +72,11 @@
   - **근사됨(경계)**: Plugin `SpatialDescribeHandler`/`SpatialCheckHandler`/`SpatialGeometryUtility`는 Unity API 의존 → 여기서 `dotnet build` 불가. 소스는 code-patterns 준수로 authored·가드레일이 소스 파싱으로 커버리지 검증. 실제 컴파일/런타임은 Unity Editor에서 확인 필요.
   - **막힘**: 없음.
   - **불확실**: 회전된 슬래브의 world AABB 팽창은 true-size(mesh bounds×lossyScale)로 보정하나, MeshFilter 없는 합성 오브젝트는 orientation "unknown"으로 폴백(footprint/gap만 판정). 실 씬에서 검증 권장.
-- **다음 러닝**: B(fleet) — 사용자가 최우선으로 지목. 러닝 A의 `spatial check`를 병렬 감사 데모에 사용. 승인 게이트 후 진행.
+- 2026-07-16 Claude Code(Fable 5) — **직접 e2e 테스트(성역)**: 데모 프로젝트에 플러그인 동기화 → Unity 6000.3.16f1 부팅 → 실제 GameObject 대상 라이브 IPC 검증.
+  - **직접 테스트가 유닛테스트로 못 잡는 실컴파일 버그 포착**: `SpatialCheckHandler.cs:38` `result["pass"].Value<bool>()` → Newtonsoft에서 CS7036(단일 JToken의 `Value<T>()`는 key 필요). `result.Value<bool>("pass")`로 수정 → Unity 재컴파일 성공, IPC ready.
+  - **재현됨(실렌더/실행)**: `spatial describe Cover` → worldBounds size (0.3,4,6), thinAxis X, surfaceNormal +X(옆을 향함). `spatial check Cover covers Ceiling` → **FAIL**(footprint 0.3×6 < 10×10, thin axis 90° off vertical). 덮개를 수평 풀사이즈로 고친 `GoodCover covers Ceiling` → **PASS**. `overlaps` → volume 0.09 m³. 전 술어 수학 실 Unity에서 정확.
+  - **결론**: 천장 참사를 스크린샷 없이 수치로 사전 차단하는 기능이 실제로 동작함을 증명. 남은 경계 없음(러닝 A 완료).
+- **다음 러닝**: B(fleet). 사용자 지시 "다음루프로 진행 항상" → 승인 대기 없이 진행. 러닝 A의 `spatial check`를 16-agent 병렬 감사 데모에 사용.
 
 ---
 
