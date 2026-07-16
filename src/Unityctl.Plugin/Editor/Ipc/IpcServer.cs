@@ -28,7 +28,13 @@ namespace Unityctl.Plugin.Editor.Ipc
             EditorQuit
         }
 
-        private const int MaxServerInstances = 4;
+        // Max simultaneous client connections to one editor. This is the local analog
+        // of Unity's official-MCP "Capacity Limit", except it is a pipe parameter we
+        // control (not a cloud license): raised to give agent swarms / Claude Code
+        // subagent fleets headroom so connections don't serialize through retry.
+        // Commands still execute serially on the main thread, so this is safe.
+        // NamedPipeServerStream allows up to 254.
+        private const int MaxServerInstances = 32;
         private const int PipeBusyRetryDelayMs = 250;
         private const int ErrorPipeBusy = 231;
 
