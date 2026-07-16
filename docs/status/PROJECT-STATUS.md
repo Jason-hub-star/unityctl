@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-06-17 (KST) — v0.4.0
+최종 업데이트: 2026-07-17 (KST) — v0.5.0 (Spatial Grounding + Agent Fleet + Play Step + dogfood 개선)
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
