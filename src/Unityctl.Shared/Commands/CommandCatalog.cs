@@ -286,11 +286,12 @@ public static class CommandCatalog
 
     public static readonly CommandDefinition PlayMode = Define(
         WellKnownCommands.PlayMode,
-        "Control Unity play mode (start, stop, pause)",
+        "Control Unity play mode (start, stop, pause, step). action=step advances N frames deterministically even when the Editor is unfocused — for verifying time-based gameplay",
         "action",
         Parameter("project", "string", "Path to Unity project", required: true),
-        Parameter("action", "string", "Play mode action: start, stop, pause", required: true),
-        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("play <start|stop|pause>");
+        Parameter("action", "string", "Play mode action: start, stop, pause, step", required: true),
+        Parameter("frames", "int", "For action=step: number of frames to advance (default 1)", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("play <start|stop|pause|step>");
 
     public static readonly CommandDefinition PlayerSettings = Define(
         WellKnownCommands.PlayerSettings,

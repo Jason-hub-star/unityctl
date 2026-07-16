@@ -139,6 +139,9 @@ app.Add("play stop", (string project, bool json = false) =>
 app.Add("play pause", (string project, bool json = false) =>
     PlayModeCommand.Execute(project, "pause", json));
 
+app.Add("play step", (string project, int frames = 1, bool json = false) =>
+    PlayModeCommand.Step(project, frames, json));
+
 app.Add("player-settings get", (string project, string key, bool json = false) =>
     PlayerSettingsCommand.Get(project, key, json));
 

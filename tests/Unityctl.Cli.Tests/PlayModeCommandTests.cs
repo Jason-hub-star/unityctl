@@ -19,4 +19,26 @@ public class PlayModeCommandTests
     {
         Assert.Throws<ArgumentException>(() => PlayModeCommand.CreateRequest(""));
     }
+
+    [Fact]
+    public void CreateStepRequest_HasStepAction()
+    {
+        var request = PlayModeCommand.CreateStepRequest(1);
+        Assert.Equal(WellKnownCommands.PlayMode, request.Command);
+        Assert.Equal("step", request.Parameters!["action"]!.ToString());
+    }
+
+    [Fact]
+    public void CreateStepRequest_DefaultOneFrame_OmitsFramesParam()
+    {
+        var request = PlayModeCommand.CreateStepRequest(1);
+        Assert.Null(request.Parameters!["frames"]);
+    }
+
+    [Fact]
+    public void CreateStepRequest_MultipleFrames_SetsFramesParam()
+    {
+        var request = PlayModeCommand.CreateStepRequest(30);
+        Assert.Equal(30, request.Parameters!["frames"]!.GetValue<int>());
+    }
 }
