@@ -127,12 +127,27 @@ public sealed class IpcStateReaderTests : IDisposable
     }
 
     [Fact]
-    public void IsReloadingFresh_ReloadingButStale_ReturnsFalse()
+    public void IsReloadingFresh_ReloadingWithinReloadWindow_ReturnsTrue()
+    {
+        // Regression: a 20s-old reloading state used to be judged stale (15s window)
+        // and the client dropped IPC mid-reload. A reloading editor cannot heartbeat,
+        // so its state must be trusted for the whole reload budget, not 15s.
+        var state = new IpcState
+        {
+            State = IpcStateValues.Reloading,
+            UpdatedAtUtc = DateTime.UtcNow.AddSeconds(-20)
+        };
+
+        Assert.True(state.IsReloadingFresh());
+    }
+
+    [Fact]
+    public void IsReloadingFresh_ReloadingBeyondReloadWindow_ReturnsFalse()
     {
         var state = new IpcState
         {
             State = IpcStateValues.Reloading,
-            UpdatedAtUtc = DateTime.UtcNow.AddSeconds(-20) // Beyond 15s stale window
+            UpdatedAtUtc = DateTime.UtcNow.AddMilliseconds(-(Constants.IpcReloadStaleMs + 5_000))
         };
 
         Assert.False(state.IsReloadingFresh());

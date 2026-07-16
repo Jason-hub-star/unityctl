@@ -60,11 +60,21 @@ namespace Unityctl.Plugin.Editor.Commands
             if (!isFile && !isDirectory)
                 return Fail(StatusCode.NotFound, $"External source not found: {absoluteSource}");
 
-            // Resolve destination to absolute path within project
-            var projectRoot = System.IO.Path.GetDirectoryName(UnityEngine.Application.dataPath);
-            var absoluteDest = System.IO.Path.IsPathRooted(destination)
-                ? destination
-                : System.IO.Path.Combine(projectRoot, destination);
+            // Resolve destination to absolute path within project.
+            var projectRoot = System.IO.Path.GetFullPath(
+                System.IO.Path.GetDirectoryName(UnityEngine.Application.dataPath));
+            var absoluteDest = System.IO.Path.GetFullPath(
+                System.IO.Path.IsPathRooted(destination)
+                    ? destination
+                    : System.IO.Path.Combine(projectRoot, destination));
+
+            // `asset copy` imports an external file INTO the project. The destination must
+            // never resolve outside the project root — an absolute or "../" destination
+            // would otherwise let an IPC caller write files anywhere the editor user can,
+            // which is a filesystem escape, not an asset operation.
+            if (!IsInsideProject(projectRoot, absoluteDest))
+                return InvalidParameters(
+                    $"Destination must be inside the project. '{destination}' resolves outside '{projectRoot}'.");
 
             try
             {
@@ -96,6 +106,21 @@ namespace Unityctl.Plugin.Editor.Commands
                 ["path"] = destination,
                 ["guid"] = guid ?? ""
             });
+        }
+
+        private static bool IsInsideProject(string projectRoot, string candidate)
+        {
+            var root = projectRoot.TrimEnd(
+                System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+            // Case-insensitive: Unity runs on Windows/macOS with case-insensitive
+            // filesystems by default; the real escape vectors ("/etc/...", "..") differ
+            // from the project root regardless of case.
+            if (string.Equals(candidate, root, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+            return candidate.StartsWith(
+                       root + System.IO.Path.DirectorySeparatorChar, System.StringComparison.OrdinalIgnoreCase)
+                   || candidate.StartsWith(
+                       root + System.IO.Path.AltDirectorySeparatorChar, System.StringComparison.OrdinalIgnoreCase);
         }
 
         private static void CopyDirectory(string sourceDir, string destDir)
