@@ -33,6 +33,7 @@
 | 1 | it1 | `scene create`가 부모 폴더 없으면 실패 — mkdir -p 미지원 | P2 | **FIXED+검증**: SceneCreateHandler `EnsureAssetFolder`. Unity 6000.3.16f1에서 `Assets/VampireSurvivors/Game.unity` 폴더 자동생성 확인 |
 | 2 | it1 | `script create`가 초기 content 미지원 → create→edit 2단계, 각각 도메인 리로드 유발. 게임빌드는 스크립트 다수 생성 → 리로드 폭주로 후속 명령 블록/타임아웃 | P2(중요) | 계획: `script create --content/--content-file` 추가(1명령=1리로드). 다음 iteration |
 | (관찰) | it1 | 스크립트 생성 직후 명령은 도메인 리로드 대기로 블록됨(리로드 내성 fix 덕에 타임아웃 대신 대기하나 느림). 에이전트는 리로드 사이 settle을 기다려야 함 | — | 관찰. gap#2 fix가 리로드 횟수 절반으로 완화 |
+| 3 | it2 | `component set-property`가 Vector2/3/4·Color를 `{"x":..}` 객체형만 받고 `[x,y,z]` 배열형은 거부 — 근데 `mesh create-primitive`는 `[x,y,z]`를 씀 → **포맷 불일치 트랩**. 에이전트가 position 포맷 재사용하면 실패 | P1(핵심, 게임빌드 상시) | **FIXED+검증**: `TryReadFloatArray` 추가(Vector2/3/4·Quaternion·Color 배열형 수용). 라이브: `manualDirection=[1,0]` → `{"x":1,"y":0}` 성공 |
 
 ## ctl 자기개선 커밋 로그
 - `SceneCreateHandler` mkdir -p (gap#1) — 커밋 예정 이번 checkpoint
