@@ -373,8 +373,8 @@ app.Add("script list", (string project, string? folder = null, string? filter = 
     ScriptCommand.List(project, folder, filter, limit, json));
 
 // Script Editing v1
-app.Add("script create", (string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", bool json = false) =>
-    ScriptCommand.Create(project, path, className, ns, baseType, json));
+app.Add("script create", (string project, string path, string className, string? ns = null, string baseType = "MonoBehaviour", string? content = null, string? contentFile = null, bool json = false) =>
+    ScriptCommand.Create(project, path, className, ns, baseType, content, contentFile, json));
 
 app.Add("script edit", (string project, string path, string? content = null, string? contentFile = null, bool json = false) =>
     ScriptCommand.Edit(project, path, content, contentFile, json));

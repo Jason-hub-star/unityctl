@@ -56,6 +56,20 @@ public class ScriptCommandTests
     }
 
     [Fact]
+    public void CreateCreateRequest_NoContent_OmitsContentParam()
+    {
+        var request = ScriptCommand.CreateCreateRequest("Assets/Scripts/Test.cs", "Test", null, "MonoBehaviour");
+        Assert.Null(request.Parameters!["content"]);
+    }
+
+    [Fact]
+    public void CreateCreateRequest_WithContent_SetsContentParam()
+    {
+        var request = ScriptCommand.CreateCreateRequest("Assets/Scripts/Test.cs", "Test", null, "MonoBehaviour", "public class Test {}");
+        Assert.Equal("public class Test {}", request.Parameters!["content"]!.ToString());
+    }
+
+    [Fact]
     public void CreateEditRequest_HasCorrectCommand()
     {
         var request = ScriptCommand.CreateEditRequest("Assets/Scripts/Test.cs", "using UnityEngine;");

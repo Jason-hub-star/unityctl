@@ -830,6 +830,8 @@ public static class CommandCatalog
         Parameter("className", "string", "C# class name (must match filename)", required: true),
         Parameter("namespace", "string", "C# namespace", required: false),
         Parameter("baseType", "string", "Base class (default: MonoBehaviour). Known: MonoBehaviour, ScriptableObject, Editor, EditorWindow", required: false),
+        Parameter("content", "string", "Initial file content (inline). Skips the template — one command, one domain reload", required: false),
+        Parameter("contentFile", "string", "Path to a file whose text becomes the script. Skips the template", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("script create");
 
     public static readonly CommandDefinition ScriptEditCmd = Define(
