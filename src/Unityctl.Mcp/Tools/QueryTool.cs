@@ -50,6 +50,9 @@ internal sealed class QueryTool(CommandExecutor executor)
         // Camera
         WellKnownCommands.CameraList,
         WellKnownCommands.CameraGet,
+        // Spatial
+        WellKnownCommands.SpatialDescribe,
+        WellKnownCommands.SpatialCheck,
         // Texture Import
         WellKnownCommands.TextureGetImportSettings,
         // ScriptableObject

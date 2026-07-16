@@ -489,6 +489,12 @@ app.Add("camera list", (string project, bool includeInactive = false, bool json 
 app.Add("camera get", (string project, string id, bool json = false) =>
     CameraCommand.Get(project, id, json));
 
+app.Add("spatial describe", (string project, string target, bool full = false, bool json = false) =>
+    SpatialCommand.Describe(project, target, full, json));
+
+app.Add("spatial check", (string project, string subject, string predicate, string target, bool json = false) =>
+    SpatialCommand.Check(project, subject, predicate, target, json));
+
 // Texture Import
 app.Add("texture get-import-settings", (string project, string path, bool json = false) =>
     TextureCommand.GetImportSettings(project, path, json));

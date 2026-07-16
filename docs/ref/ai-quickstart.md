@@ -159,6 +159,19 @@ unityctl camera list --project "/path/to/project" --json
 # Get camera details
 unityctl camera get --project "/path/to/project" --id "<GlobalObjectId>" --json
 
+# Spatial grounding — read the scene as MEASURED facts, not a screenshot.
+# Unity already knows every bound/normal, so measure instead of making a vision
+# model re-derive geometry from pixels (cheaper AND more precise).
+# Describe an object: world AABB, true (rotation-invariant) size, thin/long axis,
+# surface normal, pivot offset. summary-by-default; --full adds min/max + rotation.
+unityctl spatial describe --project "/path/to/project" --target "Ceiling" --json
+
+# Check a spatial predicate with numeric reasons (footprint, gap, rotation error).
+# Catches spatial mistakes like "ceiling cover placed as a vertical wall" before commit:
+#   FAIL: footprint 0.3x6 (need >=10x10), thin axis 90 deg off vertical, gap 2.0m
+unityctl spatial check --project "/path/to/project" --subject "Cover" --predicate covers --target "Ceiling" --json
+# predicates: covers | inside | on-top-of | overlaps | aligned
+
 # Find ScriptableObject assets
 unityctl scriptableobject find --project "/path/to/project" --type "GameConfig" --json
 

@@ -1205,6 +1205,26 @@ public static class CommandCatalog
         Parameter("id", "string", "GlobalObjectId of the Camera component or its GameObject", required: true),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("camera get");
 
+    // Spatial — measured scene grounding (world AABB / orientation / predicates), not screenshots
+    public static readonly CommandDefinition SpatialDescribeCmd = Define(
+        WellKnownCommands.SpatialDescribe,
+        "Describe a GameObject's world bounds, true dimensions, thin/long axis, surface normal, and pivot offset (summary-by-default; --full for min/max and per-renderer)",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("target", "string", "GlobalObjectId, hierarchy path, or name of the GameObject", required: true),
+        Parameter("full", "bool", "Include min/max, per-renderer breakdown, rotation, and scale", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("spatial describe");
+
+    public static readonly CommandDefinition SpatialCheckCmd = Define(
+        WellKnownCommands.SpatialCheck,
+        "Check a spatial predicate (covers|inside|on-top-of|overlaps|aligned) between two GameObjects with numeric reasons (footprint, gap, rotation error, overlap)",
+        "query",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("subject", "string", "GlobalObjectId, path, or name of the subject GameObject", required: true),
+        Parameter("predicate", "string", "One of: covers, inside, on-top-of, overlaps, aligned", required: true),
+        Parameter("target", "string", "GlobalObjectId, path, or name of the reference GameObject", required: true),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("spatial check");
+
     // Texture Import
     public static readonly CommandDefinition TextureGetImportSettingsCmd = Define(
         WellKnownCommands.TextureGetImportSettings,
@@ -1669,6 +1689,9 @@ public static class CommandCatalog
         // Camera
         CameraListCmd,
         CameraGetCmd,
+        // Spatial
+        SpatialDescribeCmd,
+        SpatialCheckCmd,
         // Texture Import
         TextureGetImportSettingsCmd,
         TextureSetImportSettingsCmd,
