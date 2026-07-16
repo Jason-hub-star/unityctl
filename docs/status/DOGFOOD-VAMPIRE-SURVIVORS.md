@@ -1,5 +1,7 @@
 # Dogfood Loop — Vampire Survivors (build a full game to self-improve unityctl)
 
+> **LOOP STATUS: PAUSED (2026-07-17)** — 사용자가 "여기까지" 하고 v0.5.0 릴리스를 요청해 루프 일시정지. 예약 wakeup이 발동해도 **작업하지 말고 정지**한다. 사용자가 명시적으로 "ㄱ"/재개할 때만 M3(무기)부터 다시 시작.
+
 **Directive (user, 2026-07-16):** unityctl로 완전한 뱀서(Vampire Survivors)류 게임을 만들면서 ctl의 취약점·개선점을 파악하고 **자기개선(ctl 수정·커밋)**한다. 무한루프 — 사용자가 "끝"이라 할 때까지 계속 개선점을 찾아 ctl을 self-improve. 시중 뱀서 장점을 모아 완전한 게임 목표.
 
 **진짜 deliverable = unityctl self-improvement.** 게임은 ctl 갭을 드러내는 vehicle. 게임 진척 + 발견한 ctl 갭 + 적용한 ctl 수정을 매 iteration 기록.
