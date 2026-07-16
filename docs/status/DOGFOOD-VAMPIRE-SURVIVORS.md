@@ -54,9 +54,10 @@
 ## 현재 상태 / 다음 액션 (RESUME POINT)
 - **게임 진척(M1 done)**: 씬 `Assets/VampireSurvivors/Game.unity` + `Scripts/PlayerMovement.cs`(agent-testable 이동) + Player 캡슐 + PlayerMovement 컴포넌트. **play mode에서 이동 검증완료**(포커스 시 x 0.32→71→87). Player GOID `...308252`, PlayerMovement 컴포넌트 GOID `...308257`.
 - **에디터**: pid 53435, IPC ready. (비포커스 스로틀 주의 — gap#4)
+- **완료**: gap#1(scene mkdir-p), gap#2(script create --content-file), gap#3(set-property 배열형), gap#4(**play step --frames N**), gap#7(CLI allowlist 게이트). 카메라 static top-down. **이제 `play step`으로 시간기반 게임플레이를 포커스 무관 검증 가능.**
 - **다음 액션 (재개 시, 우선순위)**:
-  1. **gap#4 최우선**: `play step --frames N`/`--seconds S` 신규 명령(EditorApplication.Step, 포커스 무관 결정적 전진). 자율 verify loop의 핵심 인프라. 7계층 + 테스트 + e2e.
-  2. gap#2: `script create --content-file`(create→edit 2리로드를 1로).
-  3. 카메라 top-down follow.
-  4. M2 적: 스폰 + 플레이어 추격 스크립트 → play step으로 검증.
+  1. **M2 적**: Enemy 캡슐 + 플레이어 추격 스크립트(EnemyChase.cs, script create --content-file 사용) → play start → play step --frames N → 적이 플레이어로 접근하는지 spatial describe/check로 검증.
+  2. 적 스폰너(시간에 따라 스폰) + 난이도 스케일.
+  3. (선택) 카메라 follow 스크립트, gap#6(`gameobject set-transform`), gap#7 deeper(allowlist 자동화).
+  4. M3 자동공격 무기.
 - **환경 메모**: 게임=`/Users/family/jason/unityctl-demo`(Unity 6000.3.16f1). ctl 수정=이 repo. **Plugin 수정 절차**: 소스 편집 → 데모 plugin에 `cp` sync → `open -a`로 Unity 포커스(recompile) → ipc-state fresh "ready" 대기 → 테스트. 빌드 dll: `src/Unityctl.Cli/bin/Debug/net10.0/unityctl.dll`. **주의**: 머신 부하 시 리로드가 길어짐(포커스로 nudge). play mode 시간검증은 포커스 필요(gap#4 fix 전까지).
