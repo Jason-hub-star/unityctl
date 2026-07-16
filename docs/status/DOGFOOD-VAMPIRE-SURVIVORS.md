@@ -14,7 +14,7 @@
 5. 컨텍스트가 요약돼도 이 문서만 읽으면 이어갈 수 있게 유지(SSOT).
 
 ## 게임 로드맵 (시중 뱀서 장점 종합)
-- [x] M1 Player: top-down 이동(WASD) — **검증완료**(play mode에서 x 0.32→71.68→87.15, moveSpeed=8). 카메라 follow는 미완(다음)
+- [x] M1 Player: top-down 이동(WASD) — **검증완료**(play mode에서 x 0.32→71.68→87.15, moveSpeed=8). 카메라 **static top-down 배치완료**(pos [0,18,0], rot look-down). follow 스크립트는 미완
 - [ ] M2 Enemy: 스폰 + 플레이어 추격(chase), 시간에 따른 난이도 스케일
 - [ ] M3 Combat: 자동공격 무기(투사체/오라) — VS 시그니처(무기 자동)
 - [ ] M4 XP/Level: 젬 드롭·픽업 → 레벨업 3카드 선택
@@ -32,7 +32,10 @@
 |---|---|---|---|---|
 | 1 | it1 | `scene create`가 부모 폴더 없으면 실패 — mkdir -p 미지원 | P2 | **FIXED+검증**: SceneCreateHandler `EnsureAssetFolder`. Unity 6000.3.16f1에서 `Assets/VampireSurvivors/Game.unity` 폴더 자동생성 확인 |
 | 2 | it1 | `script create`가 초기 content 미지원 → create→edit 2단계, 각각 도메인 리로드 유발. 게임빌드는 스크립트 다수 생성 → 리로드 폭주로 후속 명령 블록/타임아웃 | P2(중요) | **FIXED+검증**: `script create --content/--content-file` 추가(7계층+테스트). 라이브: ContentProbe.cs를 1명령에 내 내용으로 생성 확인(GAP2_MARKER) |
-| 5 | it2 | **부하 시 도메인 리로드가 "reloading"에 5분+ 멈춤** — 부트스트랩이 `isUpdating`(패키지/ILPP) 완료를 무한정 대기, 타임아웃/폴백 없음. Unity 포커스(`open -a`) nudge로 복구됨. 재컴파일 많은 세션에서 재현적 | P2(로봇성) | **관찰·재현**: 매번 focus nudge로 복구. 근본 fix 후보: 부트스트랩 재시작에 워치독/타임아웃, 또는 리로드 없는 배치 스크립트 쓰기. 조사 대상 |
+| 5 | it2 | **부하 시 도메인 리로드가 "reloading"에 5~10분 멈춤** — 부트스트랩이 `isUpdating`(패키지/ILPP) 완료를 무한정 대기, 타임아웃/폴백 없음. Unity 포커스(`open -a`) nudge로 복구됨. 재컴파일 많은 세션에서 재현적(주: 이 세션이 Plugin을 반복 재컴파일해 머신 포화시킨 게 증폭 원인 — 정상 에이전트 사용에선 덜함) | P2(로봇성) | **관찰·재현**: 매번 focus nudge로 복구. 근본 fix 후보: 부트스트랩 재시작 워치독/타임아웃, 리로드 없는 배치 스크립트 쓰기 |
+| 6 | it2 | **직접 transform setter 부재**: 생성 후 오브젝트 위치/회전을 바꾸려면 Transform 컴포넌트의 `m_LocalPosition`/`m_LocalRotation` SerializedProperty를 set-property로 건드려야 하고, 회전은 **raw 쿼터니언**을 줘야 함(에이전트에 불친절). `gameobject move`는 재부모화지 위치이동 아님 | P2(ergonomics) | **후보**: `gameobject set-transform --position/--rotation(euler)/--scale` 신규 명령. gap#3 배열형 재사용 |
+
+**gap#3 추가검증**: 카메라 배치에서 Vector3 `[0,18,0]` + Quaternion `[0.7071,0,0,0.7071]` 배열형 모두 성공 — gap#3 fix가 Vector2뿐 아니라 Vector3·Quaternion에도 동작함 확인.
 | (관찰) | it1 | 스크립트 생성 직후 명령은 도메인 리로드 대기로 블록됨(리로드 내성 fix 덕에 타임아웃 대신 대기하나 느림). 에이전트는 리로드 사이 settle을 기다려야 함 | — | 관찰. gap#2 fix가 리로드 횟수 절반으로 완화 |
 | 3 | it2 | `component set-property`가 Vector2/3/4·Color를 `{"x":..}` 객체형만 받고 `[x,y,z]` 배열형은 거부 — 근데 `mesh create-primitive`는 `[x,y,z]`를 씀 → **포맷 불일치 트랩**. 에이전트가 position 포맷 재사용하면 실패 | P1(핵심, 게임빌드 상시) | **FIXED+검증**: `TryReadFloatArray` 추가(Vector2/3/4·Quaternion·Color 배열형 수용). 라이브: `manualDirection=[1,0]` → `{"x":1,"y":0}` 성공 |
 | 4 | it2 | **에디터 비포커스 시 play mode 프레임 업데이트가 스로틀**됨 → 에이전트가 시간기반 게임플레이(이동/스폰/타이머)를 검증할 때 Update가 거의 안 돌아 위치 변화가 안 잡힘. 포커스하면 정상(x 0.32→71→87). 즉 에이전트의 자율 검증루프가 play mode 관찰에서 불안정 | P1(자율 verify loop 핵심) | **계획**: `play step --frames N`(또는 `--seconds S`) 신규 명령 — `EditorApplication.Step()`로 포커스 무관 결정적 프레임 전진 후 상태 읽기. 다음 iteration 최우선 |
