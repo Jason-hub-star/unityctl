@@ -15,7 +15,7 @@
 
 ## 게임 로드맵 (시중 뱀서 장점 종합)
 - [x] M1 Player: top-down 이동(WASD) — **검증완료**(play mode에서 x 0.32→71.68→87.15, moveSpeed=8). 카메라 **static top-down 배치완료**(pos [0,18,0], rot look-down). follow 스크립트는 미완
-- [ ] M2 Enemy: 스폰 + 플레이어 추격(chase), 시간에 따른 난이도 스케일
+- [~] M2 Enemy: 플레이어 추격(chase) **검증완료** — EnemyChase.cs(script create --content-file) + Enemy 캡슐. play start → play step --frames 60 → Enemy 거리 11.88→8.28(속도3×60프레임=3.6 정확), 비포커스 결정적 검증. **주목: M2를 신규 ctl 갭 0개로 빌드** — gap#1~4 수정이 마찰을 없앰(도그푸드 루프 효과 입증). 남음: 스폰너 + 난이도 스케일
 - [ ] M3 Combat: 자동공격 무기(투사체/오라) — VS 시그니처(무기 자동)
 - [ ] M4 XP/Level: 젬 드롭·픽업 → 레벨업 3카드 선택
 - [ ] M5 Weapons: 다무기(채찍/마법봉/마늘오라/단검) + 진화(evolution)
