@@ -15,7 +15,7 @@
 
 ## 게임 로드맵 (시중 뱀서 장점 종합)
 - [x] M1 Player: top-down 이동(WASD) — **검증완료**(play mode에서 x 0.32→71.68→87.15, moveSpeed=8). 카메라 **static top-down 배치완료**(pos [0,18,0], rot look-down). follow 스크립트는 미완
-- [~] M2 Enemy: 플레이어 추격(chase) **검증완료** — EnemyChase.cs(script create --content-file) + Enemy 캡슐. play start → play step --frames 60 → Enemy 거리 11.88→8.28(속도3×60프레임=3.6 정확), 비포커스 결정적 검증. **주목: M2를 신규 ctl 갭 0개로 빌드** — gap#1~4 수정이 마찰을 없앰(도그푸드 루프 효과 입증). 남음: 스폰너 + 난이도 스케일
+- [x] M2 Enemy: 추격 + 스폰너 + 난이도램프 **검증완료**. EnemyChase(거리 11.88→8.28) + EnemySpawner(링 스폰, interval 1→0.2s 램프): 적 수 1→4→8 (play step 180/360프레임). 전부 비포커스 결정적 검증. **신규 ctl 갭 0개로 빌드**(gap#1~4 효과 입증). 뱀서 기반 완성: 플레이어 이동·top-down 카메라·웨이브 스폰·추격·난이도.
 - [ ] M3 Combat: 자동공격 무기(투사체/오라) — VS 시그니처(무기 자동)
 - [ ] M4 XP/Level: 젬 드롭·픽업 → 레벨업 3카드 선택
 - [ ] M5 Weapons: 다무기(채찍/마법봉/마늘오라/단검) + 진화(evolution)
@@ -33,6 +33,7 @@
 | 1 | it1 | `scene create`가 부모 폴더 없으면 실패 — mkdir -p 미지원 | P2 | **FIXED+검증**: SceneCreateHandler `EnsureAssetFolder`. Unity 6000.3.16f1에서 `Assets/VampireSurvivors/Game.unity` 폴더 자동생성 확인 |
 | 2 | it1 | `script create`가 초기 content 미지원 → create→edit 2단계, 각각 도메인 리로드 유발. 게임빌드는 스크립트 다수 생성 → 리로드 폭주로 후속 명령 블록/타임아웃 | P2(중요) | **FIXED+검증**: `script create --content/--content-file` 추가(7계층+테스트). 라이브: ContentProbe.cs를 1명령에 내 내용으로 생성 확인(GAP2_MARKER) |
 | 5 | it2 | **부하 시 도메인 리로드가 "reloading"에 5~10분 멈춤** — 부트스트랩이 `isUpdating`(패키지/ILPP) 완료를 무한정 대기, 타임아웃/폴백 없음. Unity 포커스(`open -a`) nudge로 복구됨. 재컴파일 많은 세션에서 재현적(주: 이 세션이 Plugin을 반복 재컴파일해 머신 포화시킨 게 증폭 원인 — 정상 에이전트 사용에선 덜함) | P2(로봇성) | **관찰·재현**: 매번 focus nudge로 복구. 근본 fix 후보: 부트스트랩 재시작 워치독/타임아웃, 리로드 없는 배치 스크립트 쓰기 |
+| 8 | it4 | **긴 세션 리로드 저하 재확인 + self-heal 부재**: 프레시 에디터도 ~57분·다수 리로드 후 gap#5 재발(3~4분 stuck). 포커스 nudge/재시작으로 복구하나, 자율 루프엔 `unityctl editor restart` 같은 self-heal 명령이 없어 매번 수동 osascript. 실사용(스크립트 다수 생성)에서도 완만히 발생 | P2(자율 루프 편의) | **후보**: `editor restart --project`(kill+relaunch+await ready) 명령 — 루프가 리로드 저하 시 스스로 리셋. gap#5 완화 |
 | 6 | it2 | **직접 transform setter 부재**: 생성 후 오브젝트 위치/회전을 바꾸려면 Transform 컴포넌트의 `m_LocalPosition`/`m_LocalRotation` SerializedProperty를 set-property로 건드려야 하고, 회전은 **raw 쿼터니언**을 줘야 함(에이전트에 불친절). `gameobject move`는 재부모화지 위치이동 아님 | P2(ergonomics) | **후보**: `gameobject set-transform --position/--rotation(euler)/--scale` 신규 명령. gap#3 배열형 재사용 |
 
 **gap#3 추가검증**: 카메라 배치에서 Vector3 `[0,18,0]` + Quaternion `[0.7071,0,0,0.7071]` 배열형 모두 성공 — gap#3 fix가 Vector2뿐 아니라 Vector3·Quaternion에도 동작함 확인.
