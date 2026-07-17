@@ -25,7 +25,9 @@ namespace Unityctl.Plugin.Editor.Commands
 #if UNITY_EDITOR
             var typeName = request.GetParam("typeName", null);
             var full = request.GetParam<bool>("full");
-            var maxMembers = request.GetParam<int?>("maxMembers");
+            // GetParam<T> is constrained to non-nullable structs, so read an int sentinel (<=0 means "no limit").
+            var maxMembersRaw = request.GetParam<int>("maxMembers");
+            int? maxMembers = maxMembersRaw > 0 ? maxMembersRaw : (int?)null;
 
             if (string.IsNullOrEmpty(typeName))
             {
@@ -63,10 +65,10 @@ namespace Unityctl.Plugin.Editor.Commands
             if (full)
             {
                 // Full mode: include signatures
-                data["fields"] = ReflectFields(resolvedType, maxMembers, includeSerialized: true);
-                data["properties"] = ReflectProperties(resolvedType, maxMembers);
-                data["methods"] = ReflectMethods(resolvedType, maxMembers);
-                data["events"] = ReflectEvents(resolvedType, maxMembers);
+                data["fields"] = new JArray(ReflectFields(resolvedType, maxMembers, includeSerialized: true).ToArray());
+                data["properties"] = new JArray(ReflectProperties(resolvedType, maxMembers).ToArray());
+                data["methods"] = new JArray(ReflectMethods(resolvedType, maxMembers).ToArray());
+                data["events"] = new JArray(ReflectEvents(resolvedType, maxMembers).ToArray());
             }
             else
             {
@@ -212,7 +214,7 @@ namespace Unityctl.Plugin.Editor.Commands
                 if (includeSerialized)
                 {
                     var privateWithSerialize = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
-                        .Where(f => !f.IsSpecialName && f.GetCustomAttribute<SerializeField>() != null)
+                        .Where(f => !f.IsSpecialName && f.GetCustomAttribute<UnityEngine.SerializeField>() != null)
                         .ToList();
 
                     if (maxMembers.HasValue)

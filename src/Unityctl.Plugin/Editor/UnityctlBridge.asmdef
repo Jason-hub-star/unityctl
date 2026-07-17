@@ -1,7 +1,11 @@
 {
   "name": "UnityctlBridge",
   "rootNamespace": "Unityctl.Plugin.Editor",
-  "references": [],
+  "references": [
+    "UnityEngine.UI",
+    "UnityEditor.TestRunner",
+    "UnityEngine.TestRunner"
+  ],
   "includePlatforms": [
     "Editor"
   ],
