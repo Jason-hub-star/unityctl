@@ -25,13 +25,13 @@ public static class ConsoleOutput
         Out = new AnsiConsoleOutput(Console.Error)
     });
 
-    public static void PrintResponse(CommandResponse response)
+    public static void PrintResponse(CommandResponse response, IAnsiConsole? console = null)
     {
-        var console = CreateOut();
+        console ??= CreateOut();
 
         if (response.StatusCode == StatusCode.Accepted)
         {
-            console.MarkupLine("[cyan]ACCEPTED [104][/]" + FormatMessage(response.Message));
+            console.MarkupLine("[cyan]ACCEPTED [[104]][/]" + FormatMessage(response.Message));
         }
         else if (response.Success)
         {
@@ -39,7 +39,7 @@ public static class ConsoleOutput
         }
         else
         {
-            console.MarkupLine($"[red]FAIL [{response.StatusCode}][/]" + FormatMessage(response.Message));
+            console.MarkupLine("[red]" + Markup.Escape($"FAIL [{response.StatusCode}]") + "[/]" + FormatMessage(response.Message));
         }
 
         if (response.Data != null)
