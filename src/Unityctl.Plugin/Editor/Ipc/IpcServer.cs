@@ -432,14 +432,16 @@ namespace Unityctl.Plugin.Editor.Ipc
             _watchThread.Start();
 
             // Subscribe to Unity events on the MAIN thread
-            // (Application.logMessageReceivedThreaded requires main-thread subscription)
+            // (Application.logMessageReceivedThreaded requires main-thread subscription).
+            // update-based dispatch, not delayCall — delayCall never flushes on
+            // unattended (unfocused/locked-screen) editors.
             var capturedChannels = channels;
-            EditorApplication.delayCall += () =>
+            Utilities.MainThreadDispatch.RunDeferred(() =>
             {
                 if (!_watchActive) return;
                 _watchEventSource = new WatchEventSource(EnqueueWatchEvent, capturedChannels);
                 _watchEventSource.Subscribe();
-            };
+            });
 
             return true;
         }

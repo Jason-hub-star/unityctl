@@ -35,7 +35,10 @@ namespace Unityctl.Plugin.Editor.Bootstrap
             if (settings == null || !settings.Enabled)
                 return;
 
-            EditorApplication.delayCall += ScheduleStart;
+            // Schedule via EditorApplication.update, never delayCall: delayCall waits
+            // for a GUI repaint, which an unfocused/locked-screen editor never does,
+            // so the bridge would not start on unattended editors.
+            ScheduleStart();
         }
 
         private static void ScheduleStart()

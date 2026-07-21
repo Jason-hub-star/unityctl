@@ -23,29 +23,20 @@ namespace Unityctl.Plugin.Editor.Commands
 
             var requestId = request.requestId;
 
-            UnityEditor.EditorApplication.delayCall += () =>
+            // Two update ticks so the response can flush before domain reload side
+            // effects begin. update-based dispatch, not delayCall — delayCall never
+            // flushes on unattended (unfocused/locked-screen) editors.
+            Utilities.MainThreadDispatch.RunDeferred(() =>
             {
                 try
                 {
-                    // Defer the actual refresh one more editor tick so the Accepted response
-                    // can flush before domain reload side effects begin.
-                    UnityEditor.EditorApplication.delayCall += () =>
-                    {
-                        try
-                        {
-                            UnityEditor.AssetDatabase.Refresh();
-                        }
-                        catch (System.Exception e)
-                        {
-                            UnityEngine.Debug.LogError($"unityctl asset-refresh delayed execution failed: {e}");
-                        }
-                    };
+                    UnityEditor.AssetDatabase.Refresh();
                 }
                 catch (System.Exception e)
                 {
-                    UnityEngine.Debug.LogError($"unityctl asset-refresh scheduling failed: {e}");
+                    UnityEngine.Debug.LogError($"unityctl asset-refresh delayed execution failed: {e}");
                 }
-            };
+            }, delayTicks: 2);
 
             return Ok("Asset refresh scheduled", new JObject
             {
