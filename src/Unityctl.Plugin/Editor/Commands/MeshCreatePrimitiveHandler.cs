@@ -68,7 +68,7 @@ namespace Unityctl.Plugin.Editor.Commands
             // Set parent
             if (!string.IsNullOrEmpty(parentId))
             {
-                var parent = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(parentId);
+                var parent = GlobalObjectIdResolver.ResolveGameObject(parentId);
                 if (parent == null)
                     return Fail(StatusCode.NotFound, $"Parent not found: {parentId}");
                 go.transform.SetParent(parent.transform, true);

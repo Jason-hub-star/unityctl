@@ -19,7 +19,7 @@ namespace Unityctl.Plugin.Editor.Commands
             if (string.IsNullOrEmpty(path))
                 return InvalidParameters("Parameter 'path' is required.");
 
-            var go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(targetId);
+            var go = GlobalObjectIdResolver.ResolveGameObject(targetId);
             if (go == null)
                 return Fail(StatusCode.NotFound, $"GameObject not found: {targetId}");
 

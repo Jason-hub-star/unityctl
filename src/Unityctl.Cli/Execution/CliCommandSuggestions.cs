@@ -16,7 +16,11 @@ internal static class CliCommandSuggestions
             "play start",
             "play stop",
             "play pause",
-            "play step"
+            "play step",
+            // Player-runtime verbs target a dev build, not the editor transport,
+            // so they live outside the catalog (see RuntimeCommand).
+            "runtime status",
+            "runtime logs"
         ])
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(command => command, StringComparer.OrdinalIgnoreCase)

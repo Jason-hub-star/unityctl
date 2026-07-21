@@ -36,11 +36,12 @@ namespace Unityctl.Plugin.Editor.Commands
             using (new UndoScope(undoName))
             {
                 var so = new UnityEditor.SerializedObject(component);
-                var prop = so.FindProperty(propertyPath);
+                var prop = SerializedPropertyResolver.FindFlexible(so, propertyPath, out var resolvedPath);
 
                 if (prop == null)
                     return InvalidParameters(
-                        $"Property '{propertyPath}' not found on {component.GetType().Name}.");
+                        $"Property '{propertyPath}' not found on {component.GetType().Name}. " +
+                        $"Available: {string.Join(", ", SerializedPropertyResolver.TopLevelPaths(so, 20))}");
 
                 if (!SetPropertyValue(prop, valueStr))
                     return InvalidParameters(
@@ -52,14 +53,14 @@ namespace Unityctl.Plugin.Editor.Commands
 
                 // Read back the value
                 so.Update();
-                prop = so.FindProperty(propertyPath);
+                prop = so.FindProperty(resolvedPath);
                 var readBack = ReadPropertyValue(prop);
 
-                return Ok($"{component.GetType().Name}.{propertyPath} = {readBack}", new JObject
+                return Ok($"{component.GetType().Name}.{resolvedPath} = {readBack}", new JObject
                 {
                     ["componentGlobalObjectId"] = componentId,
                     ["componentType"] = component.GetType().FullName,
-                    ["property"] = propertyPath,
+                    ["property"] = resolvedPath,
                     ["value"] = readBack,
                     ["gameObjectName"] = component.gameObject.name,
                     ["scenePath"] = component.gameObject.scene.path,

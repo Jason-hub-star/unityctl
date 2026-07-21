@@ -121,6 +121,15 @@ app.Add("exec list-callables", (string project, string? filter = null, int? limi
 app.Add("exec invoke", (string project, string type, string method, string? args = null, bool json = false) =>
     ExecCommand.Invoke(project, type, method, args, json));
 
+app.Add("exec eval", (string project, string? code = null, string? file = null, bool json = false) =>
+    ExecCommand.Eval(project, code, file, json));
+
+app.Add("runtime status", (string stateFile, bool json = false) =>
+    RuntimeCommand.Status(stateFile, json));
+
+app.Add("runtime logs", (string stateFile, int? limit = null, string? severity = null, bool json = false) =>
+    RuntimeCommand.Logs(stateFile, limit, severity, json));
+
 app.Add("workflow run", (string file, string? project = null, bool json = false) =>
     WorkflowCommand.Run(file, project, json));
 

@@ -31,9 +31,12 @@ namespace Unityctl.Plugin.Editor.Commands
 
             using (var serializedObject = new SerializedObject(asset))
             {
-                var serializedProperty = serializedObject.FindProperty(property);
+                var serializedProperty = Utilities.SerializedPropertyResolver.FindFlexible(serializedObject, property, out var resolvedPath);
                 if (serializedProperty == null)
-                    return Fail(StatusCode.NotFound, $"Property '{property}' not found on '{path}'.");
+                    return Fail(StatusCode.NotFound,
+                        $"Property '{property}' not found on '{path}'. " +
+                        $"Available: {string.Join(", ", Utilities.SerializedPropertyResolver.TopLevelPaths(serializedObject, 20))}");
+                property = resolvedPath;
 
                 if (!SetPropertyValue(serializedProperty, value))
                     return InvalidParameters(

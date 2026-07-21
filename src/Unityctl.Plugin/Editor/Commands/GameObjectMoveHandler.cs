@@ -20,11 +20,11 @@ namespace Unityctl.Plugin.Editor.Commands
             if (string.IsNullOrEmpty(parentId))
                 return InvalidParameters("Parameter 'parent' is required.");
 
-            var go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(id);
+            var go = GlobalObjectIdResolver.ResolveGameObject(id);
             if (go == null)
                 return Fail(StatusCode.NotFound, $"GameObject not found: {id}");
 
-            var newParent = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(parentId);
+            var newParent = GlobalObjectIdResolver.ResolveGameObject(parentId);
             if (newParent == null)
                 return Fail(StatusCode.NotFound, $"Parent not found: {parentId}");
 

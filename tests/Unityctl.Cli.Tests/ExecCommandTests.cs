@@ -44,6 +44,29 @@ public class ExecCommandTests
     }
 
     [CliTestFact]
+    public void CreateEvalRequest_SetsExecEvalCommandName()
+    {
+        var request = ExecCommand.CreateEvalRequest("var c = 1; return c;");
+
+        Assert.Equal(WellKnownCommands.ExecEval, request.Command);
+    }
+
+    [CliTestFact]
+    public void CreateEvalRequest_SetsCodeParameter()
+    {
+        const string code = "var c = 1; return c;";
+        var request = ExecCommand.CreateEvalRequest(code);
+
+        Assert.Equal(code, request.Parameters!["code"]?.GetValue<string>());
+    }
+
+    [CliTestFact]
+    public void CreateEvalRequest_EmptyCode_ThrowsArgumentException()
+    {
+        Assert.Throws<ArgumentException>(() => ExecCommand.CreateEvalRequest(""));
+    }
+
+    [CliTestFact]
     public void ResolveCode_WithInlineCode_ReturnsCode()
     {
         const string code = "EditorApplication.isPlaying";

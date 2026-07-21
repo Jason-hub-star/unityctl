@@ -21,6 +21,7 @@ namespace Unityctl.Plugin.Editor.Shared
         public const string Exec = "exec";
         public const string ExecListCallables = "exec-list-callables";
         public const string ExecInvoke = "exec-invoke";
+        public const string ExecEval = "exec-eval";
         public const string BatchExecute = "batch-execute";
 
         // Write API — Phase A

@@ -79,7 +79,7 @@ If you need a contributor-style source install instead, you can still do one of 
 
 ```bash
 unityctl init --project /path/to/unity/project --source /path/to/unityctl/src/Unityctl.Plugin
-unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
+unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.0"
 ```
 
 When switching away from an older `file:` install, first run:
@@ -273,6 +273,12 @@ unityctl scriptableobject get --project /path/to/project --path "Assets/Data/con
 unityctl scriptableobject set-property --project /path/to/project --path "Assets/Data/config.asset" --property "m_Name" --value "newName" --json
 ```
 
+Property names are resolved flexibly for `component set-property` and
+`scriptableobject set-property`: friendly names auto-map to serialized paths
+(`mass` → `m_Mass`), and an unknown name fails with the available property list.
+GameObject references (`--id`, `--target`, `--parent`) accept a GlobalObjectId,
+a hierarchy path (`Parent/Child`), or a plain name — inactive objects included.
+
 ### Shader
 
 ```bash
@@ -437,6 +443,30 @@ unityctl exec invoke --project /path/to/project --type "System.String" --method 
 
 # Inspect callable static surfaces
 unityctl exec list-callables --project /path/to/project --filter "EditorApplication" --json
+
+# Full multi-statement C# (opt-in — see below)
+unityctl exec eval --project /path/to/project --code "var c = 0; foreach (var r in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)) c++; return c;" --json
+```
+
+`exec eval` compiles the snippet with the Unity-bundled Roslyn compiler and runs
+it in the Editor without a domain reload — loops, LINQ, and locals all work; end
+with `return <value>;` to get a result. It is full-trust code execution, so it is
+**disabled by default**: set `"AllowEval": true` in
+`ProjectSettings/UnityctlSettings.asset` to enable it per project.
+
+### Player runtime (Development Builds)
+
+Development Builds of a project that includes the unityctl plugin start a
+runtime bridge (release builds never do). The player writes a discovery state
+file to `persistentDataPath/unityctl-runtime.json` and logs the exact path on
+startup (Player.log).
+
+```bash
+# Live status of a running dev build (scene, playtime, fps)
+unityctl runtime status --state-file "~/Library/Application Support/<Company>/<Product>/unityctl-runtime.json" --json
+
+# Captured player logs (ring buffer, newest 200)
+unityctl runtime logs --state-file "<same path>" --limit 20 --severity Error --json
 ```
 
 `exec --code` is intentionally a small reflection DSL, not arbitrary C# execution.
@@ -492,7 +522,7 @@ unityctl.slnx
 ├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
 ├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
 ├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-└── tests/*                                 864 PR .NET xUnit tests
+└── tests/*                                 927 PR .NET xUnit tests
 ```
 
 **Dependency direction**: `Shared ← Core ← Cli / Mcp`. Plugin runs inside Unity and shares source files with Shared.

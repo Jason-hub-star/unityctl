@@ -10,6 +10,9 @@ namespace Unityctl.Plugin.Editor.Utilities
         public bool Enabled { get; set; }
         public string InstallSourceKind { get; set; }
         public string InstalledVersion { get; set; }
+
+        // Opt-in gate for exec-eval (full-trust C# execution). Absent key = false.
+        public bool AllowEval { get; set; }
     }
 
     internal static class UnityctlProjectSettingsStore

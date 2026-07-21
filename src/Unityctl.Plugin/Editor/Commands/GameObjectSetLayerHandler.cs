@@ -34,7 +34,7 @@ namespace Unityctl.Plugin.Editor.Commands
                     return InvalidParameters($"Unknown layer name: '{layerParam}'");
             }
 
-            var go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(id);
+            var go = GlobalObjectIdResolver.ResolveGameObject(id);
             if (go == null)
                 return Fail(StatusCode.NotFound, $"GameObject not found: {id}");
 

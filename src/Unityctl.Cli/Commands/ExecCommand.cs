@@ -36,6 +36,20 @@ public static class ExecCommand
         CommandRunner.Execute(project, request, json);
     }
 
+    public static void Eval(string project, string? code = null, string? file = null, bool json = false)
+    {
+        var resolvedCode = ResolveCode(code, file);
+        if (resolvedCode == null)
+        {
+            Console.Error.WriteLine("Error: Provide --code <statements> or --file <path>.");
+            Environment.Exit(1);
+            return;
+        }
+
+        var request = CreateEvalRequest(resolvedCode);
+        CommandRunner.Execute(project, request, json);
+    }
+
     /// <summary>
     /// Resolves the C# code string from either inline --code or --file argument.
     /// Returns null if neither is provided.
@@ -68,6 +82,18 @@ public static class ExecCommand
         return new CommandRequest
         {
             Command = WellKnownCommands.Exec,
+            Parameters = new JsonObject { ["code"] = code }
+        };
+    }
+
+    internal static CommandRequest CreateEvalRequest(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("code must not be empty", nameof(code));
+
+        return new CommandRequest
+        {
+            Command = WellKnownCommands.ExecEval,
             Parameters = new JsonObject { ["code"] = code }
         };
     }

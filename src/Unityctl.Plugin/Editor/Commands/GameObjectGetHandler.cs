@@ -17,7 +17,7 @@ namespace Unityctl.Plugin.Editor.Commands
                 return InvalidParameters("Parameter 'id' is required.");
             }
 
-            var gameObject = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(id);
+            var gameObject = GlobalObjectIdResolver.ResolveGameObject(id);
             if (gameObject == null)
             {
                 return Fail(StatusCode.NotFound, $"GameObject not found: {id}");

@@ -19,7 +19,7 @@ namespace Unityctl.Plugin.Editor.Commands
             var cam = GlobalObjectIdResolver.Resolve<UnityEngine.Camera>(id);
             if (cam == null)
             {
-                var go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(id);
+                var go = GlobalObjectIdResolver.ResolveGameObject(id);
                 if (go != null)
                     cam = go.GetComponent<UnityEngine.Camera>();
             }

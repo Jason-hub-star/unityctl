@@ -18,7 +18,7 @@ namespace Unityctl.Plugin.Editor.Commands
 
             var active = request.GetParam<bool>("active");
 
-            var go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(id);
+            var go = GlobalObjectIdResolver.ResolveGameObject(id);
             if (go == null)
                 return Fail(StatusCode.NotFound, $"GameObject not found: {id}");
 

@@ -23,7 +23,7 @@ namespace Unityctl.Plugin.Editor.Commands
             UnityEngine.Transform parentTransform = null;
             if (!string.IsNullOrEmpty(parentId))
             {
-                var parentGo = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(parentId);
+                var parentGo = GlobalObjectIdResolver.ResolveGameObject(parentId);
                 if (parentGo == null)
                     return Fail(StatusCode.NotFound, $"Parent not found: {parentId}");
                 parentTransform = parentGo.transform;

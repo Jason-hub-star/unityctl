@@ -119,7 +119,9 @@ internal sealed class RunTool(CommandExecutor executor)
         // Animation Workflow — Phase H
         WellKnownCommands.AnimationAddCurve,
         // Asset Import/Export — Phase G
-        WellKnownCommands.AssetExport
+        WellKnownCommands.AssetExport,
+        // Roslyn eval — opt-in via AllowEval project setting; plugin enforces the gate
+        WellKnownCommands.ExecEval
     };
 
     [McpServerTool(Name = "unityctl_run")]

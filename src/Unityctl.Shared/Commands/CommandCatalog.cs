@@ -256,6 +256,15 @@ public static class CommandCatalog
         Parameter("args", "string", "Arguments as a JSON array (default: [])", required: false),
         Parameter("json", "bool", "Output as JSON", required: false)).WithCli("exec invoke");
 
+    public static readonly CommandDefinition ExecEval = Define(
+        WellKnownCommands.ExecEval,
+        "Compile and run multi-statement C# in the Editor via the bundled Roslyn compiler (opt-in: AllowEval in UnityctlSettings.asset)",
+        "action",
+        Parameter("project", "string", "Path to Unity project", required: true),
+        Parameter("code", "string", "C# statements; end with 'return <value>;' to get a result", required: false),
+        Parameter("file", "string", "Path to a .cs file with statements to execute", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false)).WithCli("exec eval");
+
     public static readonly CommandDefinition Workflow = Define(
         WellKnownCommands.Workflow,
         "Execute a sequential workflow of unityctl commands from a JSON file",
@@ -1570,6 +1579,7 @@ public static class CommandCatalog
         Exec,
         ExecListCallables,
         ExecInvoke,
+        ExecEval,
         Workflow,
         WorkflowVerify,
         BatchExecute,

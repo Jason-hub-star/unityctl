@@ -16,7 +16,7 @@ public class CommandCatalogTests
              "test", "test-result", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",
              "scene-snapshot", "scene-hierarchy", "scene-diff",
-             "schema", "exec", "exec-list-callables", "exec-invoke", "workflow", "workflow-verify", "batch-execute",
+             "schema", "exec", "exec-list-callables", "exec-invoke", "exec-eval", "workflow", "workflow-verify", "batch-execute",
              "play-mode", "player-settings", "player-settings-get", "player-settings-set", "asset-refresh",
              "asset-find", "asset-get-info", "asset-get-dependencies", "asset-reference-graph",
               "build-settings-get-scenes", "gameobject-find", "gameobject-get", "component-get",

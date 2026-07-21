@@ -20,7 +20,7 @@ namespace Unityctl.Plugin.Editor.Commands
             if (string.IsNullOrEmpty(tag))
                 return InvalidParameters("Parameter 'tag' is required.");
 
-            var go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(id);
+            var go = GlobalObjectIdResolver.ResolveGameObject(id);
             if (go == null)
                 return Fail(StatusCode.NotFound, $"GameObject not found: {id}");
 

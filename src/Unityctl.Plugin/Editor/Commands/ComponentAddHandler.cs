@@ -25,7 +25,7 @@ namespace Unityctl.Plugin.Editor.Commands
 
             UnityEngine.GameObject go = null;
             if (!string.IsNullOrEmpty(goId))
-                go = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(goId);
+                go = GlobalObjectIdResolver.ResolveGameObject(goId);
             if (go == null && !string.IsNullOrEmpty(goName))
                 go = UnityEngine.GameObject.Find(goName);
             if (go == null)

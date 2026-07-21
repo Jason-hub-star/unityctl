@@ -25,7 +25,7 @@ namespace Unityctl.Plugin.Editor.Commands
             // Determine parent and scene
             if (!string.IsNullOrEmpty(parentId))
             {
-                var parentGo = GlobalObjectIdResolver.Resolve<UnityEngine.GameObject>(parentId);
+                var parentGo = GlobalObjectIdResolver.ResolveGameObject(parentId);
                 if (parentGo == null)
                     return Fail(StatusCode.NotFound, $"Parent not found: {parentId}");
 
