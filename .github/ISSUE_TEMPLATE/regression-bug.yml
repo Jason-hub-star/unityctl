@@ -45,4 +45,3 @@ body:
       placeholder: tests/Unityctl.Cli.Tests/... should assert ...
     validations:
       required: true
-

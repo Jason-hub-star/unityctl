@@ -1,6 +1,6 @@
 ## Summary
 
-- 
+-
 
 ## Test Trust Checklist
 

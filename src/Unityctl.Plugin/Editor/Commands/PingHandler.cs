@@ -9,9 +9,10 @@ namespace Unityctl.Plugin.Editor.Commands
 
         public CommandResponse Execute(CommandRequest request)
         {
+            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(PingHandler).Assembly);
             var data = new JObject
             {
-                ["version"] = "0.3.6",
+                ["version"] = packageInfo?.version ?? "unknown",
 #if UNITY_EDITOR
                 ["unityVersion"] = UnityEngine.Application.unityVersion
 #endif

@@ -545,6 +545,40 @@ public class CommandSyncGuardrailTests
         Assert.Contains("gh run download <run-id> --dir <artifact-dir>", source);
     }
 
+    [Fact]
+    public void PluginPackageAssets_HaveCommittedMetaFiles()
+    {
+        var pluginRoot = Path.Combine(GetRepoRoot(), "src", "Unityctl.Plugin");
+        var missing = Directory.GetFiles(pluginRoot, "*", SearchOption.AllDirectories)
+            .Where(path => !path.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !Path.GetFileName(path).StartsWith('.'))
+            .Where(path => !Path.GetRelativePath(pluginRoot, path)
+                .Split(Path.DirectorySeparatorChar)
+                .Any(segment => segment.EndsWith('~')))
+            .Where(path => !File.Exists(path + ".meta"))
+            .Select(path => Path.GetRelativePath(GetRepoRoot(), path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(missing.Length == 0,
+            $"Unity immutable packages ignore assets without .meta files: {string.Join(", ", missing)}");
+    }
+
+    [Fact]
+    public void PluginVersion_MatchesBuildVersion_AndPingReadsPackageMetadata()
+    {
+        using var package = System.Text.Json.JsonDocument.Parse(
+            ReadRepoFile(@"src\Unityctl.Plugin\package.json"));
+        var pluginVersion = package.RootElement.GetProperty("version").GetString();
+        var buildProps = System.Xml.Linq.XDocument.Parse(ReadRepoFile("Directory.Build.props"));
+        var buildVersion = buildProps.Descendants("UnityctlVersion").Single().Value;
+        var pingHandler = ReadRepoFile(@"src\Unityctl.Plugin\Editor\Commands\PingHandler.cs");
+
+        Assert.Equal(buildVersion, pluginVersion);
+        Assert.Contains("PackageInfo.FindForAssembly", pingHandler);
+        Assert.Contains("packageInfo?.version", pingHandler);
+    }
+
     private static string ReadRepoFile(string relativePath)
     {
         var normalized = relativePath.Replace('\\', Path.DirectorySeparatorChar);
