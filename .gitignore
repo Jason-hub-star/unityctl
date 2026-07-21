@@ -42,3 +42,4 @@ docs/internal/ralph/workspace/*
 docs/status/.readme-sync.lock
 ralph/workspace/*.log
 ralph/workspace/*.txt
+docs/contest/demo/
