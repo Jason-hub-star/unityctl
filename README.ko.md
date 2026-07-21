@@ -18,6 +18,16 @@ AI 에이전트에 **178개 명령**을 쥐여주세요. Unity 씬 구성부터 
 
 공식 Unity CLI(1.0.0-beta.2 + com.unity.pipeline)와 같은 에디터 세션에서 정면 벤치마크 — 더 빠른 왕복, 더 작은 응답, 그리고 측정된 격차는 당일 전부 흡수. [벤치마크 문서](docs/contest/benchmark-vs-unity-cli.md) 참조.
 
+| 실측 (같은 에디터, 같은 태스크) | unityctl v0.6.0 | 공식 Unity CLI |
+|---|---|---|
+| 씬 계층 읽기 | **286 ms / 919 B** | 617 ms / 1,602 B |
+| play 진입 → 콘솔 → 정지 | **965 ms** | 2,588 ms |
+| 다중 문장 C# eval | **1,755 ms** (opt-in 게이트) | 2,634 ms (상시 활성) |
+| 도메인 리로드 생존 (무인) | **313–516 ms** | 739 ms |
+| 무인 테스트 실행 | **1 passed (4.2 s)** | 가짜 성공 — 0개 실행 |
+| 잘못된 인자 | 명시적 실패 + 후보 목록 | 조용히 무시 후 success 반환 |
+| 카메라 없는 씬 스크린샷 | 뷰 캡처 성공 | 실패 |
+
 품질 게이트: 모든 PR에서 .NET Shared/Core/Cli/Mcp 테스트를 Windows, macOS, Linux에서 실행합니다. Unity Editor가 필요한 검증은 Unity Integration workflow로 분리하고, nightly/manual 실행에서 `init`, 샘플 프로젝트 `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, `workflow verify` 증거를 artifact로 업로드합니다. Unity Integration에는 `UNITY_LICENSE` 또는 `UNITY_SERIAL` GitHub secret이 필요합니다.
 
 기여자는 [CONTRIBUTING.md](CONTRIBUTING.md)에서 테스트 신뢰 체크리스트, flaky 테스트 정책, 명령 동기화 체크리스트, Unity live validation 분리 기준을 확인하세요.

@@ -18,6 +18,16 @@ Give your AI agent **178 commands** to build Unity scenes, write C# scripts, val
 
 Benchmarked head-to-head against the official Unity CLI (1.0.0-beta.2 + com.unity.pipeline) on the same editor session — faster round-trips, smaller responses, and every measured gap absorbed the same day. See [the benchmark](docs/contest/benchmark-vs-unity-cli.md).
 
+| Measured (same editor, same tasks) | unityctl v0.6.0 | Official Unity CLI |
+|---|---|---|
+| Scene hierarchy read | **286 ms / 919 B** | 617 ms / 1,602 B |
+| Play enter → console → stop | **965 ms** | 2,588 ms |
+| Multi-statement C# eval | **1,755 ms** (opt-in gate) | 2,634 ms (always on) |
+| Domain-reload survival (unattended) | **313–516 ms** | 739 ms |
+| Unattended test run | **1 passed (4.2 s)** | false success — 0 tests ran |
+| Wrong arguments | explicit failure + candidate list | silently ignored, returns success |
+| Screenshot with no camera in scene | captures the view | fails |
+
 Quality gates: every PR runs the .NET Shared/Core/Cli/Mcp test suites on Windows, macOS, and Linux. Unity Editor-dependent validation is separated into the Unity Integration workflow, with `init`, sample-project `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify` evidence uploaded from nightly/manual runs. Unity Integration requires either a `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret.
 
 Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) for the test trust checklist, flaky-test policy, command sync checklist, and Unity live-validation split.
