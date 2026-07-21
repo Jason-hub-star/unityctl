@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-07-17 (KST) — v0.5.0 (Spatial Grounding + Agent Fleet + Play Step + dogfood 개선)
+최종 업데이트: 2026-07-21 (KST) — 공식 Unity CLI 벤치마크 + 흡수 사다리 완주 (unattended lifecycle fix, exec eval, 리졸버/속성명 통일, player runtime)
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
@@ -59,7 +59,14 @@
 - **CLI Enhancement (profiler rendering stats + component add --name + component enable/disable + profiler --detailed)**: 구현 완료. Unity 6 라이브 테스트 통과. 755 테스트 통과.
 - **Real-World UX Hardening (`await-ready` interactive gating, headless process classification, `exec` parser hardening, UITK locator resolver, scene dirty policy)**: 구현 완료. `My project` 기준 라이브 검증/통합 테스트 통과.
 
-**전체 Phase 완료. 총 85개 write allowlist 명령, 160개 CLI 명령 (+2 component enable/disable), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트.**
+- **공식 Unity CLI 벤치마크 + 흡수 사다리 (GOAL-unity-cli-benchmark, 2026-07-21)**: 완료 — 공식 CLI(1.0.0-beta.2 + com.unity.pipeline 0.3.1-exp.1)와 동일 에디터·8태스크 16셀 실측(`docs/contest/benchmark-vs-unity-cli.md`), 발견 격차 P0~P4 전부 흡수:
+  - **Unattended Lifecycle Fix (P0)**: delayCall(리페인트 묶임) → update 기반 `MainThreadDispatch` — 무인(비포커스/화면잠금) 에디터에서 브릿지 기동·리로드 재기동 정상화. T8 시나리오 141,656ms 실패 → 313~516ms 성공.
+  - **exec eval (P1)**: 다중 문장 C#을 Unity 동봉 csc로 컴파일·실행(외부 의존성 0, 도메인 리로드 0). opt-in `AllowEval`(기본 off). 공식 eval 대비 빠름(977~1755ms vs 2634ms).
+  - **ObjectRef 리졸버 통일 (P2)**: `ResolveGameObject` — globalId/계층경로/이름(비활성 포함), write 핸들러 18파일 일괄 적용.
+  - **친화 속성명 (P3)**: `mass`→`m_Mass` 자동 해석 + 실패 시 후보 목록 — component/scriptableobject set-property.
+  - **Player Runtime (P4)**: `UnityctlBridge.Runtime` asmdef — Development Build 전용 브릿지 + `runtime status`/`runtime logs`(state 파일 디스커버리). 실행 중 플레이어 라이브 검증.
+
+**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. 유닛 테스트 927개.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -404,7 +411,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **864개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **927개**다.
 
 신규 자동 검증:
 

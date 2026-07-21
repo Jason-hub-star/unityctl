@@ -10,11 +10,13 @@
 
 ### AI가 게임을 만들 수 있게 해주는 실행 레이어.
 
-AI 에이전트에 **166개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
+AI 에이전트에 **178개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
 
 ```
-166 CLI 명령 · 12 MCP 도구 · 864 PR .NET 테스트 · Windows / macOS / Linux
+178 CLI 명령 · 12 MCP 도구 · 927 PR .NET 테스트 · Windows / macOS / Linux
 ```
+
+공식 Unity CLI(1.0.0-beta.2 + com.unity.pipeline)와 같은 에디터 세션에서 정면 벤치마크 — 더 빠른 왕복, 더 작은 응답, 그리고 측정된 격차는 당일 전부 흡수. [벤치마크 문서](docs/contest/benchmark-vs-unity-cli.md) 참조.
 
 품질 게이트: 모든 PR에서 .NET Shared/Core/Cli/Mcp 테스트를 Windows, macOS, Linux에서 실행합니다. Unity Editor가 필요한 검증은 Unity Integration workflow로 분리하고, nightly/manual 실행에서 `init`, 샘플 프로젝트 `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, `workflow verify` 증거를 artifact로 업로드합니다. Unity Integration에는 `UNITY_LICENSE` 또는 `UNITY_SERIAL` GitHub secret이 필요합니다.
 
@@ -149,7 +151,7 @@ unityctl을 공개적으로 보여주고 싶다면, 마인크래프트부터 시
 | **연결 안정성** | Named Pipe — Domain Reload에서도 끊기지 않음 | WebSocket 끊김, 수동 재연결 필요 |
 | **CI/CD** | `check` / `test` / `build --dry-run` 헤드리스 지원 | 에디터를 열어야만 동작 |
 | **진단** | `doctor`가 실패를 분류하고 다음 조치를 안내 | "Connection failed"만 출력 |
-| **명령 수** | **166** (읽기 + 쓰기 + 검증 + 진단) | ~34-200 |
+| **명령 수** | **178** (읽기 + 쓰기 + 검증 + 진단) | ~34-200 |
 | **감사 추적** | 모든 명령의 NDJSON 플라이트 레코더 | 이력 없음 |
 | **런타임** | 네이티브 .NET — Python/TS 브릿지 불필요 | 브릿지 오버헤드 있음 |
 | **설치** | `dotnet tool install -g unityctl` | Node.js + npm + 포트 설정 |
@@ -163,7 +165,7 @@ AI 에이전트 비용의 대부분은 매 턴 전송되는 도구 스키마에�
   <img src="docs/assets/token-efficiency.svg" alt="실측 토큰 비용: unityctl via Bash = 오버헤드 0, CoplayDev MCP 대비 6.8배 저렴" width="620">
 </p>
 
-12개 MCP 도구가 `unityctl_query`(읽기), `unityctl_run`(쓰기), `unityctl_schema`(조회)를 통해 166개 명령 전체를 커버합니다.
+12개 MCP 도구가 `unityctl_query`(읽기), `unityctl_run`(쓰기), `unityctl_schema`(조회)를 통해 178개 명령 전체를 커버합니다.
 
 #### 실측: Claude Code 토큰 비용 (2026-03-20)
 
@@ -219,7 +221,7 @@ dotnet tool install -g unityctl-mcp
 ```
 
 참고:
-- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6`
+- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.0`
 - GitHub Release의 CLI 아카이브는 현재 framework-dependent 빌드입니다 (self-contained 아님).
 
 ### Apple Silicon macOS 검증
@@ -246,7 +248,7 @@ Apple Silicon MacBook Air에서 Homebrew, .NET SDK `10.0.105`, Unity Hub, Unity 
 ```bash
 # 1. 에디터 플러그인 설치
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.3.6"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.0"
 
 # 2. Unity Editor에서 프로젝트를 열고 연결 확인
 unityctl ping --project /path/to/project --json
@@ -300,7 +302,7 @@ Claude Code / Cursor / VS Code MCP 설정에 추가:
 
 ---
 
-## 명령어 (166)
+## 명령어 (178)
 
 ### 코어 (13)
 
@@ -391,6 +393,8 @@ Claude Code / Cursor / VS Code MCP 설정에 추가:
 | `script find-refs` | 전체 스크립트에서 심볼 참조 검색 |
 | `script rename-symbol` | 전체 스크립트에서 심볼 이름 변경 (`--dry-run` 지원) |
 | `exec` | Unity에서 C# 표현식 실행 |
+| `exec eval` | 동봉 Roslyn 컴파일러로 다중 문장 C# 컴파일·실행, 도메인 리로드 없음 (opt-in: `AllowEval`) |
+| `runtime status` / `runtime logs` | 실행 중인 Development Build 플레이어 조회 (씬·fps·캡처 로그) |
 
 </details>
 
@@ -478,7 +482,7 @@ Claude Code / Cursor / VS Code MCP 설정에 추가:
 
 ```
 AI 에이전트 (LLM)            unityctl-mcp              unityctl CLI             Unity Editor
-Claude / GPT / Gemini         12 MCP 도구               166 명령                 플러그인 (IPC)
+Claude / GPT / Gemini         12 MCP 도구               178 명령                 플러그인 (IPC)
         |                          |                          |                       |
         |--- MCP (stdio) -------->|                          |                       |
         |                          |--- CLI 호출 ----------->|                       |
@@ -496,7 +500,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 864 PR .NET xUnit 테스트
++-- tests/*                                 927 PR .NET xUnit 테스트
 ```
 
 ---
@@ -525,7 +529,7 @@ unityctl.slnx
 </p>
 
 <p align="center">
-  <img src="docs/assets/tools.svg" alt="unityctl tools — 9개 카테고리 166개 명령" width="654">
+  <img src="docs/assets/tools.svg" alt="unityctl tools — 9개 카테고리 178개 명령" width="654">
 </p>
 
 ## 문서
