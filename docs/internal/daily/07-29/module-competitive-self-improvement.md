@@ -22,6 +22,7 @@
 3. MCP Registry metadata를 NuGet/v0.6.1/현재 repository로 동기화
 4. version/test-count/public docs guardrail 동기화
 5. Claude Code/Codex 공용 `unityctl-workflows` 스킬과 설치 경로 추가
+6. CLI/MCP NuGet package에 기존 루트 README 포함
 
 ## 검증
 
@@ -37,7 +38,10 @@
 - `unityctl-workflows` 스킬 정적 검증 + 로컬 Claude Code/Codex 설치 smoke 통과
 - 2회 전방 테스트: 1차에서 명령/dirty/routing/process 판정 결함 6개 발견,
   수정 후 2차에서 전부 해소 확인
+- 공개 GitHub source에서 Claude Code/Codex skill 설치 smoke 통과
 - NuGet.org CLI/MCP v0.6.1 공개 인덱싱 확인
+- CLI/MCP pack 경고 0, 두 `.nupkg`의 nuspec `<readme>README.md</readme>`와
+  root `README.md` entry 확인
 
 ## 다음 후보
 

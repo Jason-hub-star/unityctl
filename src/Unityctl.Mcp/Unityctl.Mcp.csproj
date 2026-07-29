@@ -12,10 +12,12 @@
     <PackageProjectUrl>https://github.com/Jason-hub-star/unityctl</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Jason-hub-star/unityctl</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>unity;mcp;ai;gamedev;editor</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <InternalsVisibleTo Include="Unityctl.Mcp.Tests" />
   </ItemGroup>
 
