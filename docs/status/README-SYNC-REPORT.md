@@ -9,19 +9,19 @@
 | CLI entrypoint count | **178** | published CLI `--help` + registration guardrail |
 | Machine catalog count | **170** | published CLI `schema --format json` / `tools --json` parity smoke |
 | MCP tool count | **12** | README + MCP black-box tests |
-| PR .NET xUnit test inventory | **938** | Shared/Core/Cli/Mcp local Release test output |
+| PR .NET xUnit test inventory | **939** | Shared/Core/Cli/Mcp local Release test output |
 
 ## Synced Public Docs
 
 | 위치 | 현재값 | 상태 |
 |------|--------|------|
-| `README.md` hero / comparison / command heading / architecture | 178 commands, 938 PR .NET tests | ✅ |
-| `README.ko.md` hero / comparison / command heading / architecture | 178 명령, 938 PR .NET 테스트 | ✅ |
+| `README.md` hero / comparison / command heading / architecture | 178 commands, 939 PR .NET tests | ✅ |
+| `README.ko.md` hero / comparison / command heading / architecture | 178 명령, 939 PR .NET 테스트 | ✅ |
 | `README.md` / `README.ko.md` agent skill install | Claude Code + Codex 공용 `unityctl-workflows` | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 178 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 178 commands | ✅ |
-| `docs/ref/architecture-mermaid.md` architecture block | 938 PR .NET xUnit tests | ✅ |
-| `docs/ref/getting-started.md` architecture block | 938 PR .NET xUnit tests | ✅ |
+| `docs/ref/architecture-mermaid.md` architecture block | 939 PR .NET xUnit tests | ✅ |
+| `docs/ref/getting-started.md` architecture block | 939 PR .NET xUnit tests | ✅ |
 | `docs/ref/ai-quickstart.md` machine-readable schema note | 170 canonical commands | ✅ |
 
 ## CI Guardrails
@@ -46,7 +46,7 @@ Unity live blocker tracking issue: #17 (`Configure Unity Integration Actions sec
 |------|--------|
 | `dotnet restore` | ✅ |
 | `dotnet build --no-restore -c Release` | ✅ warning 0 / error 0 |
-| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 110 passed |
+| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 111 passed |
 | `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 177 passed |
 | `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 626 passed |
 | `dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release` | ✅ 25 passed |

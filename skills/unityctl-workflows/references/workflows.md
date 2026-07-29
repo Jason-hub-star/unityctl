@@ -67,6 +67,16 @@ unityctl project validate --project "$P" --json
 unityctl test --project "$P" --mode edit --json
 ```
 
+Treat `data.valid: false` as a failed validation even when an older CLI/bridge
+reports transport-level `success: true`. Fix the named failed check and rerun.
+For a new project with no enabled build scene:
+
+```bash
+unityctl build-settings set-scenes --project "$P" \
+  --scenes Assets/Scenes/Main.unity --json
+unityctl project validate --project "$P" --json
+```
+
 For visual or Play Mode work, create a verification definition outside generated Unity folders:
 
 ```json

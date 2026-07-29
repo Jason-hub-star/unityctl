@@ -156,6 +156,17 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void ProjectValidationFailure_UsesFailedResponseSemantics()
+    {
+        var source = ReadRepoFile(
+            @"src\Unityctl.Plugin\Editor\Commands\ProjectValidateHandler.cs");
+
+        Assert.Contains("return Fail(", source);
+        Assert.Contains("StatusCode.TestFailed", source);
+        Assert.DoesNotContain("return Ok($\"Validation failed:", source);
+    }
+
+    [Fact]
     public void ScriptCommands_AreRegisteredAcrossCliMcpAndPlugin()
     {
         var cliCommands = ParseCliCommands();

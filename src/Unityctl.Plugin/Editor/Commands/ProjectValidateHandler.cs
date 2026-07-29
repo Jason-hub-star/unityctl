@@ -49,7 +49,10 @@ namespace Unityctl.Plugin.Editor.Commands
             };
 
             if (errorFails > 0)
-                return Ok($"Validation failed: {errorFails} error(s), {failCount - errorFails} warning(s)", data);
+                return Fail(
+                    StatusCode.TestFailed,
+                    $"Validation failed: {errorFails} error(s), {failCount - errorFails} warning(s)",
+                    data);
 
             return Ok($"All {passCount} checks passed", data);
 #else

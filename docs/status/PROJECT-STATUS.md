@@ -53,7 +53,7 @@
 - **v0.6.1 Reliability Patch**: 구현 완료 — `component get --full`이 `Rigidbody.m_Constraints` 같은 hidden top-level serialized state를 누락하지 않으며, macOS `ps` process inventory가 interactive Editor와 Asset Import Worker를 구분해 `await-ready` false negative를 제거. MCP Registry `server.json`도 NuGet/v0.6.1/현재 GitHub identity로 동기화.
 - **Agent Workflow Skill (`skills/unityctl-workflows`)**: 구현 완료 — Claude Code/Codex 공용 설치, project/selection/dirty-scene guard, readback·verification loop를 포함. 로컬 설치 smoke와 2회 전방 테스트로 문서 결함 6개를 수정·재검증.
 - **v0.6.2 Distribution/Linux Patch**: 구현 완료 — CLI/MCP NuGet package가 루트 README를 포함하고, Linux가 `/proc/<pid>/exe`와 NUL 구분 `cmdline`으로 GUI Editor와 worker/batch를 구분. Linux SDK container에서 실제 probe process의 PID/project/version/readiness 분류 검증.
-- **Post-v0.6.2 IPC Hardening (master)**: 진행 중 — listener publish/stop race 제거 및 connect-only readiness probe를 bounded `ping` roundtrip으로 교체. Unity lab에서 domain reload/UI close와 10회 probe 경고 delta 0 검증; Windows #12/#13 재검증 대기.
+- **Post-v0.6.2 IPC Hardening (master)**: 진행 중 — listener publish/stop race 제거, connect-only readiness probe를 bounded `ping` roundtrip으로 교체, `project validate` 실패를 `TestFailed`/exit 1로 정정. Unity lab 검증 완료; Windows #12/#13 재검증 대기.
 
 - **MCP Prompts (create_game_scene, debug_game, iterate_gameplay, setup_project — 4개 AI 워크플로우 프롬프트)**: 구현 완료
 - **CLI Feedback Fixes (CLI-012 prefab-instantiate, CLI-014 asset copy 외부 경로, CLI-000 IPC 30초 메시지 타임아웃)**: 구현 완료. Unity 6 라이브 테스트 통과.
@@ -70,7 +70,7 @@
   - **친화 속성명 (P3)**: `mass`→`m_Mass` 자동 해석 + 실패 시 후보 목록 — component/scriptableobject set-property.
   - **Player Runtime (P4)**: `UnityctlBridge.Runtime` asmdef — Development Build 전용 브릿지 + `runtime status`/`runtime logs`(state 파일 디스커버리). 실행 중 플레이어 라이브 검증.
 
-**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 938개.**
+**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 939개.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -401,7 +401,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 110 통과. hidden serialized property traversal + published version/registry sync guardrail 포함 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 111 통과. hidden serialized property traversal + validation failure semantics + published version/registry sync guardrail 포함 |
 | `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 177 통과. macOS parser, Linux `/proc` live probe, IPC `ping` roundtrip probe 회귀 포함. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`는 고정 시각 테스트 유지 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 626 통과 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
@@ -409,13 +409,13 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 
 | 프로젝트 | 통과 |
 |----------|------|
-| Unityctl.Shared.Tests | 110 |
+| Unityctl.Shared.Tests | 111 |
 | Unityctl.Core.Tests | 177 |
 | Unityctl.Cli.Tests | 626 |
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **938개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **939개**다.
 
 신규 자동 검증:
 

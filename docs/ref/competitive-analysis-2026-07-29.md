@@ -117,9 +117,28 @@ readiness probe가 pipe 연결 성공 직후 payload 없이 닫아 서버의
 - Unity lab에서 새 CLI로 status 10회 실행: expected pipe-close warning delta 0
 - `await-ready`: 1회, 602ms, Ready
 
+## 6차 실험 결과 — keep
+
+공식 Unity CLI로 별도 `unityctl-onboarding-lab`을 만들고 공개 v0.6.2만
+사용해 소비자 경로를 측정했다.
+
+- project create + public skill install + embedded bridge init 묶음: 14.7초
+- Editor 기동 후 `await-ready`: 명령 416ms, 내부 329ms, 1회
+- `doctor`: 365ms, embedded bridge + healthy IPC
+- scene create → GameObject ID readback → save: 2.998초
+- 첫 validate가 build scene 미등록을 정확히 발견했지만
+  `data.valid=false`와 동시에 `success=true/statusCode=0`을 반환하는 계약
+  버그도 노출
+- 공용 `ProjectValidateHandler`를 `TestFailed(504)`로 수정한 contributor
+  lab 재검증: `success=false`, CLI exit 1
+- build scene 등록 → validate green: 0.940초, 6/6 통과
+- skill recipe에 v0.6.2 이하 `data.valid` 호환 판정과 복구 명령 추가
+
+새 하네스나 명령은 필요하지 않았다. 기존 CLI, 공식 Unity CLI, 공개 skills
+installer 조합만으로 측정과 복구가 가능했다.
+
 ## 다음 실험
 
-Windows #12/#13 reporter 재검증을 기다리며, 공개 설치 첫 성공 시간을 직접
-측정할 수 있는 clean-project smoke를 스킬 설치 → bridge init → doctor →
-await-ready 순서로 자동 기록한다. 기존 CI/랩 명령 조합으로 충분하면 새
-하네스나 명령을 추가하지 않는다.
+현재 master hardening을 v0.6.3 후보로 묶기 전에 Windows #12/#13 응답과
+GitHub CI를 확인한다. Windows Unity 라이선스 증거가 없으면 종료 fix는
+“logical root fix + macOS live”로만 표기하고 과도한 확정을 피한다.
