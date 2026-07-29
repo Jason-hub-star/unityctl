@@ -137,8 +137,16 @@ readiness probe가 pipe 연결 성공 직후 payload 없이 닫아 서버의
 새 하네스나 명령은 필요하지 않았다. 기존 CLI, 공식 Unity CLI, 공개 skills
 installer 조합만으로 측정과 복구가 가능했다.
 
+## v0.6.3 릴리스 판단
+
+최종 master CI가 Ubuntu 1m31s, macOS 1m35s, Windows 2m31s에 모두
+통과했고 각 OS published CLI/local tool smoke도 green이었다. reporter가
+로컬 source 설치 없이 검증할 수 있도록 세 hardening을 v0.6.3 패치로
+릴리스한다. 단, Windows Unity 라이선스 증거는 아니므로 #12/#13은 닫지 않고
+종료 fix 증거를 “logical root fix + macOS Unity live + Windows .NET CI”로
+한정한다.
+
 ## 다음 실험
 
-현재 master hardening을 v0.6.3 후보로 묶기 전에 Windows #12/#13 응답과
-GitHub CI를 확인한다. Windows Unity 라이선스 증거가 없으면 종료 fix는
-“logical root fix + macOS live”로만 표기하고 과도한 확정을 피한다.
+v0.6.3 NuGet/GitHub 배포와 reporter 피드백을 확인한 뒤 다음 경쟁 우선순위를
+선정한다. Windows 확인이 없으면 이슈를 억지로 닫지 않는다.

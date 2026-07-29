@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-07-29 (KST) — v0.6.2 배포/Linux 신뢰성 패치
+최종 업데이트: 2026-07-29 (KST) — v0.6.3 IPC/validation 신뢰성 패치
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
@@ -53,7 +53,7 @@
 - **v0.6.1 Reliability Patch**: 구현 완료 — `component get --full`이 `Rigidbody.m_Constraints` 같은 hidden top-level serialized state를 누락하지 않으며, macOS `ps` process inventory가 interactive Editor와 Asset Import Worker를 구분해 `await-ready` false negative를 제거. MCP Registry `server.json`도 NuGet/v0.6.1/현재 GitHub identity로 동기화.
 - **Agent Workflow Skill (`skills/unityctl-workflows`)**: 구현 완료 — Claude Code/Codex 공용 설치, project/selection/dirty-scene guard, readback·verification loop를 포함. 로컬 설치 smoke와 2회 전방 테스트로 문서 결함 6개를 수정·재검증.
 - **v0.6.2 Distribution/Linux Patch**: 구현 완료 — CLI/MCP NuGet package가 루트 README를 포함하고, Linux가 `/proc/<pid>/exe`와 NUL 구분 `cmdline`으로 GUI Editor와 worker/batch를 구분. Linux SDK container에서 실제 probe process의 PID/project/version/readiness 분류 검증.
-- **Post-v0.6.2 IPC Hardening (master)**: 진행 중 — listener publish/stop race 제거, connect-only readiness probe를 bounded `ping` roundtrip으로 교체, `project validate` 실패를 `TestFailed`/exit 1로 정정. Unity lab 검증 완료; Windows #12/#13 재검증 대기.
+- **v0.6.3 IPC/Validation Hardening**: 구현 완료 — listener publish/stop race 제거, connect-only readiness probe를 bounded `ping` roundtrip으로 교체, `project validate` 실패를 `TestFailed`/exit 1로 정정. Unity labs와 3-OS CI 검증 완료; Windows #12/#13 reporter 재검증 대기.
 
 - **MCP Prompts (create_game_scene, debug_game, iterate_gameplay, setup_project — 4개 AI 워크플로우 프롬프트)**: 구현 완료
 - **CLI Feedback Fixes (CLI-012 prefab-instantiate, CLI-014 asset copy 외부 경로, CLI-000 IPC 30초 메시지 타임아웃)**: 구현 완료. Unity 6 라이브 테스트 통과.

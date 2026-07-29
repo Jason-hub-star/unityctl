@@ -56,9 +56,10 @@
 - public consumer onboarding: create+skill+init 14.7초, await-ready 416ms,
   scene write/readback/save 2.998초, build-scene 복구+green validate 0.940초
 - validation failure live response: 504 / success false / CLI exit 1
+- final master CI: Ubuntu 1m31s, macOS 1m35s, Windows 2m31s 모두 green
 
 ## 다음 후보
 
 - project-local Claude/Codex config 생성은 스킬 사용성 데이터가 필요할 때만 추가
 - Windows quit-hang #12/#13 master 재검증 요청
-- post-v0.6.2 hardening v0.6.3 후보 판단
+- v0.6.3 release + Windows reporter 피드백 확인
