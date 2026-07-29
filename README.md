@@ -13,7 +13,7 @@
 Give your AI agent **178 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-178 CLI commands · 12 MCP tools · 927 PR .NET tests · Windows / macOS / Linux
+178 CLI commands · 12 MCP tools · 931 PR .NET tests · Windows / macOS / Linux
 ```
 
 Benchmarked head-to-head against the official Unity CLI (1.0.0-beta.2 + com.unity.pipeline) on the same editor session — faster round-trips, smaller responses, and every measured gap absorbed the same day. See [the benchmark](docs/contest/benchmark-vs-unity-cli.md).
@@ -236,7 +236,7 @@ dotnet tool install -g unityctl-mcp
 ```
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.0`
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1`
 - GitHub Release CLI archives are framework-dependent (not self-contained) today.
 
 ### Apple Silicon macOS Validation
@@ -263,7 +263,7 @@ Project compatibility note: if a Unity project or third-party package is pinned 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.0"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json
@@ -516,7 +516,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI shell
 +-- src/Unityctl.Mcp      (net10.0)         MCP server
 +-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 927 PR .NET xUnit tests
++-- tests/*                                 931 PR .NET xUnit tests
 ```
 
 ---

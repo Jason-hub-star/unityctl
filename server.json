@@ -1,17 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.kimjuyoung1127/unityctl",
-  "description": "Deterministic Unity Editor control plane — 155 CLI commands, 12 MCP tools for AI-driven game development. IPC-first architecture for real-time scene manipulation, asset management, script editing, build automation, and visual verification.",
+  "name": "io.github.jason-hub-star/unityctl",
+  "description": "Deterministic Unity Editor control plane with 178 CLI commands and 12 MCP tools.",
   "repository": {
-    "url": "https://github.com/kimjuyoung1127/unityctl",
+    "url": "https://github.com/Jason-hub-star/unityctl",
     "source": "github"
   },
-  "version": "0.3.0",
+  "version": "0.6.1",
   "packages": [
     {
-      "registryType": "npm",
+      "registryType": "nuget",
+      "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "unityctl-mcp",
-      "version": "0.3.0",
+      "version": "0.6.1",
       "transport": {
         "type": "stdio"
       }

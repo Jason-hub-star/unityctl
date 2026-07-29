@@ -94,7 +94,8 @@ namespace Unityctl.Plugin.Editor.Utilities
             using (var serializedObject = new SerializedObject(component))
             {
                 var iterator = serializedObject.GetIterator();
-                while (iterator.NextVisible(true))
+                // Hidden top-level fields such as Rigidbody.m_Constraints are still serialized state.
+                for (var enterChildren = true; iterator.Next(enterChildren); enterChildren = false)
                 {
                     var value = ToJsonValue(iterator);
                     if (value != null)

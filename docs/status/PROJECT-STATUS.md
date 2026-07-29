@@ -1,6 +1,6 @@
 # unityctl 프로젝트 상태
 
-최종 업데이트: 2026-07-21 (KST) — 공식 Unity CLI 벤치마크 + 흡수 사다리 완주 (unattended lifecycle fix, exec eval, 리졸버/속성명 통일, player runtime)
+최종 업데이트: 2026-07-29 (KST) — v0.6.1 신뢰성 패치 (hidden serialized state + macOS process inventory + registry metadata)
 기준 문서: `CLAUDE.md`, `docs/ref/phase-roadmap.md`, `docs/internal/DEVELOPMENT.md`
 
 ## 현재 Phase
@@ -50,6 +50,7 @@
 - **Phase I-2: UI Toolkit (uitk-find/get/set-value/click — 4개 명령, runtime capability check)**: 구현 완료
 - **Spatial Grounding (`spatial describe`/`spatial check` — 월드 AABB·true dimensions·표면 법선·covers/inside/on-top-of/overlaps/aligned 술어 판정, 스크린샷 없는 공간 그라운딩)**: 구현 완료 (.NET 표면 green + Unity 6000.3.16f1 라이브 IPC e2e 검증 — 천장 참사 covers FAIL→수정 PASS 재현)
 - **Agent Fleet (IPC `MaxServerInstances` 4→32)**: 구현 완료 — Unity 공식 MCP의 "Capacity Limit"과 달리 로컬 상한이라 자유 조정. Unity 6000.3.16f1에서 16개 동시 에이전트 `spatial check` 100% 성공(0 busy/timeout) 실측. 명령은 메인 스레드에서 직렬 실행되어 안전.
+- **v0.6.1 Reliability Patch**: 구현 완료 — `component get --full`이 `Rigidbody.m_Constraints` 같은 hidden top-level serialized state를 누락하지 않으며, macOS `ps` process inventory가 interactive Editor와 Asset Import Worker를 구분해 `await-ready` false negative를 제거. MCP Registry `server.json`도 NuGet/v0.6.1/현재 GitHub identity로 동기화.
 
 - **MCP Prompts (create_game_scene, debug_game, iterate_gameplay, setup_project — 4개 AI 워크플로우 프롬프트)**: 구현 완료
 - **CLI Feedback Fixes (CLI-012 prefab-instantiate, CLI-014 asset copy 외부 경로, CLI-000 IPC 30초 메시지 타임아웃)**: 구현 완료. Unity 6 라이브 테스트 통과.
@@ -66,7 +67,7 @@
   - **친화 속성명 (P3)**: `mass`→`m_Mass` 자동 해석 + 실패 시 후보 목록 — component/scriptableobject set-property.
   - **Player Runtime (P4)**: `UnityctlBridge.Runtime` asmdef — Development Build 전용 브릿지 + `runtime status`/`runtime logs`(state 파일 디스커버리). 실행 중 플레이어 라이브 검증.
 
-**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. 유닛 테스트 927개.**
+**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 931개.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -397,21 +398,21 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 107 통과. workflow hard-gate/smoke/README badge/public trust inventory/Unity blocker tracking/PR skip guardrail, CLI/Plugin duplicate registration guardrail, catalog↔WellKnown↔MCP reachability guardrail 추가 |
-| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 153 통과. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`를 고정 시각 테스트로 안정화. slash/backslash/case policy path/pipe normalization, UnityProcessDetector slash/case process matching, CommandExecutor headless/interactive lock no-batch-fallback, BatchTransport lock/readiness, IPC timeout guidance regression 추가 |
-| `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 579 통과. ProjectVersion parsing / Unity Hub editors.json / running process kind regression, running project path case policy, dirty scene policy normalization, batch command parser edge regression 추가 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 110 통과. hidden serialized property traversal + published version/registry sync guardrail 포함 |
+| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 170 통과. macOS interactive/headless Unity process inventory parser 회귀 포함. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`는 고정 시각 테스트 유지 |
+| `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 626 통과 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
 | `dotnet test unityctl.slnx -c Release` | ⚠️ | Integration/환경 락, AppLocker 등 워크스테이션 조건에 따라 개별 프로젝트 실행이 더 안정적 |
 
 | 프로젝트 | 통과 |
 |----------|------|
-| Unityctl.Shared.Tests | 107 |
-| Unityctl.Core.Tests | 153 |
-| Unityctl.Cli.Tests | 579 |
+| Unityctl.Shared.Tests | 110 |
+| Unityctl.Core.Tests | 170 |
+| Unityctl.Cli.Tests | 626 |
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **927개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **931개**다.
 
 신규 자동 검증:
 

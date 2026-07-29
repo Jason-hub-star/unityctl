@@ -1,6 +1,6 @@
 # unityctl 전체 Phase 로드맵
 
-> 최종 업데이트: 2026-03-20
+> 최종 업데이트: 2026-07-29
 > 목표: MCP 상위 호환 Unity 제어 체인
 
 ---
@@ -131,13 +131,14 @@ Marketplace — mcp.so + PulseMCP 등록 ✅ 완료
 ## 다음 개발 로드맵 (경쟁 분석 기반)
 
 > 최종 업데이트: 2026-03-20
-> 출처: `docs/internal/competitive-analysis-2026-03-19.md`
+> 출처: [`docs/ref/competitive-analysis-2026-07-29.md`](competitive-analysis-2026-07-29.md)
 
 전체 core phase는 완료됐다. 다음 단계는 "MCP 호환 기능 추가" 자체보다, `unityctl`을 **production-safe Unity automation control plane**으로 차별화하는 것이다.
 
 | 우선순위 | 영역 | 핵심 내용 |
 |---------|------|----------|
-| **P0** | 멀티 인스턴스 라우팅 Phase 2 | running process inventory, true editor-instance identity, session/task별 editor pin 고도화, response metadata 확장 |
+| **P0** | 멀티 인스턴스 라우팅 Phase 2 | macOS inventory ✅ / Linux inventory, true editor-instance identity, session/task별 editor pin 고도화 |
+| **P0** | Agent onboarding | project-local Claude/Codex 설정 + 5개 이하 workflow skills + first-success smoke |
 | **P0** | Workflow 번들 도구 | raw command 위에 `workflow compile-fix`, `workflow ui-smoke`, `workflow build-verify` 같은 멀티스텝 자동화 계층 추가 |
 | **P0** | Visual Verification v2 Phase 2 | play-mode end-of-frame capture/diff, UI click helper, richer console/hierarchy delta evidence 묶음 |
 | **P1** | 제작 도메인 확장 | ~~packages~~ ✅, ~~camera~~ ✅, ~~ScriptableObject~~ ✅, ~~texture import~~ ✅, ~~shader~~ ✅, ~~Cinemachine~~ ✅, ~~URP/HDRP volume~~ ✅, ~~renderer features~~ ✅, ~~model/audio import~~ ✅, ~~animation workflow~~ ✅, ~~profiler~~ ✅, ~~UGUI enhancement~~ ✅, ~~UI Toolkit~~ ✅ / 남은 영역: shader graph |

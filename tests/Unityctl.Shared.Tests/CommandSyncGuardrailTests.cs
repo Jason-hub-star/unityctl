@@ -141,6 +141,18 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void ComponentFullDump_IncludesHiddenSerializedProperties()
+    {
+        var source = ReadRepoFile(
+            @"src\Unityctl.Plugin\Editor\Utilities\SerializedPropertyJsonUtility.cs");
+
+        Assert.Contains(
+            "for (var enterChildren = true; iterator.Next(enterChildren); enterChildren = false)",
+            source);
+        Assert.DoesNotContain("while (iterator.NextVisible(true))", source);
+    }
+
+    [Fact]
     public void ScriptCommands_AreRegisteredAcrossCliMcpAndPlugin()
     {
         var cliCommands = ParseCliCommands();
@@ -565,16 +577,23 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
-    public void PluginVersion_MatchesBuildVersion_AndPingReadsPackageMetadata()
+    public void PublishedVersions_MatchBuildVersion_AndPingReadsPackageMetadata()
     {
         using var package = System.Text.Json.JsonDocument.Parse(
             ReadRepoFile(@"src\Unityctl.Plugin\package.json"));
         var pluginVersion = package.RootElement.GetProperty("version").GetString();
+        using var server = System.Text.Json.JsonDocument.Parse(ReadRepoFile("server.json"));
+        var serverVersion = server.RootElement.GetProperty("version").GetString();
+        var serverPackage = server.RootElement.GetProperty("packages")[0];
         var buildProps = System.Xml.Linq.XDocument.Parse(ReadRepoFile("Directory.Build.props"));
         var buildVersion = buildProps.Descendants("UnityctlVersion").Single().Value;
         var pingHandler = ReadRepoFile(@"src\Unityctl.Plugin\Editor\Commands\PingHandler.cs");
 
         Assert.Equal(buildVersion, pluginVersion);
+        Assert.Equal(buildVersion, serverVersion);
+        Assert.Equal(buildVersion, serverPackage.GetProperty("version").GetString());
+        Assert.Equal("nuget", serverPackage.GetProperty("registryType").GetString());
+        Assert.Equal("unityctl-mcp", serverPackage.GetProperty("identifier").GetString());
         Assert.Contains("PackageInfo.FindForAssembly", pingHandler);
         Assert.Contains("packageInfo?.version", pingHandler);
     }

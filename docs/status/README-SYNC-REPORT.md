@@ -1,25 +1,25 @@
 # README sync report
 
-최종 업데이트: 2026-06-02 (KST)
+최종 업데이트: 2026-07-29 (KST)
 
 ## Current Ground Truth
 
 | 항목 | 실제값 | 검증 |
 |------|--------|------|
-| CLI command count | **166** | published CLI `schema --format json` / `tools --json` smoke |
+| CLI command count | **178** | published CLI `schema --format json` / `tools --json` smoke |
 | MCP tool count | **12** | README + MCP black-box tests |
-| PR .NET xUnit test inventory | **927** | Shared/Core/Cli/Mcp local Release test output |
+| PR .NET xUnit test inventory | **931** | Shared/Core/Cli/Mcp local Release test output |
 
 ## Synced Public Docs
 
 | 위치 | 현재값 | 상태 |
 |------|--------|------|
-| `README.md` hero / comparison / command heading / architecture | 178 commands, 927 PR .NET tests | ✅ |
-| `README.ko.md` hero / comparison / command heading / architecture | 178 명령, 927 PR .NET 테스트 | ✅ |
+| `README.md` hero / comparison / command heading / architecture | 178 commands, 931 PR .NET tests | ✅ |
+| `README.ko.md` hero / comparison / command heading / architecture | 178 명령, 931 PR .NET 테스트 | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 178 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 178 commands | ✅ |
-| `docs/ref/architecture-mermaid.md` architecture block | 927 PR .NET xUnit tests | ✅ |
-| `docs/ref/getting-started.md` architecture block | 927 PR .NET xUnit tests | ✅ |
+| `docs/ref/architecture-mermaid.md` architecture block | 931 PR .NET xUnit tests | ✅ |
+| `docs/ref/getting-started.md` architecture block | 931 PR .NET xUnit tests | ✅ |
 | `docs/ref/ai-quickstart.md` machine-readable schema note | 178 commands | ✅ |
 
 ## CI Guardrails
@@ -38,15 +38,15 @@ Unity live blocker tracking issue: #17 (`Configure Unity Integration Actions sec
 
 ## Local Verification Evidence
 
-2026-06-02 local reproduction:
+2026-07-29 local verification:
 
 | Gate | Result |
 |------|--------|
 | `dotnet restore` | ✅ |
 | `dotnet build --no-restore -c Release` | ✅ warning 0 / error 0 |
-| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 107 passed |
-| `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 153 passed |
-| `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 579 passed |
+| `dotnet test tests/Unityctl.Shared.Tests --no-build -c Release` | ✅ 110 passed |
+| `dotnet test tests/Unityctl.Core.Tests --no-build -c Release` | ✅ 170 passed |
+| `dotnet test tests/Unityctl.Cli.Tests --no-build -c Release` | ✅ 626 passed |
 | `dotnet test tests/Unityctl.Mcp.Tests --no-build -c Release` | ✅ 25 passed |
 | published CLI `schema` / `tools --json` / `doctor --json` smoke | ✅ 178 commands, no drift, doctor JSON shape valid |
 | local nupkg `dotnet tool install --tool-path` smoke | ✅ installs the current PR `unityctl` package; schema/tools parity, required README commands, doctor/check/workflow verify JSON shape smoke passed |

@@ -79,7 +79,7 @@ If you need a contributor-style source install instead, you can still do one of 
 
 ```bash
 unityctl init --project /path/to/unity/project --source /path/to/unityctl/src/Unityctl.Plugin
-unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.0"
+unityctl init --project /path/to/unity/project --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1"
 ```
 
 When switching away from an older `file:` install, first run:
@@ -522,7 +522,7 @@ unityctl.slnx
 ├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
 ├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
 ├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-└── tests/*                                 927 PR .NET xUnit tests
+└── tests/*                                 931 PR .NET xUnit tests
 ```
 
 **Dependency direction**: `Shared ← Core ← Cli / Mcp`. Plugin runs inside Unity and shares source files with Shared.
