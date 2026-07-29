@@ -178,12 +178,12 @@ public class WorkflowGuardrailTests
             Assert.DoesNotContain("476", source);
         }
 
-        Assert.Contains("937 PR .NET tests", publicDocs[0]);
-        Assert.Contains("937 PR .NET 테스트", publicDocs[1]);
-        Assert.Contains("937 PR .NET xUnit tests", publicDocs[2]);
-        Assert.Contains("937 PR .NET xUnit tests", publicDocs[3]);
-        Assert.Contains("**937**", publicDocs[4]);
-        Assert.Contains("**937개**", publicDocs[5]);
+        Assert.Contains("938 PR .NET tests", publicDocs[0]);
+        Assert.Contains("938 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("938 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("938 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**938**", publicDocs[4]);
+        Assert.Contains("**938개**", publicDocs[5]);
         Assert.Contains("Unity live blocker tracking issue: #17", publicDocs[4]);
         Assert.Contains("Configure Unity Integration Actions secret", publicDocs[4]);
     }

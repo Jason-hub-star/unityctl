@@ -32,6 +32,44 @@ public class IpcTransportTests
     }
 
     [Fact]
+    public async Task ProbeAsync_RequiresSuccessfulPingRoundTrip()
+    {
+        var pipeName = $"unityctl_probe_{Guid.NewGuid():N}"[..25];
+        var serverTask = Task.Run(async () =>
+        {
+            using var server = new NamedPipeServerStream(
+                pipeName,
+                PipeDirection.InOut,
+                1,
+                PipeTransmissionMode.Byte,
+                PipeOptions.Asynchronous);
+            await server.WaitForConnectionAsync();
+
+            var header = new byte[4];
+            await ReadExactAsync(server, header);
+            var body = new byte[BitConverter.ToInt32(header, 0)];
+            await ReadExactAsync(server, body);
+            var request = JsonSerializer.Deserialize(
+                body,
+                UnityctlJsonContext.Default.CommandRequest);
+            Assert.Equal(WellKnownCommands.Ping, request?.Command);
+
+            var response = JsonSerializer.SerializeToUtf8Bytes(
+                CommandResponse.Ok("pong"),
+                UnityctlJsonContext.Default.CommandResponse);
+            await server.WriteAsync(BitConverter.GetBytes(response.Length));
+            await server.WriteAsync(response);
+            await server.FlushAsync();
+        });
+
+        await Task.Delay(100);
+        var transport = new IpcTransport(pipeName, useRawPipeName: true);
+
+        Assert.True(await transport.ProbeAsync());
+        await serverTask;
+    }
+
+    [Fact]
     public async Task SendAsync_NoServer_ReturnsFail()
     {
         var transport = new IpcTransport("/nonexistent/project/path");

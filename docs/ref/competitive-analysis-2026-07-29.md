@@ -105,9 +105,21 @@ unityctl의 방어 가능한 우위는 178개 CLI 명령 자체가 아니다.
 원 보고 환경은 Windows 11이므로 master 후보를 공개한 뒤 reporter 재검증 전에는
 이슈를 닫거나 릴리스 완료로 선언하지 않는다.
 
+## 5차 실험 결과 — keep
+
+readiness probe가 pipe 연결 성공 직후 payload 없이 닫아 서버의
+`MessageFraming.ReadMessage`가 정상적으로 `EndOfStreamException`을 내고, 이를
+실제 IPC 오류처럼 로그에 남기는 것이 원인이었다.
+
+- connect-only probe를 `ping` request/response roundtrip으로 교체
+- 사용자 cancellation은 계속 전파하고, probe 자체는 1초 예산으로 제한
+- named-pipe test가 `ping` payload와 성공 response를 검증
+- Unity lab에서 새 CLI로 status 10회 실행: expected pipe-close warning delta 0
+- `await-ready`: 1회, 602ms, Ready
+
 ## 다음 실험
 
-Windows #12/#13 재검증 결과를 기다리는 동안, readiness probe가 랩 로그에
-`Pipe closed before full message was read` 경고를 반복 생성하는 원인을 좁힌다.
-프로브가 의도적으로 연결만 확인하고 닫는 경로라면 정상 연결 오류로 분류해
-로그 신호 대 잡음비를 높인다.
+Windows #12/#13 reporter 재검증을 기다리며, 공개 설치 첫 성공 시간을 직접
+측정할 수 있는 clean-project smoke를 스킬 설치 → bridge init → doctor →
+await-ready 순서로 자동 기록한다. 기존 CI/랩 명령 조합으로 충분하면 새
+하네스나 명령을 추가하지 않는다.

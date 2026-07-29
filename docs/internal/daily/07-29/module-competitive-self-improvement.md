@@ -26,6 +26,7 @@
 7. Linux `/proc` process inventory와 실제 container probe 추가
 8. CLI 178 entrypoints / machine catalog 170개 문서 의미 분리
 9. IPC listener publish/stop race를 공용 lock에서 제거
+10. connect-only readiness probe를 1초 bounded `ping` roundtrip으로 교체
 
 ## 검증
 
@@ -35,7 +36,7 @@
 - 수정 후: PID 93832, `processKind=interactive`, `isRunning=true`
 - reload 뒤 `await-ready`: 2.47초 내 Ready
 - `dotnet build unityctl.slnx -c Release -m:1 /p:UseSharedCompilation=false`: 경고 0 / 오류 0
-- 전체 솔루션: 960개 통과(Shared 110, Core 176, Cli 626, MCP 25, Integration 23)
+- 전체 솔루션: 961개 통과(Shared 110, Core 177, Cli 626, MCP 25, Integration 23)
 - v0.6.1 CLI/MCP NuGet pack + local tool install + 178-command schema/tools parity smoke 통과
 - MCP Registry `server.json` 공식 2025-12-11 JSON Schema 검증 통과
 - `unityctl-workflows` 스킬 정적 검증 + 로컬 Claude Code/Codex 설치 smoke 통과
@@ -49,9 +50,11 @@
 - v0.6.2 local CLI/MCP install, version 0.6.2, schema/tools 170개 parity 통과
 - Unity lab domain reload 1.5초 내 완료와 IPC 재기동 확인
 - 실제 window close 뒤 Unity PID·`Temp/UnityLockfile` 제거 확인
+- 새 CLI status 10회: expected pipe-close warning delta 0
+- bounded ping probe `await-ready`: 1회, 602ms, Ready
 
 ## 다음 후보
 
 - project-local Claude/Codex config 생성은 스킬 사용성 데이터가 필요할 때만 추가
 - Windows quit-hang #12/#13 master 재검증 요청
-- readiness probe의 expected pipe-close 경고 소음 제거
+- clean-project 공개 설치 첫 성공 시간 smoke

@@ -52,6 +52,7 @@
 | Marketplace Registration | mcp.so + PulseMCP 등록 | P0 | Done | — | 2026-03-20 |
 | v0.6.1 Reliability Patch | hidden serialized state + macOS process inventory + registry metadata sync | P0 | Done | docs/ref/competitive-analysis-2026-07-29.md | 2026-07-29 |
 | v0.6.2 Distribution/Linux Patch | agent workflow skill + package README + Linux process inventory | P0 | Done | docs/ref/competitive-analysis-2026-07-29.md | 2026-07-29 |
+| Post-v0.6.2 IPC Hardening | listener shutdown race + bounded ping readiness probe | P0 | In Progress | docs/ref/competitive-analysis-2026-07-29.md | 2026-07-29 |
 | MCP Prompts | create_game_scene/debug_game/iterate_gameplay/setup_project (4개 AI 워크플로우) | P1 | Done | docs/ref/phase-roadmap.md | 2026-03-20 |
 | CLI Feedback Fixes | prefab-instantiate + asset copy 외부 경로 + IPC 30초 메시지 타임아웃 (CLI-012/014/000) | P0 | Done | docs/status/FEATURE-BACKLOG.md | 2026-03-20 |
 | Token Optimization | status state 구분 + hierarchy summary/maxDepth + component get summary + console-get-entries dedupe | P0 | Done | — | 2026-03-20 |

@@ -163,16 +163,23 @@ public sealed class IpcTransport : ITransport
 
     public async Task<bool> ProbeAsync(CancellationToken ct = default)
     {
+        using var probeCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        probeCts.CancelAfter(TimeSpan.FromSeconds(1));
+
         try
         {
             var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             await using (pipe.ConfigureAwait(false))
             {
-                await pipe.ConnectAsync(1000, ct).ConfigureAwait(false);
-                return true;
+                await pipe.ConnectAsync(1000, probeCts.Token).ConfigureAwait(false);
+                var response = await MessageFraming.SendReceiveAsync(
+                    pipe,
+                    new CommandRequest { Command = WellKnownCommands.Ping },
+                    probeCts.Token).ConfigureAwait(false);
+                return response.Success;
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
             throw;
         }
