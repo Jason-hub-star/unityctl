@@ -72,7 +72,7 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - v0.6.3 IPC/Validation Hardening (listener shutdown race + bounded ping readiness probe + validation failure semantics): Done (Unity labs + 3-OS CI, Windows #12/#13 reporter 재검증 대기)
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
-- v0.6.3 IPC/Validation Hardening (2026-07-29): listener pipe 게시/종료 race를 공용 lock으로 제거하고 connect-only probe를 1초 bounded `ping` roundtrip으로 교체. `project validate`가 `data.valid=false`인데 성공을 반환하던 계약도 `TestFailed`/exit 1로 정정. Unity labs + 3-OS CI 검증, Windows #12/#13 reporter 재검증 대기. PR 대상 939 테스트.
+- v0.6.3 IPC/Validation Hardening (2026-07-29): listener pipe 게시/종료 race를 공용 lock으로 제거하고 connect-only probe를 1초 bounded `ping` roundtrip으로 교체. `project validate`가 `data.valid=false`인데 성공을 반환하던 계약도 `TestFailed`/exit 1로 정정. Unity labs + 3-OS CI 검증, Windows #12/#13 reporter 재검증 대기. PR 대상 940 테스트.
 - v0.6.2 Distribution/Linux Patch (2026-07-29): 검증된 `unityctl-workflows` 공용 skill, CLI/MCP NuGet package README, Linux `/proc/<pid>/{exe,cmdline}` 기반 interactive/headless process inventory 추가. Linux SDK container에서 실제 probe process 탐지 포함 Core 176개, PR 대상 937개 테스트.
 - v0.6.1 Reliability Patch (2026-07-29): 최신 경쟁자/공식 Unity CLI·Skills 재조사 후 기능 개수보다 신뢰성 우선 — `component get --full`이 hidden top-level serialized state(`Rigidbody.m_Constraints=80`)를 누락하던 공용 iterator 수정, macOS `ps` 기반 interactive/headless process inventory 구현으로 `await-ready` false negative 제거, MCP Registry metadata를 NuGet/v0.6.1/현재 GitHub identity로 동기화. 별도 `unityctl-lab`(Unity 6000.3.16f1) 라이브 검증, 931 PR .NET 테스트.
 

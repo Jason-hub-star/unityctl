@@ -13,7 +13,7 @@
 AI 에이전트에 **178개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
 
 ```
-178 CLI 명령 · 12 MCP 도구 · 939 PR .NET 테스트 · Windows / macOS / Linux
+178 CLI 명령 · 12 MCP 도구 · 940 PR .NET 테스트 · Windows / macOS / Linux
 ```
 
 공식 Unity CLI(1.0.0-beta.2 + com.unity.pipeline)와 같은 에디터 세션에서 정면 벤치마크 — 더 빠른 왕복, 더 작은 응답, 그리고 측정된 격차는 당일 전부 흡수. [벤치마크 문서](docs/contest/benchmark-vs-unity-cli.md) 참조.
@@ -523,7 +523,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 939 PR .NET xUnit 테스트
++-- tests/*                                 940 PR .NET xUnit 테스트
 ```
 
 ---

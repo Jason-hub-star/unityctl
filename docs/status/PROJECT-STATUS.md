@@ -70,7 +70,7 @@
   - **친화 속성명 (P3)**: `mass`→`m_Mass` 자동 해석 + 실패 시 후보 목록 — component/scriptableobject set-property.
   - **Player Runtime (P4)**: `UnityctlBridge.Runtime` asmdef — Development Build 전용 브릿지 + `runtime status`/`runtime logs`(state 파일 디스커버리). 실행 중 플레이어 라이브 검증.
 
-**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 939개.**
+**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 940개.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -266,6 +266,7 @@
 | `script get-errors --path` 필터 | ✅ | 특정 파일 에러만 필터링 |
 | `script find-refs --symbol MonoBehaviour` | ✅ | 10개 참조, 파일/줄/컬럼/컨텍스트 |
 | `script find-refs --symbol BrokenTest` | ✅ | 1036개 파일 스캔, 단어 경계 매칭 정상 |
+| 같은 줄에 동일 심볼 2개 | ✅ | Unity 6000.3.16f1 lab에서 두 column을 별도 reference로 반환 |
 | `script rename-symbol --dry-run` | ✅ | 파일명 변경 미리보기 포함 |
 | `script rename-symbol` (실제) | ✅ | 클래스명+파일명 변경, 리컴파일 에러 0 |
 
@@ -401,7 +402,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 항목 | 상태 | 비고 |
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
-| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 111 통과. hidden serialized property traversal + validation failure semantics + published version/registry sync guardrail 포함 |
+| `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 112 통과. hidden serialized property traversal + validation failure semantics + find-refs 다중 위치 + published version/registry sync guardrail 포함 |
 | `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 177 통과. macOS parser, Linux `/proc` live probe, IPC `ping` roundtrip probe 회귀 포함. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`는 고정 시각 테스트 유지 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 626 통과 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
@@ -409,13 +410,13 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 
 | 프로젝트 | 통과 |
 |----------|------|
-| Unityctl.Shared.Tests | 111 |
+| Unityctl.Shared.Tests | 112 |
 | Unityctl.Core.Tests | 177 |
 | Unityctl.Cli.Tests | 626 |
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **939개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **940개**다.
 
 신규 자동 검증:
 

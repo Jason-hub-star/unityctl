@@ -167,6 +167,17 @@ public class CommandSyncGuardrailTests
     }
 
     [Fact]
+    public void ScriptFindRefs_CollectsEveryOccurrenceOnEachLine()
+    {
+        var source = ReadRepoFile(
+            @"src\Unityctl.Plugin\Editor\Commands\ScriptFindRefsHandler.cs");
+
+        Assert.Contains("while (searchStart < lines[i].Length)", source);
+        Assert.Contains("FindWordBoundary(lines[i], symbol, searchStart)", source);
+        Assert.Contains("searchStart = col + symbol.Length", source);
+    }
+
+    [Fact]
     public void ScriptCommands_AreRegisteredAcrossCliMcpAndPlugin()
     {
         var cliCommands = ParseCliCommands();

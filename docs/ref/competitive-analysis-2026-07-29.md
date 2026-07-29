@@ -146,7 +146,24 @@ installer 조합만으로 측정과 복구가 가능했다.
 종료 fix 증거를 “logical root fix + macOS Unity live + Windows .NET CI”로
 한정한다.
 
+## 7차 실험 결과 — keep
+
+local code intelligence를 새 LSP로 재구현하기 전에 기존 `script find-refs`의
+정확성을 Unity lab에서 점검했다. 기존 handler는 줄마다 첫 번째 단어 경계만
+반환해 한 줄에 같은 심볼이 여러 번 등장하면 reference count와 column이
+누락됐다.
+
+- 새 의존성이나 계층 없이 같은 줄의 다음 검색 위치를 계속 순회
+- Unity 6000.3.16f1 lab probe에서 `transform` 5개를 반환
+- 같은 9행의 두 occurrence를 column 20과 41로 각각 readback
+- Shared source guardrail 포함 전체 963개 .NET 테스트 통과
+
+semantic 구분은 여전히 경쟁 LSP의 우위이며 결과는 comments/strings를 포함할
+수 있다. 다음 단계는 이 한계를 숨기지 않고, Editor 연결 없는 탐색이 실제
+시간을 줄이는지 먼저 벤치마크한다.
+
 ## 다음 실험
 
-v0.6.3 NuGet/GitHub 배포와 reporter 피드백을 확인한 뒤 다음 경쟁 우선순위를
-선정한다. Windows 확인이 없으면 이슈를 억지로 닫지 않는다.
+v0.6.3 CLI NuGet 인덱싱과 Windows reporter 피드백을 계속 확인한다. 병행해서
+기존 script 탐색의 local 실행 경로가 새 LSP 없이 가능한지 조사한다. Windows
+확인이 없으면 이슈를 억지로 닫지 않는다.

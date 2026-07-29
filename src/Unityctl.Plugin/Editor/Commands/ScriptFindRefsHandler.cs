@@ -48,16 +48,25 @@ namespace Unityctl.Plugin.Editor.Commands
                     var lines = System.IO.File.ReadAllLines(fullPath);
                     for (int i = 0; i < lines.Length; i++)
                     {
-                        int col = FindWordBoundary(lines[i], symbol);
-                        if (col < 0) continue;
-
-                        references.Add(new JObject
+                        int searchStart = 0;
+                        while (searchStart < lines[i].Length)
                         {
-                            ["file"] = path,
-                            ["line"] = i + 1,
-                            ["column"] = col + 1,
-                            ["context"] = lines[i].TrimEnd()
-                        });
+                            int col = FindWordBoundary(lines[i], symbol, searchStart);
+                            if (col < 0) break;
+
+                            references.Add(new JObject
+                            {
+                                ["file"] = path,
+                                ["line"] = i + 1,
+                                ["column"] = col + 1,
+                                ["context"] = lines[i].TrimEnd()
+                            });
+
+                            if (references.Count >= limit)
+                                break;
+
+                            searchStart = col + symbol.Length;
+                        }
 
                         if (references.Count >= limit)
                             break;
@@ -91,9 +100,8 @@ namespace Unityctl.Plugin.Editor.Commands
         /// Finds symbol with word-boundary check (not inside another identifier).
         /// Returns the 0-based column index, or -1 if not found.
         /// </summary>
-        private static int FindWordBoundary(string line, string symbol)
+        private static int FindWordBoundary(string line, string symbol, int startIdx)
         {
-            int startIdx = 0;
             while (true)
             {
                 int idx = line.IndexOf(symbol, startIdx, StringComparison.Ordinal);
