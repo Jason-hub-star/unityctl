@@ -25,6 +25,7 @@
 6. CLI/MCP NuGet package에 기존 루트 README 포함
 7. Linux `/proc` process inventory와 실제 container probe 추가
 8. CLI 178 entrypoints / machine catalog 170개 문서 의미 분리
+9. IPC listener publish/stop race를 공용 lock에서 제거
 
 ## 검증
 
@@ -46,8 +47,11 @@
   root `README.md` entry 확인
 - Linux SDK container: `LinuxPlatformTests` 9개 통과, 실제 `/proc` probe 포함
 - v0.6.2 local CLI/MCP install, version 0.6.2, schema/tools 170개 parity 통과
+- Unity lab domain reload 1.5초 내 완료와 IPC 재기동 확인
+- 실제 window close 뒤 Unity PID·`Temp/UnityLockfile` 제거 확인
 
 ## 다음 후보
 
 - project-local Claude/Codex config 생성은 스킬 사용성 데이터가 필요할 때만 추가
-- Windows quit-hang 공개 issue의 v0.6.2 재검증과 issue 정리
+- Windows quit-hang #12/#13 master 재검증 요청
+- readiness probe의 expected pipe-close 경고 소음 제거

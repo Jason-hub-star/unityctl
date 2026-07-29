@@ -90,8 +90,24 @@ unityctl의 방어 가능한 우위는 178개 CLI 명령 자체가 아니다.
 - package smoke 과정에서 CLI 178 entrypoints와 machine catalog 170개를
   혼용한 문서 오류를 발견해 분리 표기하고 회귀 가드 추가
 
+## 4차 실험 결과 — master 후보
+
+공개 이슈 #12/#13의 root-cause 설명과 현재 `IpcServer`를 대조했다. quit 시
+긴 thread join을 생략하는 기존 fast path는 있었지만, listener가 pipe 생성과
+`_listenPipe` 게시 사이에서 종료되면 새 pipe를 놓치는 race는 남아 있었다.
+
+- `StopInternal`과 같은 lock 안에서 `_stopping` 확인과 `_listenPipe` 게시를
+  원자화해 dispose 누락 창을 제거
+- exact source-shape guardrail 추가
+- Unity 6000.3.16f1 lab domain reload 1.5초 내 완료, IPC 재기동 확인
+- 저장 후 실제 window close에서 Unity PID와 `Temp/UnityLockfile` 제거 확인
+
+원 보고 환경은 Windows 11이므로 master 후보를 공개한 뒤 reporter 재검증 전에는
+이슈를 닫거나 릴리스 완료로 선언하지 않는다.
+
 ## 다음 실험
 
-Windows quit-hang 공개 이슈를 현재 shutdown 경로와 테스트로 재현하고,
-v0.6.2에서 닫을 수 있는지 확인한다. 재현되지 않으면 추측성 코드를 추가하지
-않고 진단 증거와 재현 조건만 보강한다.
+Windows #12/#13 재검증 결과를 기다리는 동안, readiness probe가 랩 로그에
+`Pipe closed before full message was read` 경고를 반복 생성하는 원인을 좁힌다.
+프로브가 의도적으로 연결만 확인하고 닫는 경로라면 정상 연결 오류로 분류해
+로그 신호 대 잡음비를 높인다.

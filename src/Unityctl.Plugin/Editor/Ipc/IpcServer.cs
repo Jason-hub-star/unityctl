@@ -257,7 +257,13 @@ namespace Unityctl.Plugin.Editor.Ipc
                         PipeTransmissionMode.Byte,
                         PipeOptions.None);
 
-                    _listenPipe = pipe;
+                    // Publish under the same lock used by StopInternal. Otherwise shutdown
+                    // can dispose the old/null field just before this new pipe blocks.
+                    lock (_lock)
+                    {
+                        if (_stopping) break;
+                        _listenPipe = pipe;
+                    }
                     pipe.WaitForConnection();
                     _listenPipe = null;
 

@@ -138,6 +138,9 @@ public class CommandSyncGuardrailTests
         Assert.Contains("private void StopForEditorQuit()", source);
         Assert.Contains("StopInternal(ShutdownMode.EditorQuit)", source);
         Assert.Contains("if (!fastExit)", source);
+        Assert.Matches(
+            @"lock \(_lock\)\s*\{\s*if \(_stopping\) break;\s*_listenPipe = pipe;",
+            source);
     }
 
     [Fact]
