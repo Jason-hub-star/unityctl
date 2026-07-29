@@ -16,6 +16,7 @@
 |------|--------|------|
 | `README.md` hero / comparison / command heading / architecture | 178 commands, 931 PR .NET tests | ✅ |
 | `README.ko.md` hero / comparison / command heading / architecture | 178 명령, 931 PR .NET 테스트 | ✅ |
+| `README.md` / `README.ko.md` agent skill install | Claude Code + Codex 공용 `unityctl-workflows` | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 178 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 178 commands | ✅ |
 | `docs/ref/architecture-mermaid.md` architecture block | 931 PR .NET xUnit tests | ✅ |

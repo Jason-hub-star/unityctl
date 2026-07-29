@@ -230,6 +230,17 @@ dotnet tool install -g unityctl
 dotnet tool install -g unityctl-mcp
 ```
 
+Claude Code와 Codex용 에이전트 워크플로 스킬(선택):
+
+```bash
+npx skills add Jason-hub-star/unityctl \
+  --skill unityctl-workflows \
+  -a claude-code -a codex
+```
+
+이 스킬은 에이전트가 실제 명령 목록을 먼저 탐색하고, 올바른 Unity 프로젝트를
+선택하며, 모든 변경을 구조화된 재조회와 검증으로 마무리하도록 안내합니다.
+
 참고:
 - `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1`
 - GitHub Release의 CLI 아카이브는 현재 framework-dependent 빌드입니다 (self-contained 아님).

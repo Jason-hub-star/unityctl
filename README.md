@@ -235,6 +235,17 @@ dotnet tool install -g unityctl
 dotnet tool install -g unityctl-mcp
 ```
 
+Optional agent workflow skill for Claude Code and Codex:
+
+```bash
+npx skills add Jason-hub-star/unityctl \
+  --skill unityctl-workflows \
+  -a claude-code -a codex
+```
+
+The skill teaches agents to discover the live command surface, target the right
+Unity project, and close every edit with structured readback and verification.
+
 Bootstrap notes:
 - `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1`
 - GitHub Release CLI archives are framework-dependent (not self-contained) today.
@@ -317,7 +328,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 
 ---
 
-## Commands (167)
+## Commands (178)
 
 ### Core (13)
 

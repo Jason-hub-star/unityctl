@@ -1,0 +1,4 @@
+interface:
+  display_name: "unityctl Workflows"
+  short_description: "Drive and verify Unity projects with unityctl"
+  default_prompt: "Use $unityctl-workflows to make and verify this change in my Unity project."

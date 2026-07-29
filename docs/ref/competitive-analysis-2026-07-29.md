@@ -62,6 +62,22 @@ unityctl의 방어 가능한 우위는 178개 CLI 명령 자체가 아니다.
    - baseline: `server.json`이 v0.3.0, 이전 GitHub identity, 존재하지 않는 npm 배포를 선언
    - result: NuGet `unityctl-mcp`, v0.6.1, 현재 GitHub identity로 동기화하고 회귀 가드 추가
 
+## 2차 실험 결과 — keep
+
+`skill-creator`로 단일 `unityctl-workflows` 스킬을 만들고 별도 에이전트가
+문서만 읽은 상태에서 `unityctl-lab`을 진단하게 했다.
+
+- 로컬 `npx skills add`가 공용 `.agents/skills` 설치와 Claude Code symlink를 생성
+- 첫 전방 테스트가 dirty scene, 전역 target mismatch, 구형 CLI의 macOS process
+  false negative를 모두 쓰기 blocker로 판단
+- 잘못된 `editor current --project` 예시, dirty guard, tools JSON shape 등 6개
+  문서 결함을 수정
+- 두 번째 전방 테스트에서 6개 결함 해소 및 0.6.1 process metadata 정상화 확인
+- project-local config 자동 생성은 아직 추가하지 않음. 공용 스킬 설치로 같은
+  목적을 달성하며, 설정 파일 생성은 실제 사용성 데이터가 요구할 때만 검토
+
 ## 다음 실험
 
-`v0.7.0` 후보는 “project-local Claude/Codex onboarding + 얇은 workflow skills”다. 새 command를 추가하기 전에 현재 `init`이 설치 후 첫 성공까지 필요한 수동 설정을 얼마나 줄일 수 있는지 CoderGamester v1.4.0, Ivan v0.86.3, akiojin v0.12.0과 같은 신규 프로젝트에서 측정한다.
+OS process inventory의 남은 Linux 공백을 실제 또는 격리된 process fixture로
+재현한다. 동시에 NuGet package readme 경고처럼 설치 후 첫 성공을 방해하는
+배포 마찰을 새 기능보다 먼저 제거한다.

@@ -21,6 +21,7 @@
 2. macOS Unity process inventory 구현
 3. MCP Registry metadata를 NuGet/v0.6.1/현재 repository로 동기화
 4. version/test-count/public docs guardrail 동기화
+5. Claude Code/Codex 공용 `unityctl-workflows` 스킬과 설치 경로 추가
 
 ## 검증
 
@@ -33,9 +34,13 @@
 - 전체 솔루션: 954개 통과(Shared 110, Core 170, Cli 626, MCP 25, Integration 23)
 - v0.6.1 CLI/MCP NuGet pack + local tool install + 178-command schema/tools parity smoke 통과
 - MCP Registry `server.json` 공식 2025-12-11 JSON Schema 검증 통과
+- `unityctl-workflows` 스킬 정적 검증 + 로컬 Claude Code/Codex 설치 smoke 통과
+- 2회 전방 테스트: 1차에서 명령/dirty/routing/process 판정 결함 6개 발견,
+  수정 후 2차에서 전부 해소 확인
+- NuGet.org CLI/MCP v0.6.1 공개 인덱싱 확인
 
 ## 다음 후보
 
-- project-local Claude/Codex onboarding + 얇은 workflow skills
+- project-local Claude/Codex config 생성은 스킬 사용성 데이터가 필요할 때만 추가
 - Linux process inventory
 - Windows quit-hang 공개 issue의 v0.6.1 재검증과 issue 정리
