@@ -382,6 +382,9 @@ public class CommandSyncGuardrailTests
     public void CatalogCliNames_AreRegisteredInProgram()
     {
         var cliCommands = ParseCliCommands();
+        Assert.Equal(178, cliCommands.Count);
+        Assert.Equal(170, CommandCatalog.All.Count());
+
         var missing = CommandCatalog.All
             .Select(command => command.CliName ?? command.Name)
             .Where(commandName => !commandName.Contains('<', StringComparison.Ordinal)

@@ -13,7 +13,7 @@
 Give your AI agent **178 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-178 CLI commands · 12 MCP tools · 931 PR .NET tests · Windows / macOS / Linux
+178 CLI commands · 12 MCP tools · 937 PR .NET tests · Windows / macOS / Linux
 ```
 
 Benchmarked head-to-head against the official Unity CLI (1.0.0-beta.2 + com.unity.pipeline) on the same editor session — faster round-trips, smaller responses, and every measured gap absorbed the same day. See [the benchmark](docs/contest/benchmark-vs-unity-cli.md).
@@ -180,7 +180,9 @@ AI agent costs are dominated by tool schemas sent every turn. unityctl uses **on
   <img src="docs/assets/token-efficiency.svg" alt="Measured token cost: unityctl via Bash = 0 overhead, 6.8x cheaper than CoplayDev MCP" width="620">
 </p>
 
-The 12 MCP tools cover the full 178-command surface through `unityctl_query` (read), `unityctl_run` (write), and `unityctl_schema` (lookup).
+The CLI exposes 178 entry points, including convenience wrappers. The 12 MCP
+tools keep prompts small by loading 170 canonical command schemas on demand
+through `unityctl_query`, `unityctl_run`, and `unityctl_schema`.
 
 #### Measured: Claude Code Token Cost (2026-03-20)
 
@@ -247,7 +249,7 @@ The skill teaches agents to discover the live command surface, target the right
 Unity project, and close every edit with structured readback and verification.
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1`
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.2`
 - GitHub Release CLI archives are framework-dependent (not self-contained) today.
 
 ### Apple Silicon macOS Validation
@@ -274,7 +276,7 @@ Project compatibility note: if a Unity project or third-party package is pinned 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.2"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json
@@ -527,7 +529,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI shell
 +-- src/Unityctl.Mcp      (net10.0)         MCP server
 +-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 931 PR .NET xUnit tests
++-- tests/*                                 937 PR .NET xUnit tests
 ```
 
 ---

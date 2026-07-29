@@ -13,7 +13,7 @@
 AI 에이전트에 **178개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
 
 ```
-178 CLI 명령 · 12 MCP 도구 · 931 PR .NET 테스트 · Windows / macOS / Linux
+178 CLI 명령 · 12 MCP 도구 · 937 PR .NET 테스트 · Windows / macOS / Linux
 ```
 
 공식 Unity CLI(1.0.0-beta.2 + com.unity.pipeline)와 같은 에디터 세션에서 정면 벤치마크 — 더 빠른 왕복, 더 작은 응답, 그리고 측정된 격차는 당일 전부 흡수. [벤치마크 문서](docs/contest/benchmark-vs-unity-cli.md) 참조.
@@ -175,7 +175,9 @@ AI 에이전트 비용의 대부분은 매 턴 전송되는 도구 스키마에�
   <img src="docs/assets/token-efficiency.svg" alt="실측 토큰 비용: unityctl via Bash = 오버헤드 0, CoplayDev MCP 대비 6.8배 저렴" width="620">
 </p>
 
-12개 MCP 도구가 `unityctl_query`(읽기), `unityctl_run`(쓰기), `unityctl_schema`(조회)를 통해 178개 명령 전체를 커버합니다.
+CLI는 편의 래퍼를 포함해 178개 진입점을 제공합니다. 12개 MCP 도구는
+`unityctl_query`, `unityctl_run`, `unityctl_schema`를 통해 정규화된 170개
+명령 스키마를 필요할 때만 불러와 프롬프트 크기를 줄입니다.
 
 #### 실측: Claude Code 토큰 비용 (2026-03-20)
 
@@ -242,7 +244,7 @@ npx skills add Jason-hub-star/unityctl \
 선택하며, 모든 변경을 구조화된 재조회와 검증으로 마무리하도록 안내합니다.
 
 참고:
-- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1`
+- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.2`
 - GitHub Release의 CLI 아카이브는 현재 framework-dependent 빌드입니다 (self-contained 아님).
 
 ### Apple Silicon macOS 검증
@@ -269,7 +271,7 @@ Apple Silicon MacBook Air에서 Homebrew, .NET SDK `10.0.105`, Unity Hub, Unity 
 ```bash
 # 1. 에디터 플러그인 설치
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.2"
 
 # 2. Unity Editor에서 프로젝트를 열고 연결 확인
 unityctl ping --project /path/to/project --json
@@ -521,7 +523,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 931 PR .NET xUnit 테스트
++-- tests/*                                 937 PR .NET xUnit 테스트
 ```
 
 ---

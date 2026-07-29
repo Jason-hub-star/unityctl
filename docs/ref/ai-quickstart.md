@@ -23,7 +23,7 @@ Open (or restart) the Unity Editor after running this command. For contributor w
 
 ```bash
 unityctl init --project "/path/to/unity/project" --source /path/to/unityctl/src/Unityctl.Plugin
-unityctl init --project "/path/to/unity/project" --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.1"
+unityctl init --project "/path/to/unity/project" --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.2"
 ```
 
 ### 3. Verify
@@ -93,7 +93,7 @@ Notes:
 # Human-readable list
 unityctl tools
 
-# Machine-readable JSON (all 166 commands with parameter schemas)
+# Machine-readable JSON (170 canonical commands with parameter schemas)
 unityctl tools --json
 
 # Full CLI schema

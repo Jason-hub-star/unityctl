@@ -19,7 +19,8 @@ GitHub 수치는 조사 시점의 공개 API 스냅샷이며 시간에 따라 �
 
 unityctl의 방어 가능한 우위는 178개 CLI 명령 자체가 아니다.
 
-- 12개 MCP 도구로 178개 명령을 on-demand schema로 노출하는 낮은 상시 토큰 비용
+- 178개 CLI 진입점과 별도로 정규화된 170개 command schema를 12개 MCP
+  도구에서 on-demand로 불러오는 낮은 상시 토큰 비용
 - IPC probe-first + batch fallback, reload-aware reconnect, 무인 Editor update dispatch
 - Undo rollback, dry-run, flight log, sessions, `workflow verify` evidence bundle
 - 공식 Unity CLI와 같은 Editor/태스크에서 측정한 실패 의미론·응답 크기·지연 증거
@@ -76,8 +77,21 @@ unityctl의 방어 가능한 우위는 178개 CLI 명령 자체가 아니다.
 - project-local config 자동 생성은 아직 추가하지 않음. 공용 스킬 설치로 같은
   목적을 달성하며, 설정 파일 생성은 실제 사용성 데이터가 요구할 때만 검토
 
+## 3차 실험 결과 — keep
+
+- Linux의 빈 `FindRunningUnityProcesses()`를 `/proc/<pid>/exe`와 NUL 구분
+  `cmdline` 읽기로 구현
+- 공백 포함 `-projectPath`, Unity Hub version, `-batchmode`/`-nographics`/
+  `-adb2` 분류를 parser fixture로 검증
+- Linux .NET SDK container에서 실제 `Unity` probe process를 띄워 PID,
+  project, version, interactive classification을 `/proc` 경로로 검증
+- 릴리스 pack 경고에서 발견한 CLI/MCP NuGet README 누락도 기존 루트 README
+  재사용으로 제거
+- package smoke 과정에서 CLI 178 entrypoints와 machine catalog 170개를
+  혼용한 문서 오류를 발견해 분리 표기하고 회귀 가드 추가
+
 ## 다음 실험
 
-OS process inventory의 남은 Linux 공백을 실제 또는 격리된 process fixture로
-재현한다. 동시에 NuGet package readme 경고처럼 설치 후 첫 성공을 방해하는
-배포 마찰을 새 기능보다 먼저 제거한다.
+Windows quit-hang 공개 이슈를 현재 shutdown 경로와 테스트로 재현하고,
+v0.6.2에서 닫을 수 있는지 확인한다. 재현되지 않으면 추측성 코드를 추가하지
+않고 진단 증거와 재현 조건만 보강한다.

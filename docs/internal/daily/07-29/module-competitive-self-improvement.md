@@ -23,6 +23,8 @@
 4. version/test-count/public docs guardrail 동기화
 5. Claude Code/Codex 공용 `unityctl-workflows` 스킬과 설치 경로 추가
 6. CLI/MCP NuGet package에 기존 루트 README 포함
+7. Linux `/proc` process inventory와 실제 container probe 추가
+8. CLI 178 entrypoints / machine catalog 170개 문서 의미 분리
 
 ## 검증
 
@@ -32,7 +34,7 @@
 - 수정 후: PID 93832, `processKind=interactive`, `isRunning=true`
 - reload 뒤 `await-ready`: 2.47초 내 Ready
 - `dotnet build unityctl.slnx -c Release -m:1 /p:UseSharedCompilation=false`: 경고 0 / 오류 0
-- 전체 솔루션: 954개 통과(Shared 110, Core 170, Cli 626, MCP 25, Integration 23)
+- 전체 솔루션: 960개 통과(Shared 110, Core 176, Cli 626, MCP 25, Integration 23)
 - v0.6.1 CLI/MCP NuGet pack + local tool install + 178-command schema/tools parity smoke 통과
 - MCP Registry `server.json` 공식 2025-12-11 JSON Schema 검증 통과
 - `unityctl-workflows` 스킬 정적 검증 + 로컬 Claude Code/Codex 설치 smoke 통과
@@ -42,9 +44,10 @@
 - NuGet.org CLI/MCP v0.6.1 공개 인덱싱 확인
 - CLI/MCP pack 경고 0, 두 `.nupkg`의 nuspec `<readme>README.md</readme>`와
   root `README.md` entry 확인
+- Linux SDK container: `LinuxPlatformTests` 9개 통과, 실제 `/proc` probe 포함
+- v0.6.2 local CLI/MCP install, version 0.6.2, schema/tools 170개 parity 통과
 
 ## 다음 후보
 
 - project-local Claude/Codex config 생성은 스킬 사용성 데이터가 필요할 때만 추가
-- Linux process inventory
-- Windows quit-hang 공개 issue의 v0.6.1 재검증과 issue 정리
+- Windows quit-hang 공개 issue의 v0.6.2 재검증과 issue 정리

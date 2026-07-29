@@ -68,11 +68,12 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - Spatial Grounding (`spatial describe`/`spatial check covers|inside|on-top-of|overlaps|aligned` — 월드 AABB·true dimensions·표면 법선·술어 판정을 텍스트로. 스크린샷 없이 씬을 "측정된 공간 사실"로): Done (.NET 표면·핸들러 authored, Unity 컴파일은 에디터에서 확인)
 - 공식 CLI 벤치마크 + 흡수 사다리 (unattended lifecycle fix, `exec eval`, 리졸버/속성명 통일, `runtime status/logs`): Done (전 항목 라이브 검증)
 - v0.6.1 Reliability Patch (`component get --full` hidden serialized state, macOS process inventory, MCP Registry metadata sync): Done (Unity 6000.3.16f1 라이브 검증)
+- v0.6.2 Distribution/Linux Patch (Claude Code/Codex workflow skill, NuGet README, Linux `/proc` process inventory): Done (Linux container `/proc` probe 검증)
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
+- v0.6.2 Distribution/Linux Patch (2026-07-29): 검증된 `unityctl-workflows` 공용 skill, CLI/MCP NuGet package README, Linux `/proc/<pid>/{exe,cmdline}` 기반 interactive/headless process inventory 추가. Linux SDK container에서 실제 probe process 탐지 포함 Core 176개, PR 대상 937개 테스트.
 - v0.6.1 Reliability Patch (2026-07-29): 최신 경쟁자/공식 Unity CLI·Skills 재조사 후 기능 개수보다 신뢰성 우선 — `component get --full`이 hidden top-level serialized state(`Rigidbody.m_Constraints=80`)를 누락하던 공용 iterator 수정, macOS `ps` 기반 interactive/headless process inventory 구현으로 `await-ready` false negative 제거, MCP Registry metadata를 NuGet/v0.6.1/현재 GitHub identity로 동기화. 별도 `unityctl-lab`(Unity 6000.3.16f1) 라이브 검증, 931 PR .NET 테스트.
 - 공식 Unity CLI 벤치마크 + 흡수 사다리 (2026-07-21): 공식 CLI(beta.2 + pipeline 0.3.1-exp.1)와 8태스크 16셀 실측(`docs/contest/benchmark-vs-unity-cli.md`) 후 격차 전부 흡수 — ① 무인 에디터 브릿지 기동/재기동 버그 수정(delayCall→update 기반 `MainThreadDispatch`, T8 141.7s 실패→0.5s 성공) ② `exec eval`(동봉 csc로 다중 문장 C#, opt-in `AllowEval`, 공식 eval보다 빠름) ③ `ResolveGameObject`(이름/경로/globalId 통일, 18핸들러) ④ 친화 속성명(`mass`→`m_Mass`+후보 목록) ⑤ Player Runtime(`UnityctlBridge.Runtime` + `runtime status/logs`). 927 테스트 통과.
-- Spatial Grounding + IPC Reload Staleness Fix (2026-07-16): `spatial describe`/`spatial check` 신규 read 명령 2종(7계층 동기화, summary-by-default). AI가 코드/좌표만 보고 저지르는 공간 오류(예: 천장 덮개를 세로 벽으로)를 스크린샷 없이 수치로 사전 차단 — `spatial check Cover covers Ceiling` → footprint/gap/rotation 오차 리포트. IPC `reloading` staleness를 90초로 상향해 긴 리로드 중 드롭 방지. 908 테스트 통과.
 
 ## 실행 규칙 (MUST)
 1. 기존 코드/타입/유틸 우선 재사용, 중복 구현 금지
