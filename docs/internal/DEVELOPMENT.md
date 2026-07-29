@@ -772,7 +772,7 @@ Unity 실측 (fresh published CLI: `artifacts/investigation/cli/unityctl.exe`):
   - 실제 execute 단계에서도 script 계열은 일반 Busy 문구 대신 script 전용 추천 액션 반환
 - [`src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs)
   - recent failure가 `script-get-errors`면 `script validate --wait` 후속 액션 추천
-  - recent failure가 `script-find-refs` / `script-rename-symbol`이면 IPC 우선 / batch 주의 추천
+  - recent failure가 `script-rename-symbol`이면 IPC 우선 / batch 주의 추천
 - [`src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs)
   - compile cache 없음 상태를 `no-compilation-data` + `recommendedAction`으로 더 명확히 반환
 
@@ -791,7 +791,7 @@ Unity 실측 (fresh published CLI: `artifacts/investigation/cli/unityctl.exe`):
 - built CLI로 `doctor --project C:\Users\gmdqn\robotapp --json`
   - 결과: `starting-or-reloading`
   - script 전용 추천 포함:
-    - `script find-refs` / `script rename-symbol`은 IPC ready 권장
+    - `script find-refs`는 local read-only, `script rename-symbol`은 IPC ready 권장
     - batch fallback 주의
 
 메모:

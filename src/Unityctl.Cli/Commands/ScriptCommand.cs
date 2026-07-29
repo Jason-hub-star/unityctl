@@ -294,8 +294,7 @@ public static class ScriptCommand
     public static void FindRefs(string project, string symbol, string? folder = null, int? limit = null, bool json = false)
     {
         var request = CreateFindRefsRequest(symbol, folder, limit);
-        var exitCode = ExecuteInteractiveAsync(project, request, json).GetAwaiter().GetResult();
-        Environment.Exit(exitCode);
+        CommandRunner.Execute(project, request, json);
     }
 
     internal static CommandRequest CreateFindRefsRequest(string symbol, string? folder = null, int? limit = null)
@@ -430,7 +429,6 @@ public static class ScriptCommand
         return command switch
         {
             WellKnownCommands.ScriptGetErrors => "script get-errors",
-            WellKnownCommands.ScriptFindRefs => "script find-refs",
             WellKnownCommands.ScriptRenameSymbol => "script rename-symbol",
             _ => command
         };

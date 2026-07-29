@@ -194,6 +194,36 @@ public sealed class CommandExecutorReadinessTests
         Assert.Equal("project validate", response.Data!["command"]!.GetValue<string>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_FindRefsUsesLocalScannerEvenWhenEditorIsLocked()
+    {
+        var projectPath = Path.Combine(Path.GetTempPath(), $"unityctl-local-refs-{Guid.NewGuid():N}");
+        var assetsPath = Path.Combine(projectPath, "Assets");
+        Directory.CreateDirectory(assetsPath);
+        File.WriteAllText(Path.Combine(assetsPath, "Probe.cs"), "target target\n");
+        try
+        {
+            var platform = new FakePlatform(locked: true);
+            var executor = new CommandExecutor(platform, new UnityEditorDiscovery(platform));
+            var request = new CommandRequest
+            {
+                Command = WellKnownCommands.ScriptFindRefs,
+                Parameters = new() { ["symbol"] = "target" }
+            };
+
+            var response = await executor.ExecuteAsync(projectPath, request);
+
+            Assert.True(response.Success);
+            Assert.Equal(2, response.Data!["referenceCount"]!.GetValue<int>());
+            Assert.Equal("local", response.Data["target"]!["transport"]!.GetValue<string>());
+            Assert.False(response.Data["target"]!["requiresEditor"]!.GetValue<bool>());
+        }
+        finally
+        {
+            Directory.Delete(projectPath, recursive: true);
+        }
+    }
+
     private sealed class FakePlatform : IPlatformServices
     {
         private readonly bool _locked;

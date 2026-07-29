@@ -51,6 +51,7 @@ Run `--help` first because spatial selector flags can evolve.
 Use normal filesystem editing for C# when possible. Then let Unity compile and return structured errors:
 
 ```bash
+unityctl script find-refs --project "$P" --symbol TargetSymbol --json  # local; Editor not required
 unityctl script validate --project "$P" --wait --json
 unityctl script get-errors --project "$P" --json
 ```

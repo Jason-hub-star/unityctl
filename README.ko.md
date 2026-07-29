@@ -13,7 +13,7 @@
 AI 에이전트에 **178개 명령**을 쥐여주세요. Unity 씬 구성부터 C# 스크립트 작성, 빌드 검증, 게임 배포까지 — 문제가 생기면 자동으로 롤백됩니다.
 
 ```
-178 CLI 명령 · 12 MCP 도구 · 940 PR .NET 테스트 · Windows / macOS / Linux
+178 CLI 명령 · 12 MCP 도구 · 944 PR .NET 테스트 · Windows / macOS / Linux
 ```
 
 공식 Unity CLI(1.0.0-beta.2 + com.unity.pipeline)와 같은 에디터 세션에서 정면 벤치마크 — 더 빠른 왕복, 더 작은 응답, 그리고 측정된 격차는 당일 전부 흡수. [벤치마크 문서](docs/contest/benchmark-vs-unity-cli.md) 참조.
@@ -413,7 +413,7 @@ Claude Code / Cursor / VS Code MCP 설정에 추가:
 | `script validate` | 컴파일 트리거 및 검증 |
 | `script list` | MonoScript 에셋 목록 |
 | `script get-errors` | 구조화된 컴파일 에러 (파일/줄/열/코드) |
-| `script find-refs` | 전체 스크립트에서 심볼 참조 검색 |
+| `script find-refs` | Unity를 시작하지 않고 로컬에서 심볼 참조 검색 |
 | `script rename-symbol` | 전체 스크립트에서 심볼 이름 변경 (`--dry-run` 지원) |
 | `exec` | Unity에서 C# 표현식 실행 |
 | `exec eval` | 동봉 Roslyn 컴파일러로 다중 문장 C# 컴파일·실행, 도메인 리로드 없음 (opt-in: `AllowEval`) |
@@ -523,7 +523,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 940 PR .NET xUnit 테스트
++-- tests/*                                 944 PR .NET xUnit 테스트
 ```
 
 ---

@@ -290,10 +290,9 @@ internal static class DoctorAnalyzer
             return;
         }
 
-        if (string.Equals(lastScriptFailure.Operation, WellKnownCommands.ScriptFindRefs, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(lastScriptFailure.Operation, WellKnownCommands.ScriptRenameSymbol, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(lastScriptFailure.Operation, WellKnownCommands.ScriptRenameSymbol, StringComparison.OrdinalIgnoreCase))
         {
-            recommendations.Add("`script find-refs` and `script rename-symbol` are most reliable with a running Unity Editor and IPC ready.");
+            recommendations.Add("`script rename-symbol` is most reliable with a running Unity Editor and IPC ready.");
             recommendations.Add("Avoid relying on batch fallback for script refactor commands unless you have already verified that project path in practice.");
         }
     }
@@ -329,7 +328,6 @@ internal static class DoctorAnalyzer
     private static bool IsScriptCommand(string? operation)
     {
         return string.Equals(operation, WellKnownCommands.ScriptGetErrors, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(operation, WellKnownCommands.ScriptFindRefs, StringComparison.OrdinalIgnoreCase)
             || string.Equals(operation, WellKnownCommands.ScriptRenameSymbol, StringComparison.OrdinalIgnoreCase);
     }
 

@@ -6,6 +6,7 @@ using Unityctl.Shared.Transport;
 using Unityctl.Shared;
 using System.Text.Json.Nodes;
 using Unityctl.Shared.Models;
+using Unityctl.Core.CodeIntelligence;
 
 namespace Unityctl.Core.Transport;
 
@@ -66,6 +67,9 @@ public sealed class CommandExecutor
         CommandRequest request,
         CancellationToken ct)
     {
+        if (request.Command == WellKnownCommands.ScriptFindRefs)
+            return ScriptReferenceScanner.Execute(projectPath, request, ct);
+
         // IPC first: probe checks if an Editor with IPC server is running
         await using var ipc = new IpcTransport(projectPath, _platform, _processDetector);
         var process = _processDetector.FindProcessForProject(projectPath);
@@ -211,7 +215,6 @@ public sealed class CommandExecutor
         var cliCommand = command switch
         {
             WellKnownCommands.ScriptGetErrors => "script get-errors",
-            WellKnownCommands.ScriptFindRefs => "script find-refs",
             WellKnownCommands.ScriptRenameSymbol => "script rename-symbol",
             WellKnownCommands.ExecListCallables => "exec list-callables",
             WellKnownCommands.ExecInvoke => "exec invoke",
@@ -222,7 +225,6 @@ public sealed class CommandExecutor
         };
 
         if (command is WellKnownCommands.ScriptGetErrors
-            or WellKnownCommands.ScriptFindRefs
             or WellKnownCommands.ScriptRenameSymbol
             or WellKnownCommands.ExecListCallables
             or WellKnownCommands.ExecInvoke

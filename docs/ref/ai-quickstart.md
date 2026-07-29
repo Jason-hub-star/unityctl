@@ -266,7 +266,7 @@ unityctl script validate --project "/path/to/project" --json
 unityctl script list --project "/path/to/project" --folder Assets --json
 ```
 
-`script get-errors`, `script find-refs`, and `script rename-symbol` are best used with a running Editor and IPC ready. If `script get-errors` returns no compile data after Unity reports Ready, run `unityctl script validate --project "/path/to/project" --wait` once and retry.
+`script find-refs` runs locally without an Editor. `script get-errors` and `script rename-symbol` are best used with a running Editor and IPC ready. If `script get-errors` returns no compile data after Unity reports Ready, run `unityctl script validate --project "/path/to/project" --wait` once and retry.
 
 ### Build and test
 

@@ -13,7 +13,7 @@
 Give your AI agent **178 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-178 CLI commands · 12 MCP tools · 940 PR .NET tests · Windows / macOS / Linux
+178 CLI commands · 12 MCP tools · 944 PR .NET tests · Windows / macOS / Linux
 ```
 
 Benchmarked head-to-head against the official Unity CLI (1.0.0-beta.2 + com.unity.pipeline) on the same editor session — faster round-trips, smaller responses, and every measured gap absorbed the same day. See [the benchmark](docs/contest/benchmark-vs-unity-cli.md).
@@ -418,7 +418,7 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 | `script validate` | Trigger compilation and verify |
 | `script list` | List MonoScript assets |
 | `script get-errors` | Structured compile errors (file/line/column/code) |
-| `script find-refs` | Find symbol references across all scripts |
+| `script find-refs` | Find symbol references locally without starting Unity |
 | `script rename-symbol` | Rename symbol across all scripts (with `--dry-run`) |
 | `type describe` | Reflect a live C# type (members, Unity specifics, Manual link); summary-by-default, `--full` for signatures |
 | `exec` | Execute C# expression in Unity |
@@ -529,7 +529,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI shell
 +-- src/Unityctl.Mcp      (net10.0)         MCP server
 +-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 940 PR .NET xUnit tests
++-- tests/*                                 944 PR .NET xUnit tests
 ```
 
 ---

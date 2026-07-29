@@ -162,8 +162,29 @@ semantic 구분은 여전히 경쟁 LSP의 우위이며 결과는 comments/strin
 수 있다. 다음 단계는 이 한계를 숨기지 않고, Editor 연결 없는 탐색이 실제
 시간을 줄이는지 먼저 벤치마크한다.
 
+## 8차 실험 결과 — keep
+
+`script find-refs`의 word-boundary 계약은 Roslyn/LSP가 없어도 로컬 파일에서
+동일하게 수행할 수 있으므로 Core scanner로 이동했다. `CommandExecutor`의
+공용 진입점에서 처리해 CLI와 MCP가 같은 경로를 사용하며, 세션과 flight log
+기록도 유지한다.
+
+- running lab: 동일 `transform` 5개와 두 column readback 유지
+- locked Editor fixture: IPC probe 없이 local response를 반환하는 회귀 테스트
+- closed sample project: 공개 v0.6.2 batch Unity 4.34초 → local 0.21초
+  (**20.7배**, 결과 1개 동일)
+- project 밖 folder 거부, deterministic file ordering, 실제 추가 match가 있을
+  때만 `truncated=true`
+- 전체 967개 .NET 테스트와 warning 0 build 통과
+
+이는 semantic navigation 전체를 복제한 것이 아니다. 현재 명령의 정직한
+text-search 계약을 더 빠르고 독립적으로 만든 슬라이스이며, overload 구분이나
+comments/strings 제외가 필요하다는 실제 사례가 생길 때 Roslyn 비용을 다시
+평가한다.
+
 ## 다음 실험
 
-v0.6.3 CLI NuGet 인덱싱과 Windows reporter 피드백을 계속 확인한다. 병행해서
-기존 script 탐색의 local 실행 경로가 새 LSP 없이 가능한지 조사한다. Windows
-확인이 없으면 이슈를 억지로 닫지 않는다.
+v0.6.3 CLI/MCP NuGet 인덱싱과 글로벌 tool update, schema/tools 170개 parity
+smoke까지 완료했다. 사용자 요청으로 자기개선 루프를 여기서 종료한다.
+Input System/Addressables/video 비교는 후속 backlog로 남기며, Windows
+확인이 없으므로 #12/#13은 억지로 닫지 않는다.

@@ -70,7 +70,7 @@
   - **친화 속성명 (P3)**: `mass`→`m_Mass` 자동 해석 + 실패 시 후보 목록 — component/scriptableobject set-property.
   - **Player Runtime (P4)**: `UnityctlBridge.Runtime` asmdef — Development Build 전용 브릿지 + `runtime status`/`runtime logs`(state 파일 디스커버리). 실행 중 플레이어 라이브 검증.
 
-**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 940개.**
+**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 178개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 944개.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -272,9 +272,10 @@
 
 readiness 메모:
 
-- `script get-errors`, `script find-refs`, `script rename-symbol`은 현재 **running Editor + IPC ready** 상태에서 가장 신뢰도가 높다.
+- `script get-errors`, `script rename-symbol`은 현재 **running Editor + IPC ready** 상태에서 가장 신뢰도가 높다.
+- `script find-refs`는 Core의 로컬 read-only scanner를 사용하므로 Editor 실행이나 IPC가 필요 없다.
 - `script get-errors`는 compile cache가 아직 없으면 stale empty 결과를 낼 수 있으므로, Editor가 Ready인데도 데이터가 비어 있으면 `unityctl script validate --project <path> --wait`를 한 번 권장한다.
-- `script find-refs` / `script rename-symbol`은 batch fallback보다 IPC 경로를 우선 안내하도록 CLI와 `doctor` recommendation을 보강했다.
+- `script rename-symbol`은 batch fallback보다 IPC 경로를 우선 안내하도록 CLI와 `doctor` recommendation을 보강했다.
 
 ## Script Patch v2 라이브 검증 (robotapp, Unity 6000.0.64f1)
 
@@ -403,7 +404,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 |------|------|------|
 | `dotnet build unityctl.slnx -c Release` | ✅ | 경고/오류 없이 통과 |
 | `dotnet test tests/Unityctl.Shared.Tests -c Release` | ✅ | 112 통과. hidden serialized property traversal + validation failure semantics + find-refs 다중 위치 + published version/registry sync guardrail 포함 |
-| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 177 통과. macOS parser, Linux `/proc` live probe, IPC `ping` roundtrip probe 회귀 포함. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`는 고정 시각 테스트 유지 |
+| `dotnet test tests/Unityctl.Core.Tests -c Release` | ✅ | 181 통과. local reference scanner, macOS parser, Linux `/proc` live probe, IPC `ping` roundtrip probe 회귀 포함. 해결된 날짜/시각 경계 회귀 `FlightLogRobustnessTests.Query_FilterByUntil_ExcludesNewerEntries`는 고정 시각 테스트 유지 |
 | `dotnet test tests/Unityctl.Cli.Tests -c Release` | ✅ | 626 통과 |
 | `dotnet test tests/Unityctl.Mcp.Tests -c Release` | ✅ | 25 통과 |
 | `dotnet test unityctl.slnx -c Release` | ⚠️ | Integration/환경 락, AppLocker 등 워크스테이션 조건에 따라 개별 프로젝트 실행이 더 안정적 |
@@ -411,12 +412,12 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | 프로젝트 | 통과 |
 |----------|------|
 | Unityctl.Shared.Tests | 112 |
-| Unityctl.Core.Tests | 177 |
+| Unityctl.Core.Tests | 181 |
 | Unityctl.Cli.Tests | 626 |
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **940개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **944개**다.
 
 신규 자동 검증:
 

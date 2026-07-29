@@ -895,7 +895,7 @@ public static class CommandCatalog
 
     public static readonly CommandDefinition ScriptFindRefsCmd = Define(
         WellKnownCommands.ScriptFindRefs,
-        "Find text references to a symbol in C# scripts (word-boundary matching)",
+        "Find text references locally without starting Unity (word-boundary matching)",
         "query",
         Parameter("project", "string", "Path to Unity project", required: true),
         Parameter("symbol", "string", "Symbol name to search for (class, method, field, etc.)", required: true),

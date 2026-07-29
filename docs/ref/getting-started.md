@@ -424,7 +424,7 @@ unityctl script list --project /path/to/project --folder Assets --json
 unityctl script validate --project /path/to/project --json
 ```
 
-For `script get-errors`, `script find-refs`, and `script rename-symbol`, prefer a running Editor with IPC ready. If `script get-errors` still has no compile data after Unity reports Ready, run `unityctl script validate --project <path> --wait` once and retry.
+`script find-refs` runs locally without an Editor. For `script get-errors` and `script rename-symbol`, prefer a running Editor with IPC ready. If `script get-errors` still has no compile data after Unity reports Ready, run `unityctl script validate --project <path> --wait` once and retry.
 
 ### Exec / Reflection
 
@@ -522,7 +522,7 @@ unityctl.slnx
 ├── src/Unityctl.Cli      (net10.0)         CLI shell → dotnet tool "unityctl"
 ├── src/Unityctl.Mcp      (net10.0)         MCP server → dotnet tool "unityctl-mcp"
 ├── src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-└── tests/*                                 940 PR .NET xUnit tests
+└── tests/*                                 944 PR .NET xUnit tests
 ```
 
 **Dependency direction**: `Shared ← Core ← Cli / Mcp`. Plugin runs inside Unity and shares source files with Shared.
