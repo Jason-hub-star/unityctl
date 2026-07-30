@@ -1,0 +1,16 @@
+{
+  "template_root": "/Users/family/orca/workspaces/jason-agent-harness-template/spirula",
+  "template_commit": "57b7543",
+  "synced_on": "2026-07-31",
+  "project_name": "",
+  "assets": {
+    ".claude/automations/automation-health-monitor.prompt.md": {
+      "local": "600b907ed1f2b0192ffa0e0d8257d1c96b46292bfc45b6588ba7a5b337343ce3",
+      "src": "472113090dabc6d525004dcb127cad3b81e76ecc135eca9898b7564ca82f9800"
+    },
+    ".claude/automations/docs-nightly-organizer.prompt.md": {
+      "local": "abc0036c8935ba0db1b041bdef11eb087ff91c5dde99886871322382f38b4ae1",
+      "src": "a2c61a1373593c04e63541cdb4e13b75ff687f02b72e9af1e8dfcea055a52521"
+    }
+  }
+}
