@@ -11,7 +11,7 @@ public class CommandCatalogTests
         var names = CommandCatalog.All.Select(command => command.Name).ToArray();
 
         Assert.Equal(
-            ["init", "detach", "editor list", "editor instances", "editor current", "editor select", "ping", "status", "await-ready", "build",
+            ["init", "detach", "mcp install", "editor list", "editor instances", "editor current", "editor select", "ping", "status", "await-ready", "build",
              "build-profile-list", "build-profile-get-active", "build-profile-set-active", "build-target-switch",
              "test", "test-result", "check", "tools", "doctor", "log",
              "session list", "session stop", "session clean", "watch",

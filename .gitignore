@@ -43,3 +43,9 @@ docs/status/.readme-sync.lock
 ralph/workspace/*.log
 ralph/workspace/*.txt
 docs/contest/demo/
+
+# 로컬 하네스(작업방식) — 저장소에 올리지 않는다
+.claude/
+scripts/check/
+docs/INDEX.md
+docs/SESSION-START.md

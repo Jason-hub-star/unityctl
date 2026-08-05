@@ -10,11 +10,17 @@
 
 ### The execution layer for AI-driven game development.
 
-Give your AI agent **178 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
+Give your AI agent **179 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-178 CLI commands · 12 MCP tools · 944 PR .NET tests · Windows / macOS / Linux
+179 CLI commands · 12 MCP tools · 961 PR .NET tests · Windows / macOS / Linux
 ```
+
+<p align="center">
+  <img src="docs/assets/unityctl-demo.gif" alt="Live unityctl session: status, scene hierarchy, mesh create-primitive, gameobject find, screenshot capture — every response written to out/ as an artifact" width="820">
+</p>
+
+<p align="center"><em>Unrehearsed session against a live Unity 6000.3.16f1 Editor — every command answers in structured JSON and drops an artifact in <code>out/</code>.</em></p>
 
 Benchmarked head-to-head against the official Unity CLI (1.0.0-beta.2 + com.unity.pipeline) on the same editor session — faster round-trips, smaller responses, and every measured gap absorbed the same day. See [the benchmark](docs/contest/benchmark-vs-unity-cli.md).
 
@@ -31,10 +37,6 @@ Benchmarked head-to-head against the official Unity CLI (1.0.0-beta.2 + com.unit
 Quality gates: every PR runs the .NET Shared/Core/Cli/Mcp test suites on Windows, macOS, and Linux. Unity Editor-dependent validation is separated into the Unity Integration workflow, with `init`, sample-project `doctor`, `check`, `scene hierarchy`, `player-settings set/get`, and `workflow verify` evidence uploaded from nightly/manual runs. Unity Integration requires either a `UNITY_LICENSE` or `UNITY_SERIAL` GitHub secret.
 
 Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) for the test trust checklist, flaky-test policy, command sync checklist, and Unity live-validation split.
-
-<p align="center">
-  <img src="docs/assets/mcp-demo.svg" alt="AI agent building a Unity scene via MCP" width="700">
-</p>
 
 ---
 
@@ -66,95 +68,6 @@ For AI agents, this means a **closed-loop automation cycle** — the agent doesn
 
 ---
 
-## What AI Agents Can Build
-
-### Scene Construction
-
-> _"Create a platformer level with a floor, walls, and a player spawn point"_
-
-```bash
-# Agent creates scene structure
-unityctl scene create --path "Assets/Scenes/Level01.unity" --project $P
-unityctl mesh create-primitive --type Plane --name "Floor" --scale "[10,1,10]" --project $P
-unityctl mesh create-primitive --type Cube --name "Wall" --position "[5,1,0]" --scale "[0.5,2,10]" --project $P
-unityctl gameobject create --name "PlayerSpawn" --project $P
-unityctl component add --id "<PlayerSpawnId>" --type "BoxCollider" --project $P
-
-# Agent verifies the scene
-unityctl scene hierarchy --project $P --json      # check structure
-unityctl screenshot capture --project $P           # visual verification
-unityctl project validate --project $P --json      # camera? lights? errors?
-```
-
-### Script Authoring with Compile Verification
-
-> _"Write a player movement script and make sure it compiles"_
-
-```bash
-# Agent writes code
-unityctl script create --path "Assets/Scripts/PlayerMovement.cs" --className "PlayerMovement" --project $P
-unityctl script patch --path "Assets/Scripts/PlayerMovement.cs" \
-  --startLine 8 --insertContent "public float speed = 5f;" --project $P
-
-# Agent checks compilation — and fixes errors in a loop
-unityctl script validate --project $P --wait       # trigger recompile
-unityctl script get-errors --project $P --json     # structured CS errors
-# if errors: read error, patch fix, validate again
-```
-
-### Safe Batch Operations with Rollback
-
-> _"Set up physics layers for Player, Enemy, and Projectile — roll back if anything fails"_
-
-```bash
-unityctl batch execute --project $P --rollbackOnFailure true --commands '[
-  {"command": "layer-set", "parameters": {"index": 8, "name": "Player"}},
-  {"command": "layer-set", "parameters": {"index": 9, "name": "Enemy"}},
-  {"command": "layer-set", "parameters": {"index": 10, "name": "Projectile"}},
-  {"command": "physics-set-collision-matrix", "parameters": {"layer1": 10, "layer2": 10, "ignore": true}}
-]'
-# If any command fails, all changes are automatically rolled back via Undo
-```
-
-### Build Verification Pipeline
-
-> _"Check if the project is ready to ship"_
-
-<p align="center">
-  <img src="docs/assets/project-validate.svg" alt="project-validate output showing 6 checks" width="600">
-</p>
-
-```bash
-# Agent reads the failure, fixes it, validates again
-unityctl gameobject create --name "Main Camera" --project $P
-unityctl component add --id "<MainCameraId>" --type "Camera" --project $P
-unityctl gameobject set-tag --id "<MainCameraId>" --tag "MainCamera" --project $P
-unityctl project validate --project $P --json   # valid: true
-```
-
----
-
-## What To Build First
-
-If you want to prove `unityctl` in public, do not start with Minecraft.
-Start with a showcase ladder that matches the strongest verified loops in the current toolchain:
-
-1. **Zero-to-playable**: a small 3D arena microgame built from primitives, scripts, UI, physics, and verification artifacts.
-2. **Vertical slice**: expand that into a polished top-down survival or base-defense prototype with prefabs, NavMesh, materials, audio, and build validation.
-3. **Sandbox step**: only then move into chunked worlds, crafting, procedural terrain, and save-heavy systems.
-
-The best first showcase for `unityctl` is a **small 3D survival / base-defense game**, not an open-world sandbox.
-It is easy to understand in screenshots and GIFs, maps cleanly to scene editing + script patching + rollback + visual verification, and can grow into a more complex sandbox later.
-
-See [Showcase Roadmap](docs/ref/showcase-roadmap.md) for:
-
-- the recommended public demo scope
-- the asset checklist to prepare before building
-- the pre-production plan for using `unityctl` effectively
-- the gaps worth closing before attempting a Minecraft-like demo
-
----
-
 ## Why unityctl for AI Agents?
 
 | | unityctl | Existing Unity MCP |
@@ -166,7 +79,7 @@ See [Showcase Roadmap](docs/ref/showcase-roadmap.md) for:
 | **Connection stability** | Named Pipe — survives Domain Reload | WebSocket drops, reconnect needed |
 | **CI/CD** | `check` / `test` / `build --dry-run` work headless | Editor must be open |
 | **Diagnostics** | `doctor` classifies failures + suggests next steps | "Connection failed" |
-| **Commands** | **178** (read + write + validate + diagnose) | ~34-200 tools |
+| **Commands** | **179** (read + write + validate + diagnose) | ~34-200 tools |
 | **Audit trail** | NDJSON flight recorder for every command | No history |
 | **Runtime** | Native .NET — no Python/TS bridge | Bridge overhead |
 | **Install** | `dotnet tool install -g unityctl` | Node.js + npm + port config |
@@ -180,60 +93,29 @@ AI agent costs are dominated by tool schemas sent every turn. unityctl uses **on
   <img src="docs/assets/token-efficiency.svg" alt="Measured token cost: unityctl via Bash = 0 overhead, 6.8x cheaper than CoplayDev MCP" width="620">
 </p>
 
-The CLI exposes 178 entry points, including convenience wrappers. The 12 MCP
-tools keep prompts small by loading 170 canonical command schemas on demand
+The CLI exposes 179 entry points, including convenience wrappers. The 12 MCP
+tools keep prompts small by loading 171 canonical command schemas on demand
 through `unityctl_query`, `unityctl_run`, and `unityctl_schema`.
-
-#### Measured: Claude Code Token Cost (2026-03-20)
-
-When Claude Code runs 5 read-only QA operations (compile check, scene hierarchy, robot catalog, DH table, build settings), the **cumulative token cost** differs dramatically:
-
-| Stack | Schema (once) | 5 ops x 1 | 5 ops x 10 |
-|---|---:|---:|---:|
-| **unityctl via Bash** | **0 tok** | **1,780 tok** | **17,800 tok** |
-| unityctl MCP (12 tools) | 1,256 tok | 2,957 tok | 18,261 tok |
-| CoplayDev MCP (30 tools) | 11,427 tok | 12,158 tok | 18,742 tok |
-
-Key findings:
-- **unityctl via Bash has zero schema overhead** — the Bash tool is already in Claude Code's system prompt, so no additional tokens are spent on tool definitions
-- CoplayDev MCP loads **45 KB of schemas** (30 tools), but only **1 out of 5** QA operations has a matching tool
-- In a typical short session, unityctl via Bash uses **6.8x fewer tokens** than CoplayDev MCP
-- Full benchmark methodology and raw data: [`docs/benchmark/`](docs/benchmark/)
 
 ---
 
-## Selection-aware Routing
-
-```bash
-# Pin the current Unity project once
-unityctl editor select --project /path/to/project
-
-# Or pin a running Unity PID when it maps to a single project
-unityctl editor select --pid 55028
-
-# Inspect the current selection
-unityctl editor current --json
-
-# See running Unity instances with PID / project / IPC status
-unityctl editor instances --json
-
-# These CLI commands can now omit --project
-unityctl ping --json
-unityctl status --json
-unityctl check --json
-unityctl doctor --json
-
-# Run a small verification bundle (artifacts-first)
-unityctl workflow verify --file verify.json --project /path/to/project --json
-```
-
 ## Install
 
-```bash
-# CLI (requires .NET 10 SDK)
-dotnet tool install -g unityctl
+**Standalone binary — no .NET SDK required** (recommended):
 
-# MCP server for AI agents
+```bash
+# macOS (Apple Silicon) — swap in unityctl-osx-x64 / unityctl-linux-x64 as needed
+curl -L https://github.com/Jason-hub-star/unityctl/releases/latest/download/unityctl-osx-arm64.tar.gz | tar xz
+./unityctl --version
+```
+
+Windows: download `unityctl-win-x64.zip` from [Releases](https://github.com/Jason-hub-star/unityctl/releases/latest) and unzip.
+Each archive contains a self-contained `unityctl` + `unityctl-mcp` executable and the embedded Unity plugin template.
+
+**Or via .NET tool** (requires .NET 10 SDK):
+
+```bash
+dotnet tool install -g unityctl
 dotnet tool install -g unityctl-mcp
 ```
 
@@ -249,34 +131,14 @@ The skill teaches agents to discover the live command surface, target the right
 Unity project, and close every edit with structured readback and verification.
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.3`
-- GitHub Release CLI archives are framework-dependent (not self-contained) today.
-
-### Apple Silicon macOS Validation
-
-Manual validation was completed on an Apple silicon MacBook Air using Homebrew, .NET SDK `10.0.105`, Unity Hub, and Unity editors `6000.0.64f1` and `6000.3.11f1`.
-
-Validated path:
-
-- `dotnet tool install -g unityctl`
-- `dotnet tool install -g unityctl-mcp`
-- `unityctl editor list`
-- `unityctl init --project <project> --source /path/to/unityctl/src/Unityctl.Plugin`
-- `unityctl ping --project <project> --json`
-- `unityctl doctor --project <project> --json`
-- `unityctl status --project <project> --json`
-- `unityctl check --project <project> --json`
-
-Observed result on a Unity `6000.0.64f1` project: `ping` returned `pong`, `doctor` reported IPC connected, `status` returned `Ready`, and `check` passed on macOS.
-
-Project compatibility note: if a Unity project or third-party package is pinned to Unity `6.0 LTS`, opening that same project in `6000.3+` can fail before `unityctl` is involved. During validation, reopening the project in its pinned `6000.0.64f1` editor resolved the project-side render pipeline error.
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.4`
 
 ## Quick Start
 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.3"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.4"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json
@@ -296,7 +158,15 @@ unityctl build --project /path/to/project --dry-run    # 13 preflight checks
 
 ### MCP Setup (AI Agents)
 
-Add to your Claude Code / Cursor / VS Code MCP config:
+One command per client — it merges into the existing config instead of replacing it:
+
+```bash
+unityctl mcp install --client claude-code            # or cursor / codex
+unityctl mcp install --client vscode --project .     # VS Code is workspace-scoped
+unityctl mcp install --client cursor --dry-run       # preview, writes nothing
+```
+
+Or add it by hand:
 
 ```json
 {
@@ -308,261 +178,12 @@ Add to your Claude Code / Cursor / VS Code MCP config:
 }
 ```
 
-<details>
-<summary><strong>12 MCP Tools</strong></summary>
-
-| Tool | Type | Description |
-|------|------|-------------|
-| `unityctl_query` | Read | Unified read: asset, gameobject, scene, component, UI, physics, lighting, tags |
-| `unityctl_run` | Write | Unified write: create, delete, modify, script, material, prefab, batch |
-| `unityctl_schema` | Meta | On-demand parameter lookup (by command or category) |
-| `unityctl_build` | Action | Build player with 13 preflight checks |
-| `unityctl_check` | Action | Compile verification (headless) |
-| `unityctl_test` | Action | EditMode / PlayMode tests |
-| `unityctl_exec` | Action | Execute arbitrary C# expression |
-| `unityctl_status` | Read | Editor state + connectivity |
-| `unityctl_ping` | Read | Fast connectivity check |
-| `unityctl_watch` | Stream | Real-time console / hierarchy / compilation events |
-| `unityctl_log` | Read | Flight recorder query |
-| `unityctl_session_list` | Read | Active session list |
-
-</details>
-
 ---
-
-## Commands (178)
-
-### Core (13)
-
-| Command | Description |
-|---------|-------------|
-| `ping` | Check Unity connectivity |
-| `status` | Editor state (with `--wait` smart polling for Domain Reload) |
-| `check` | Verify script compilation (headless) |
-| `build` | Build player with `--dry-run` preflight (13 checks) |
-| `test` | Run EditMode / PlayMode tests |
-| `doctor` | Diagnose connectivity + suggest recovery steps |
-| `project validate` | Game readiness check (compile, scenes, camera, lights, console, editor) |
-| `init` | Install plugin to Unity project |
-| `editor list` | Discover installed Unity editors |
-| `editor instances` | List running Unity Editor instances |
-| `editor current` | Show the selected Unity project target |
-| `editor select` | Select a Unity project target, or a unique running PID, for project-less CLI routing |
-| `workflow verify` | Run artifact-first verification steps (`projectValidate`, `capture`, `imageDiff`, `consoleWatch`, `uiAssert`, `playSmoke`) |
-
-<details>
-<summary><strong>Scene & GameObject</strong> (19)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `scene snapshot` | Capture scene state |
-| `scene hierarchy` | Scene hierarchy tree |
-| `scene diff` | Property-level scene diff with epsilon |
-| `scene save` | Save active scene |
-| `scene open` | Open scene by path |
-| `scene create` | Create new scene |
-| `gameobject create` | Create GameObject |
-| `gameobject delete` | Delete GameObject |
-| `gameobject rename` | Rename GameObject |
-| `gameobject move` | Reparent GameObject |
-| `gameobject find` | Find by name/tag/component |
-| `gameobject get` | Get GameObject details |
-| `gameobject set-active` | Toggle active state |
-| `gameobject set-tag` | Set tag |
-| `gameobject set-layer` | Set layer |
-| `component add` | Add component |
-| `component remove` | Remove component |
-| `component get` | Get component properties |
-| `component set-property` | Set component property |
-
-</details>
-
-<details>
-<summary><strong>Assets & Materials</strong> (21)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `asset find` | Search by type/label/path |
-| `asset get-info` | Asset metadata |
-| `asset get-dependencies` | Direct dependencies |
-| `asset reference-graph` | Reverse-reference graph |
-| `asset create` | Create asset |
-| `asset create-folder` | Create folder |
-| `asset copy` | Copy asset |
-| `asset move` | Move/rename asset |
-| `asset delete` | Delete asset |
-| `asset import` | Reimport asset |
-| `asset refresh` | Refresh AssetDatabase |
-| `asset get-labels` | Get labels |
-| `asset set-labels` | Set labels |
-| `material create` | Create material |
-| `material get` | Get material properties |
-| `material set` | Set material property |
-| `material set-shader` | Change shader |
-| `prefab create` | Create prefab from GameObject |
-| `prefab unpack` | Unpack prefab instance |
-| `prefab apply` | Apply prefab overrides |
-| `prefab edit` | Enter/exit prefab edit mode |
-
-</details>
-
-<details>
-<summary><strong>Scripting & Code Analysis</strong> (11)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `script create` | Create C# script from template |
-| `script edit` | Replace script content (whole-file) |
-| `script patch` | Line-level insert/delete/replace |
-| `script delete` | Delete script file |
-| `script validate` | Trigger compilation and verify |
-| `script list` | List MonoScript assets |
-| `script get-errors` | Structured compile errors (file/line/column/code) |
-| `script find-refs` | Find symbol references locally without starting Unity |
-| `script rename-symbol` | Rename symbol across all scripts (with `--dry-run`) |
-| `type describe` | Reflect a live C# type (members, Unity specifics, Manual link); summary-by-default, `--full` for signatures |
-| `exec` | Execute C# expression in Unity |
-| `exec eval` | Compile & run multi-statement C# via the bundled Roslyn compiler, no domain reload (opt-in: `AllowEval`) |
-| `runtime status` / `runtime logs` | Query a running Development Build player (scene, fps, captured logs) over IPC |
-
-</details>
-
-<details>
-<summary><strong>Editor Control</strong> (18)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `play start/stop/pause` | Start, stop, or pause play mode |
-| `editor pause` | Toggle editor pause |
-| `editor focus-gameview` | Focus Game View |
-| `editor focus-sceneview` | Focus Scene View |
-| `player-settings get/set` | PlayerSettings read/write |
-| `project-settings get/set` | Project settings read/write |
-| `console clear` | Clear console |
-| `console get-count` | Log/warning/error counts |
-| `define-symbols get/set` | Scripting define symbols |
-| `tag list/add` | Tag management |
-| `layer list/set` | Layer management |
-| `undo` | Undo last operation |
-| `redo` | Redo last undone operation |
-
-</details>
-
-<details>
-<summary><strong>Build & Deployment</strong> (6)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `build-profile list/get-active/set-active` | Build profile management |
-| `build-target switch` | Switch build platform |
-| `build-settings get-scenes/set-scenes` | Build scene list |
-
-</details>
-
-<details>
-<summary><strong>Physics, Lighting & NavMesh</strong> (12)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `physics get-settings/set-settings` | DynamicsManager |
-| `physics get-collision-matrix/set-collision-matrix` | 32x32 layer collision |
-| `lighting bake/cancel/clear` | Lightmap baking |
-| `lighting get-settings/set-settings` | Lightmap settings |
-| `navmesh bake/clear/get-settings` | NavMesh |
-
-</details>
-
-<details>
-<summary><strong>UI & Mesh</strong> (8)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `ui canvas-create` | Create UI Canvas |
-| `ui element-create` | Create Button, Text, Image, etc. |
-| `ui set-rect` | Set RectTransform |
-| `ui find` | Find UI elements |
-| `ui get` | Get UI element details |
-| `ui toggle` | Set Toggle state |
-| `ui input` | Set InputField text |
-| `mesh create-primitive` | Create Cube/Sphere/Plane/Cylinder/Capsule/Quad |
-
-</details>
-
-<details>
-<summary><strong>Automation & Monitoring</strong> (15)</summary>
-
-| Command | Description |
-|---------|-------------|
-| `batch execute` | Transaction with rollback |
-| `workflow run` | JSON workflow execution |
-| `watch` | Real-time event streaming |
-| `log` | Flight recorder query |
-| `session list/stop/clean` | Session management |
-| `screenshot` | Scene/Game View capture (base64) |
-| `schema` / `tools` | Machine-readable metadata |
-| `package list/add/remove` | Package management |
-| `animation create-clip/create-controller` | Animation assets |
-
-</details>
-
----
-
-## Architecture
-
-```
-AI Agent (LLM)                unityctl-mcp              unityctl CLI             Unity Editor
-Claude / GPT / Gemini         12 MCP tools              178 commands             Plugin (IPC)
-        |                          |                          |                       |
-        |--- MCP (stdio) -------->|                          |                       |
-        |                          |--- CLI invocation ----->|                       |
-        |                          |                          |--- IPC (~100ms) ---->|
-        |                          |                          |    or Batch (30s+)   |
-        |                          |                          |<--- JSON response ---|
-        |                          |<--- result -------------|                       |
-        |<--- tool result --------|                          |                       |
-```
-
-```
-unityctl.slnx
-+-- src/Unityctl.Shared   (netstandard2.1)  Protocol + models
-+-- src/Unityctl.Core     (net10.0)         Business logic
-+-- src/Unityctl.Cli      (net10.0)         CLI shell
-+-- src/Unityctl.Mcp      (net10.0)         MCP server
-+-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 944 PR .NET xUnit tests
-```
-
----
-
-## Platforms
-
-| Platform | CLI | IPC Transport | Batch | CI |
-|----------|-----|---------------|-------|----|
-| Windows | ✅ | Named Pipe | ✅ | ✅ |
-| macOS | ✅ | Unix Domain Socket | ✅ | ✅ |
-| Linux | ✅ | Unix Domain Socket | ✅ | ✅ |
-
-## Prerequisites
-
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Unity 2021.3+](https://unity.com/download)
-
-## Terminal Output
-
-<p align="center">
-  <img src="docs/assets/editor-list.svg" alt="unityctl editor list" width="570">
-</p>
-
-<p align="center">
-  <img src="docs/assets/log-table.svg" alt="unityctl log" width="645">
-</p>
-
-<p align="center">
-  <img src="docs/assets/tools.svg" alt="unityctl tools — 178 commands across 9 categories" width="654">
-</p>
 
 ## Documentation
 
+- [Command Reference](docs/ref/commands.md) — all 179 CLI commands and the 12 MCP tools
+- [README Appendix](docs/ref/readme-appendix.md) — worked examples, architecture, platform support
 - [Getting Started](docs/ref/getting-started.md) — installation, setup, and common workflows
 - [AI Agent Quickstart](docs/ref/ai-quickstart.md) — MCP setup and agent integration guide
 - [Showcase Roadmap](docs/ref/showcase-roadmap.md) — recommended demo game ladder, asset checklist, and pre-production plan

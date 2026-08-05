@@ -12,6 +12,9 @@ app.Add("init", (string project, string? source = null) =>
 app.Add("detach", (string project, bool cleanCache = false, bool json = false) =>
     DetachCommand.Execute(project, cleanCache, json));
 
+app.Add("mcp install", (string client, string? project = null, string command = "unityctl-mcp", bool dryRun = false, bool json = false) =>
+    McpCommand.Install(client, project, command, dryRun, json));
+
 app.Add("editor list", (bool json = false) =>
     EditorCommands.List(json));
 

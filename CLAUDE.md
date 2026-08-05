@@ -71,6 +71,7 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - v0.6.2 Distribution/Linux Patch (Claude Code/Codex workflow skill, NuGet README, Linux `/proc` process inventory): Done (Linux container `/proc` probe 검증)
 - v0.6.3 IPC/Validation Hardening (listener shutdown race + bounded ping readiness probe + validation failure semantics): Done (Unity labs + 3-OS CI, Windows #12/#13 reporter 재검증 대기)
 - Local Code Intelligence Slice (`script find-refs` Core local scanner, Editor/IPC 불필요): Done (closed-project 4.34s→0.21s, 20.7x)
+- Distribution Ladder P1~P5 (README hero GIF, 저장소 메타, self-contained single-file 릴리스, `mcp install` + Unity 상태창, README 603→199줄): Done (Unity 6000.3.16f1 batchmode 컴파일 검증, 4 RID publish 재현)
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
 - Local Code Intelligence Slice (2026-07-29): `script find-refs`를 Core의 deterministic local scanner로 실행해 Editor/IPC/batch Unity 의존을 제거. 공개 v0.6.2 대비 closed-project 4.34초→0.21초(20.7배), same-line 다중 column과 project-root guard 검증. PR 대상 944 테스트.
@@ -193,6 +194,8 @@ unityctl.slnx
 - Phase 2B 설계: `docs/ref/phase-2b-plan.md`
 - 프로젝트 상태: `docs/status/PROJECT-STATUS.md`
 - Phase 실행 보드: `docs/status/PHASE-EXECUTION-BOARD.md`
+- 명령어 레퍼런스: `docs/ref/commands.md` (ko: `docs/ref/commands.ko.md`)
+- README 부록 (예제·아키텍처·플랫폼): `docs/ref/readme-appendix.md` (ko: `docs/ref/readme-appendix.ko.md`)
 - 사용자 가이드: `docs/ref/getting-started.md`
 - AI 빠른 시작: `docs/ref/ai-quickstart.md`
 - 용어 사전: `docs/ref/glossary.md`

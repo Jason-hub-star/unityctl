@@ -93,7 +93,7 @@ Notes:
 # Human-readable list
 unityctl tools
 
-# Machine-readable JSON (170 canonical commands with parameter schemas)
+# Machine-readable JSON (171 canonical commands with parameter schemas)
 unityctl tools --json
 
 # Full CLI schema

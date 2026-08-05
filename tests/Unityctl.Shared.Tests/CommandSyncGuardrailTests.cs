@@ -369,6 +369,7 @@ public class CommandSyncGuardrailTests
                 "editor select",
                 "init",
                 "log",
+                "mcp install",
                 "package resolve",
                 "player-settings-get",
                 "player-settings-set",
@@ -407,8 +408,8 @@ public class CommandSyncGuardrailTests
     public void CatalogCliNames_AreRegisteredInProgram()
     {
         var cliCommands = ParseCliCommands();
-        Assert.Equal(178, cliCommands.Count);
-        Assert.Equal(170, CommandCatalog.All.Count());
+        Assert.Equal(179, cliCommands.Count);
+        Assert.Equal(171, CommandCatalog.All.Count());
 
         var missing = CommandCatalog.All
             .Select(command => command.CliName ?? command.Name)

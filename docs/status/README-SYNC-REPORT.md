@@ -9,19 +9,19 @@
 | CLI entrypoint count | **178** | published CLI `--help` + registration guardrail |
 | Machine catalog count | **170** | published CLI `schema --format json` / `tools --json` parity smoke |
 | MCP tool count | **12** | README + MCP black-box tests |
-| PR .NET xUnit test inventory | **944** | Shared/Core/Cli/Mcp local Release test output |
+| PR .NET xUnit test inventory | **961** | Shared/Core/Cli/Mcp local Release test output |
 
 ## Synced Public Docs
 
 | 위치 | 현재값 | 상태 |
 |------|--------|------|
-| `README.md` hero / comparison / command heading / architecture | 178 commands, 944 PR .NET tests | ✅ |
-| `README.ko.md` hero / comparison / command heading / architecture | 178 명령, 944 PR .NET 테스트 | ✅ |
+| `README.md` hero / comparison / command heading / architecture | 179 commands, 961 PR .NET tests | ✅ |
+| `README.ko.md` hero / comparison / command heading / architecture | 179 명령, 961 PR .NET 테스트 | ✅ |
 | `README.md` / `README.ko.md` agent skill install | Claude Code + Codex 공용 `unityctl-workflows` | ✅ |
 | `docs/assets/tools.svg` README-rendered command summary | 178 commands, 12 MCP tools | ✅ |
 | `docs/assets/token-efficiency.svg` README-linked command summary | 178 commands | ✅ |
-| `docs/ref/architecture-mermaid.md` architecture block | 944 PR .NET xUnit tests | ✅ |
-| `docs/ref/getting-started.md` architecture block | 944 PR .NET xUnit tests | ✅ |
+| `docs/ref/architecture-mermaid.md` architecture block | 961 PR .NET xUnit tests | ✅ |
+| `docs/ref/getting-started.md` architecture block | 961 PR .NET xUnit tests | ✅ |
 | `docs/ref/ai-quickstart.md` machine-readable schema note | 170 canonical commands | ✅ |
 
 ## CI Guardrails

@@ -765,15 +765,15 @@ Unity 실측 (fresh published CLI: `artifacts/investigation/cli/unityctl.exe`):
 
 구현:
 
-- [`src/Unityctl.Cli/Commands/ScriptCommand.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Cli/Commands/ScriptCommand.cs)
+- [`src/Unityctl.Cli/Commands/ScriptCommand.cs`](../../src/Unityctl.Cli/Commands/ScriptCommand.cs)
   - `script get-errors` / `script find-refs` / `script rename-symbol`에 script 전용 readiness preflight 추가
   - 프로젝트 lock이 있는 동안 direct IPC probe를 최대 12회 시도한 뒤, 계속 미준비면 script 전용 `Busy[103]` 응답 반환
-- [`src/Unityctl.Core/Transport/CommandExecutor.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Core/Transport/CommandExecutor.cs)
+- [`src/Unityctl.Core/Transport/CommandExecutor.cs`](../../src/Unityctl.Core/Transport/CommandExecutor.cs)
   - 실제 execute 단계에서도 script 계열은 일반 Busy 문구 대신 script 전용 추천 액션 반환
-- [`src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs)
+- [`src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs`](../../src/Unityctl.Core/Diagnostics/DoctorAnalyzer.cs)
   - recent failure가 `script-get-errors`면 `script validate --wait` 후속 액션 추천
   - recent failure가 `script-rename-symbol`이면 IPC 우선 / batch 주의 추천
-- [`src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs`](C:/Users/gmdqn/unityagent/src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs)
+- [`src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs`](../../src/Unityctl.Plugin/Editor/Commands/ScriptGetErrorsHandler.cs)
   - compile cache 없음 상태를 `no-compilation-data` + `recommendedAction`으로 더 명확히 반환
 
 검증:
