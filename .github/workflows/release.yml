@@ -66,14 +66,45 @@ jobs:
           dotnet test tests/Unityctl.Cli.Tests -c Release --verbosity normal
           dotnet test tests/Unityctl.Mcp.Tests -c Release --verbosity normal
 
-      - name: Publish
+      # Self-contained + single-file: the archive runs without a .NET SDK/runtime
+      # on the target machine. The CLI still ships its embedded Unity plugin
+      # template as a sibling folder — that is data, not a managed assembly.
+      - name: Publish CLI
         run: >
           dotnet publish src/Unityctl.Cli/Unityctl.Cli.csproj
           -c Release
           -r ${{ matrix.rid }}
           -p:Version=${{ needs.version.outputs.version }}
-          --self-contained false
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          --self-contained true
           -o publish/${{ matrix.rid }}
+
+      - name: Publish MCP server
+        run: >
+          dotnet publish src/Unityctl.Mcp/Unityctl.Mcp.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          -p:Version=${{ needs.version.outputs.version }}
+          -p:PublishSingleFile=true
+          -p:DebugType=none
+          --self-contained true
+          -o publish/${{ matrix.rid }}
+
+      - name: Smoke published binaries
+        shell: bash
+        run: |
+          set -e
+          bin="publish/${{ matrix.rid }}/unityctl"
+          mcp="publish/${{ matrix.rid }}/unityctl-mcp"
+          if [ "${{ runner.os }}" = "Windows" ]; then bin="$bin.exe"; mcp="$mcp.exe"; fi
+          test -f "$bin" && test -f "$mcp"
+          # Cross-RID jobs (osx-x64 on arm64 runners) cannot execute their own output.
+          if [ "${{ matrix.rid }}" != "osx-x64" ]; then
+            got="$("$bin" --version)"
+            echo "unityctl --version = $got"
+            test "$got" = "${{ needs.version.outputs.version }}"
+          fi
 
       - name: Package (Windows)
         if: runner.os == 'Windows'

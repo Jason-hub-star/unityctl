@@ -20,6 +20,16 @@ public static class CommandCatalog
         Parameter("cleanCache", "bool", "Also remove Bee and PackageManager cache files", required: false),
         Parameter("json", "bool", "Output as JSON", required: false));
 
+    public static readonly CommandDefinition McpInstall = Define(
+        "mcp install",
+        "Write the unityctl MCP server entry into an AI client config (merges, never replaces)",
+        "setup",
+        Parameter("client", "string", "claude-code | codex | cursor | vscode", required: true),
+        Parameter("project", "string", "Write the project-scoped config instead of the user-level one (required for vscode)", required: false),
+        Parameter("command", "string", "Executable to register (default: unityctl-mcp)", required: false),
+        Parameter("dryRun", "bool", "Print the merged config without writing", required: false),
+        Parameter("json", "bool", "Output as JSON", required: false));
+
     public static readonly CommandDefinition EditorList = Define(
         "editor list",
         "Discover installed Unity editors",
@@ -1550,6 +1560,7 @@ public static class CommandCatalog
     [
         Init,
         Detach,
+        McpInstall,
         EditorList,
         EditorInstances,
         EditorCurrent,

@@ -71,6 +71,7 @@ unityctl 작업 시작 시 가장 먼저 읽는 진입 문서입니다.
 - v0.6.2 Distribution/Linux Patch (Claude Code/Codex workflow skill, NuGet README, Linux `/proc` process inventory): Done (Linux container `/proc` probe 검증)
 - v0.6.3 IPC/Validation Hardening (listener shutdown race + bounded ping readiness probe + validation failure semantics): Done (Unity labs + 3-OS CI, Windows #12/#13 reporter 재검증 대기)
 - Local Code Intelligence Slice (`script find-refs` Core local scanner, Editor/IPC 불필요): Done (closed-project 4.34s→0.21s, 20.7x)
+- Distribution Ladder P1~P5 (README hero GIF, 저장소 메타, self-contained single-file 릴리스, `mcp install` + Unity 상태창, README 603→199줄): Done (Unity 6000.3.16f1 batchmode 컴파일 검증, 4 RID publish 재현)
 
 최근 확정 사항 (최신 3개만 표시, 전체 이력은 `docs/internal/DEVELOPMENT.md` "슬라이스 이력" 참조):
 - Local Code Intelligence Slice (2026-07-29): `script find-refs`를 Core의 deterministic local scanner로 실행해 Editor/IPC/batch Unity 의존을 제거. 공개 v0.6.2 대비 closed-project 4.34초→0.21초(20.7배), same-line 다중 column과 project-root guard 검증. PR 대상 944 테스트.

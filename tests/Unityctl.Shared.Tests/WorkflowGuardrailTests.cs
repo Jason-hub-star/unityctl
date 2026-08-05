@@ -171,6 +171,10 @@ public class WorkflowGuardrailTests
             ReadRepoFile("docs/ref/getting-started.md"),
             ReadRepoFile("docs/status/README-SYNC-REPORT.md"),
             ReadRepoFile("docs/status/PROJECT-STATUS.md"),
+            // The architecture block moved here when the READMEs were slimmed, so it
+            // carries the same trust numbers and needs the same guard.
+            ReadRepoFile("docs/ref/readme-appendix.md"),
+            ReadRepoFile("docs/ref/readme-appendix.ko.md"),
         };
 
         foreach (var source in publicDocs)
@@ -178,12 +182,14 @@ public class WorkflowGuardrailTests
             Assert.DoesNotContain("476", source);
         }
 
-        Assert.Contains("944 PR .NET tests", publicDocs[0]);
-        Assert.Contains("944 PR .NET 테스트", publicDocs[1]);
-        Assert.Contains("944 PR .NET xUnit tests", publicDocs[2]);
-        Assert.Contains("944 PR .NET xUnit tests", publicDocs[3]);
-        Assert.Contains("**944**", publicDocs[4]);
-        Assert.Contains("**944개**", publicDocs[5]);
+        Assert.Contains("961 PR .NET tests", publicDocs[0]);
+        Assert.Contains("961 PR .NET 테스트", publicDocs[1]);
+        Assert.Contains("961 PR .NET xUnit tests", publicDocs[2]);
+        Assert.Contains("961 PR .NET xUnit tests", publicDocs[3]);
+        Assert.Contains("**961**", publicDocs[4]);
+        Assert.Contains("**961개**", publicDocs[5]);
+        Assert.Contains("961 PR .NET xUnit tests", publicDocs[6]);
+        Assert.Contains("961 PR .NET xUnit 테스트", publicDocs[7]);
         Assert.Contains("Unity live blocker tracking issue: #17", publicDocs[4]);
         Assert.Contains("Configure Unity Integration Actions secret", publicDocs[4]);
     }
