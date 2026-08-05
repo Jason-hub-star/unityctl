@@ -183,6 +183,75 @@ public sealed class McpClientConfigInstallerTests : IDisposable
     }
 
     [Fact]
+    public void Install_UnresolvableHome_FailsInsteadOfWritingToCurrentDirectory()
+    {
+        // Regression: a stripped environment made GetFolderPath return "", so
+        // Path.Combine("", ".cursor", "mcp.json") wrote into the working directory.
+        var installer = new McpClientConfigInstaller(homeDirectory: "not-an-absolute-home");
+        var cwd = Directory.GetCurrentDirectory();
+
+        var result = installer.Install("cursor");
+
+        Assert.False(result.Success);
+        Assert.Contains("home directory", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.False(File.Exists(Path.Combine(cwd, "not-an-absolute-home", ".cursor", "mcp.json")));
+        Assert.False(File.Exists(Path.Combine(cwd, ".cursor", "mcp.json")));
+    }
+
+    [Fact]
+    public void Install_ReplacingAnEntry_ReportsWhatItReplaced()
+    {
+        var configPath = Path.Combine(_project, ".mcp.json");
+        File.WriteAllText(configPath, """
+        {
+          "mcpServers": {
+            "unityctl": { "command": "/hand/tuned/unityctl-mcp", "args": ["--verbose"] }
+          }
+        }
+        """);
+
+        var result = Installer().Install("claude-code", _project);
+
+        Assert.True(result.AlreadyPresent);
+        Assert.NotNull(result.PreviousEntry);
+        Assert.Contains("/hand/tuned/unityctl-mcp", result.PreviousEntry);
+        Assert.Contains("--verbose", result.PreviousEntry);
+    }
+
+    [Fact]
+    public void Install_CodexReplacingATable_ReportsThePreviousTable()
+    {
+        var configPath = Path.Combine(_home, ".codex", "config.toml");
+        Directory.CreateDirectory(Path.GetDirectoryName(configPath)!);
+        File.WriteAllText(configPath, "[mcp_servers.unityctl]\ncommand = \"/hand/tuned/unityctl-mcp\"\n");
+
+        var result = Installer().Install("codex");
+
+        Assert.True(result.AlreadyPresent);
+        Assert.Contains("/hand/tuned/unityctl-mcp", result.PreviousEntry);
+    }
+
+    [Fact]
+    public void Install_FreshEntry_HasNoPreviousEntry()
+    {
+        var result = Installer().Install("claude-code", _project);
+
+        Assert.True(result.Success);
+        Assert.Null(result.PreviousEntry);
+    }
+
+    [Fact]
+    public void Install_ResolvedConfigPath_IsAlwaysAbsolute()
+    {
+        foreach (var client in McpClientConfigInstaller.SupportedClients)
+        {
+            var result = Installer().Install(client, _project, dryRun: true);
+            Assert.True(result.Success, client);
+            Assert.True(Path.IsPathRooted(result.ConfigPath), $"{client}: {result.ConfigPath}");
+        }
+    }
+
+    [Fact]
     public void Install_UnknownClient_FailsWithCandidateList()
     {
         var result = Installer().Install("windsurf");

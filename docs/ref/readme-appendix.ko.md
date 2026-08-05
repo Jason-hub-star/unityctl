@@ -112,7 +112,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI 셸
 +-- src/Unityctl.Mcp      (net10.0)         MCP 서버
 +-- src/Unityctl.Plugin   (Unity UPM)       에디터 브릿지 (IPC 서버)
-+-- tests/*                                 961 PR .NET xUnit 테스트
++-- tests/*                                 966 PR .NET xUnit 테스트
 ```
 
 ---

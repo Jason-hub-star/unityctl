@@ -13,7 +13,7 @@
 Give your AI agent **179 commands** to build Unity scenes, write C# scripts, validate builds, and ship games — with automatic rollback when things go wrong.
 
 ```
-179 CLI commands · 12 MCP tools · 961 PR .NET tests · Windows / macOS / Linux
+179 CLI commands · 12 MCP tools · 966 PR .NET tests · Windows / macOS / Linux
 ```
 
 <p align="center">
@@ -131,14 +131,14 @@ The skill teaches agents to discover the live command surface, target the right
 Unity project, and close every edit with structured readback and verification.
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.4`
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.5`
 
 ## Quick Start
 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.4"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.5"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json

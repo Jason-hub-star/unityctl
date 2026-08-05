@@ -117,7 +117,7 @@ unityctl.slnx
 +-- src/Unityctl.Cli      (net10.0)         CLI shell
 +-- src/Unityctl.Mcp      (net10.0)         MCP server
 +-- src/Unityctl.Plugin   (Unity UPM)       Editor bridge (IPC server)
-+-- tests/*                                 961 PR .NET xUnit tests
++-- tests/*                                 966 PR .NET xUnit tests
 ```
 
 ---

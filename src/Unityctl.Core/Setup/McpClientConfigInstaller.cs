@@ -28,6 +28,10 @@ public enum McpConfigFormat
 /// agent's context and leak personal settings.
 /// </param>
 /// <param name="Content">The full merged file text. Written to disk; not reported.</param>
+/// <param name="PreviousEntry">
+/// The entry we replaced, if any. Reported so an overwrite is recoverable from the
+/// command output alone — replacing a hand-tuned entry must not be silent.
+/// </param>
 public sealed record McpInstallResult(
     bool Success,
     string Client,
@@ -38,6 +42,7 @@ public sealed record McpInstallResult(
     string Entry,
     string Content,
     string Message,
+    string? PreviousEntry = null,
     IReadOnlyList<string>? Candidates = null);
 
 /// <summary>
@@ -56,8 +61,25 @@ public sealed class McpClientConfigInstaller
 
     public McpClientConfigInstaller(string? homeDirectory = null)
     {
-        _homeDirectory = homeDirectory
-            ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        // GetFolderPath returns "" when the environment has no HOME/USERPROFILE
+        // (stripped env, GUI-spawned process). Left unchecked, Path.Combine("", ...)
+        // silently writes the config into the current directory.
+        _homeDirectory = Coalesce(
+            homeDirectory,
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            Environment.GetEnvironmentVariable("HOME"),
+            Environment.GetEnvironmentVariable("USERPROFILE"));
+    }
+
+    private static string Coalesce(params string?[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (!string.IsNullOrWhiteSpace(candidate))
+                return candidate;
+        }
+
+        return string.Empty;
     }
 
     public McpInstallResult Install(
@@ -78,6 +100,17 @@ public sealed class McpClientConfigInstaller
         if (!TryResolveTarget(normalized, projectPath, out var configPath, out var format, out var error))
             return Failure(normalized, error!, null);
 
+        // Never write a relative path: that would land the config in whatever the
+        // current directory happens to be instead of the user's home.
+        if (!Path.IsPathRooted(configPath))
+        {
+            return Failure(
+                normalized,
+                $"Cannot resolve the home directory for '{normalized}' (HOME/USERPROFILE is unset). "
+                + "Pass --project to write a project-scoped config instead.",
+                null);
+        }
+
         var existed = File.Exists(configPath);
         string existing;
         try
@@ -91,13 +124,14 @@ public sealed class McpClientConfigInstaller
 
         string merged;
         string entry;
+        string? previousEntry;
         bool alreadyPresent;
         try
         {
             if (format == McpConfigFormat.Toml)
-                merged = MergeToml(existing, command, out alreadyPresent, out entry);
+                merged = MergeToml(existing, command, out alreadyPresent, out entry, out previousEntry);
             else
-                merged = MergeJson(existing, format, command, out alreadyPresent, out entry);
+                merged = MergeJson(existing, format, command, out alreadyPresent, out entry, out previousEntry);
         }
         catch (JsonException ex)
         {
@@ -131,7 +165,8 @@ public sealed class McpClientConfigInstaller
             AlreadyPresent: alreadyPresent,
             Entry: entry,
             Content: merged,
-            Message: $"{verb} {ServerName} MCP server entry in {configPath}");
+            Message: $"{verb} {ServerName} MCP server entry in {configPath}",
+            PreviousEntry: previousEntry);
     }
 
     private bool TryResolveTarget(
@@ -194,7 +229,8 @@ public sealed class McpClientConfigInstaller
         McpConfigFormat format,
         string command,
         out bool alreadyPresent,
-        out string entry)
+        out string entry,
+        out string? previousEntry)
     {
         var key = format == McpConfigFormat.JsonServers ? "servers" : "mcpServers";
 
@@ -210,6 +246,9 @@ public sealed class McpClientConfigInstaller
         }
 
         alreadyPresent = servers.ContainsKey(ServerName);
+        previousEntry = alreadyPresent
+            ? servers[ServerName]?.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
+            : null;
 
         var serverEntry = new JsonObject { ["command"] = command };
         if (format == McpConfigFormat.JsonServers)
@@ -223,7 +262,12 @@ public sealed class McpClientConfigInstaller
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine;
     }
 
-    private static string MergeToml(string existing, string command, out bool alreadyPresent, out string entry)
+    private static string MergeToml(
+        string existing,
+        string command,
+        out bool alreadyPresent,
+        out string entry,
+        out string? previousEntry)
     {
         // ponytail: line-level TOML editing, not a TOML parser. Ceiling — it only
         // understands the one table it owns ([mcp_servers.unityctl]) and rewrites
@@ -240,6 +284,7 @@ public sealed class McpClientConfigInstaller
         if (string.IsNullOrWhiteSpace(existing))
         {
             alreadyPresent = false;
+            previousEntry = null;
             return block;
         }
 
@@ -249,6 +294,7 @@ public sealed class McpClientConfigInstaller
 
         if (!alreadyPresent)
         {
+            previousEntry = null;
             var trailing = existing.EndsWith('\n') ? string.Empty : Environment.NewLine;
             return existing + trailing + Environment.NewLine + block;
         }
@@ -257,6 +303,8 @@ public sealed class McpClientConfigInstaller
         var end = start + 1;
         while (end < lines.Length && !lines[end].TrimStart().StartsWith('['))
             end++;
+
+        previousEntry = string.Join(Environment.NewLine, lines[start..end]).TrimEnd();
 
         var rebuilt = new StringBuilder();
         for (var i = 0; i < start; i++)
@@ -284,5 +332,6 @@ public sealed class McpClientConfigInstaller
             Entry: string.Empty,
             Content: string.Empty,
             Message: message,
+            PreviousEntry: null,
             Candidates: candidates);
 }

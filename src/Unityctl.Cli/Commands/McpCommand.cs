@@ -39,7 +39,15 @@ public static class McpCommand
 
         Console.WriteLine(result.Message);
         if (result.AlreadyPresent)
+        {
             Console.WriteLine($"  (replaced the existing '{McpClientConfigInstaller.ServerName}' entry; other servers untouched)");
+            if (!string.IsNullOrWhiteSpace(result.PreviousEntry))
+            {
+                Console.WriteLine("  previous entry (restore by hand if it was customised):");
+                foreach (var line in result.PreviousEntry.Split('\n'))
+                    Console.WriteLine("    " + line.TrimEnd());
+            }
+        }
 
         if (dryRun)
         {
@@ -62,6 +70,9 @@ public static class McpCommand
             ["entry"] = result.Entry,
             ["configBytes"] = result.Content.Length
         };
+
+        if (!string.IsNullOrWhiteSpace(result.PreviousEntry))
+            data["previousEntry"] = result.PreviousEntry;
 
         if (result.Candidates is { Count: > 0 })
         {

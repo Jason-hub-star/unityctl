@@ -70,7 +70,7 @@
   - **친화 속성명 (P3)**: `mass`→`m_Mass` 자동 해석 + 실패 시 후보 목록 — component/scriptableobject set-property.
   - **Player Runtime (P4)**: `UnityctlBridge.Runtime` asmdef — Development Build 전용 브릿지 + `runtime status`/`runtime logs`(state 파일 디스커버리). 실행 중 플레이어 라이브 검증.
 
-**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 179개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 961개.**
+**전체 Phase 완료. 총 86개 write allowlist 명령(+exec-eval), 179개 CLI 명령(실측, +exec eval·runtime status/logs), 12개 MCP 도구 (33→12 통합), 4개 MCP 프롬프트. PR 대상 .NET 테스트 966개.**
 
 ## Real-World UX Hardening 라이브 검증 (My project, 2026-04-06)
 
@@ -417,7 +417,7 @@ Unityctl.Mcp resident mode는 `editor_state` / `active_scene` 기준 CoplayDev�
 | Unityctl.Mcp.Tests | 25 |
 | Unityctl.Integration.Tests | 23 (환경 의존 3개 실패 가능) |
 
-PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **961개**다.
+PR 대상 .NET 테스트(Shared/Core/Cli/Mcp) 기준 합계는 **966개**다.
 
 신규 자동 검증:
 

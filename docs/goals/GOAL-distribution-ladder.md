@@ -216,6 +216,11 @@ grep -q 'unityctl-demo.gif' README.md           # P1 hero 유지
 <!-- phase-loop 실행 에이전트가 페이즈별로 append -->
 
 - 2026-08-05 Claude Code(Opus 5) — 브리프 작성. baseline 실측: README 578/572줄, stars 19, fork 0, description 공란, Discussions off, `release.yml:75` self-contained false, GIF untracked 1.4MB, 로컬 문서 게이트 OK(경고 7건).
+- 2026-08-05 **v0.6.4 릴리스 → 배포본 실행에서 버그 발견 → v0.6.5 수정** — 릴리스 워크플로 7개 잡 전부 success, GitHub Release 자산 4개(64~70MB) 게시. **실제 배포 아카이브를 내려받아 `env -i`로 돌린 것이 결정적이었다**: `--version`=0.6.4, `editor list` 3개, `init` 내장 플러그인 설치까지 정상이었으나 **`mcp install --client cursor`가 `.cursor/mcp.json`을 상대 경로로 써서 저장소 루트를 오염시켰다.**
+  - **근본 원인**: `Environment.GetFolderPath(UserProfile)`가 HOME 미해석 환경에서 빈 문자열을 반환 → `Path.Combine("", ".cursor", "mcp.json")`이 상대 경로가 되어 cwd에 기록. 단위 테스트는 항상 명시적 home을 주입해서 이 경로를 못 밟았다.
+  - **수정**: 홈 해석에 `HOME`/`USERPROFILE` 폴백 추가 + **`Path.IsPathRooted` 가드로 상대 경로면 명시적 실패**(unityctl의 실패 계약). 회귀 테스트 2개(`Install_UnresolvableHome_FailsInsteadOfWritingToCurrentDirectory`, `Install_ResolvedConfigPath_IsAlwaysAbsolute`).
+  - **사고 보고**: 검증 중 주인님의 실제 `/Users/family/.cursor/mcp.json`의 기존 `unityctl` 항목을 덮어썼다(다른 서버 없었음, 최종값은 정본과 동일). 이 사고에서 나온 개선으로 **`PreviousEntry`** 를 추가해 덮어쓸 때 이전 항목을 출력·JSON에 노출하도록 했다 — 손으로 조정한 항목을 조용히 날리지 않는다. 테스트 3개 추가.
+  - 테스트 961 → **966**, 버전 0.6.4 → **0.6.5**.
 - 2026-08-05 **릴리스 준비 + 하네스 분리** — 주인님 지시("내작업방식은 깃에 올리지마")에 따라 로컬 하네스(`.claude/`·`scripts/check/`·`docs/INDEX.md`·`docs/SESSION-START.md`)를 `.gitignore`에 넣고 `docs/INDEX.md`는 `git rm --cached`로 추적 해제했다. 그 결과 이 브리프의 검증 명령이 깃에 없는 스크립트를 가리키게 되므로 **`scripts/check-links.py`(저장소 소유, 20줄)** 를 추가해 `bash scripts/check/docs.sh` 참조를 전부 대체했다 — broken relative links = 0. P5의 "INDEX 등재" 제약은 `CLAUDE.md`의 Source of Truth 목록 등재로 대체.
   - 버전 0.6.3 → **0.6.4**: `Directory.Build.props`, `Constants.cs` 폴백, `server.json`(×2), `src/Unityctl.Plugin/package.json`, README 양쪽의 플러그인 Git URL 태그. `PublishedVersions_MatchBuildVersion_AndPingReadsPackageMetadata` guardrail이 plugin package.json 누락을 잡아냈다.
 - 2026-08-05 **승인 게이트 2곳 중 1곳 자동 해소** — 브리프가 "자동 증거 불가"로 골 밖에 뒀던 Unity 실컴파일을 **batchmode로 검증했다**. throwaway 프로젝트에 `file:` 참조로 플러그인을 물리고 `Unity 6000.3.16f1 -batchmode -nographics -quit` 실행 → exit 0, **`error CS` 0건**, `Library/ScriptAssemblies/UnityctlBridge.dll`(350.5KB)에 `Unityctl.Plugin.Editor.Windows|UnityctlStatusWindow` 타입 존재 확인. GUI·라이선스 서버 모두 정상. → **P4의 Unity 컴파일 미검증 항목 해소.**
