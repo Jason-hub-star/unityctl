@@ -2,7 +2,7 @@
 
 ## 골 한 줄
 
-unityctl의 설치 마찰과 발견성을 경쟁 수준으로 올린다 — verified by 페이즈별 자동 증거(`git ls-files`·`gh repo view`·self-contained 바이너리 `--version`·신규 xUnit green·`bash scripts/check/docs.sh`), while preserving 기존 .NET 스위트 green·`dotnet build` 경고 0·Shared↔Plugin 동기 규약. details in docs/goals/GOAL-distribution-ladder.md
+unityctl의 설치 마찰과 발견성을 경쟁 수준으로 올린다 — verified by 페이즈별 자동 증거(`git ls-files`·`gh repo view`·self-contained 바이너리 `--version`·신규 xUnit green·`python3 scripts/check-links.py`), while preserving 기존 .NET 스위트 green·`dotnet build` 경고 0·Shared↔Plugin 동기 규약. details in docs/goals/GOAL-distribution-ladder.md
 
 ---
 
@@ -84,7 +84,7 @@ test "$(wc -c < docs/assets/unityctl-demo.gif)" -le 5242880          # ≤5MB
 - 아티팩트: `docs/assets/unityctl-demo.gif` (tracked)
 
 ## Constraints
-- 기존 `docs/assets/*.svg` 7개 참조가 전부 살아 있을 것 (`bash scripts/check/docs.sh` → 깨진 상대 링크 = 0)
+- 기존 `docs/assets/*.svg` 7개 참조가 전부 살아 있을 것 (`python3 scripts/check-links.py` → broken relative links = 0)
 - GIF 내용이 실제 unityctl 세션일 것 — 중간 프레임 육안 확인 후 커밋 (빈 터미널만 나오면 재생성 대상)
 
 ---
@@ -198,7 +198,7 @@ test "$(wc -l < README.md)" -le 200
 test "$(wc -l < README.ko.md)" -le 200
 test -f docs/ref/commands.md
 grep -c '^| `' docs/ref/commands.md            # 178
-bash scripts/check/docs.sh                      # exit 0, "깨진 상대 링크 = 0"
+python3 scripts/check-links.py                  # exit 0, broken relative links = 0
 grep -q 'commands.md' README.md                 # 이관 링크 존재
 grep -q 'unityctl-demo.gif' README.md           # P1 hero 유지
 ```
@@ -215,7 +215,9 @@ grep -q 'unityctl-demo.gif' README.md           # P1 hero 유지
 
 <!-- phase-loop 실행 에이전트가 페이즈별로 append -->
 
-- 2026-08-05 Claude Code(Opus 5) — 브리프 작성. baseline 실측: README 578/572줄, stars 19, fork 0, description 공란, Discussions off, `release.yml:75` self-contained false, GIF untracked 1.4MB, `scripts/check/docs.sh` 게이트 OK(경고 7건).
+- 2026-08-05 Claude Code(Opus 5) — 브리프 작성. baseline 실측: README 578/572줄, stars 19, fork 0, description 공란, Discussions off, `release.yml:75` self-contained false, GIF untracked 1.4MB, 로컬 문서 게이트 OK(경고 7건).
+- 2026-08-05 **릴리스 준비 + 하네스 분리** — 주인님 지시("내작업방식은 깃에 올리지마")에 따라 로컬 하네스(`.claude/`·`scripts/check/`·`docs/INDEX.md`·`docs/SESSION-START.md`)를 `.gitignore`에 넣고 `docs/INDEX.md`는 `git rm --cached`로 추적 해제했다. 그 결과 이 브리프의 검증 명령이 깃에 없는 스크립트를 가리키게 되므로 **`scripts/check-links.py`(저장소 소유, 20줄)** 를 추가해 `bash scripts/check/docs.sh` 참조를 전부 대체했다 — broken relative links = 0. P5의 "INDEX 등재" 제약은 `CLAUDE.md`의 Source of Truth 목록 등재로 대체.
+  - 버전 0.6.3 → **0.6.4**: `Directory.Build.props`, `Constants.cs` 폴백, `server.json`(×2), `src/Unityctl.Plugin/package.json`, README 양쪽의 플러그인 Git URL 태그. `PublishedVersions_MatchBuildVersion_AndPingReadsPackageMetadata` guardrail이 plugin package.json 누락을 잡아냈다.
 - 2026-08-05 **승인 게이트 2곳 중 1곳 자동 해소** — 브리프가 "자동 증거 불가"로 골 밖에 뒀던 Unity 실컴파일을 **batchmode로 검증했다**. throwaway 프로젝트에 `file:` 참조로 플러그인을 물리고 `Unity 6000.3.16f1 -batchmode -nographics -quit` 실행 → exit 0, **`error CS` 0건**, `Library/ScriptAssemblies/UnityctlBridge.dll`(350.5KB)에 `Unityctl.Plugin.Editor.Windows|UnityctlStatusWindow` 타입 존재 확인. GUI·라이선스 서버 모두 정상. → **P4의 Unity 컴파일 미검증 항목 해소.**
   - 릴리스 매트릭스도 로컬 재현: `win-x64`(PE32+), `linux-x64`(ELF 64-bit), `osx-x64`, `osx-arm64` × CLI/MCP 8개 publish 전부 성공, 74~76MB. `osx-x64`는 Rosetta로 `--version`=0.6.4 출력. workflow의 osx-x64 smoke 가드는 CI 런너에 Rosetta가 보장되지 않으므로 유지한다.
   - **남은 미검증 1건**: 릴리스 워크플로 **실주행**(태그 push → NuGet 게시). 되돌릴 수 없는 공개 배포이므로 주인님 명시 승인 전까지 실행하지 않는다.
@@ -236,4 +238,4 @@ grep -q 'unityctl-demo.gif' README.md           # P1 hero 유지
 - [docs/ref/competitive-analysis-2026-07-29.md](../ref/competitive-analysis-2026-07-29.md)
 - [docs/internal/benchmark/readme-benchmark.md](../internal/benchmark/readme-benchmark.md) — README 채점표 50/100
 - [CLAUDE.md](../../CLAUDE.md) — 실행 규칙 3·6·7·8
-- [scripts/check/docs.conf](../../scripts/check/docs.conf) — 문서 게이트 기준값
+- `scripts/check-links.py` — 저장소 상대 링크 게이트 (이 브리프의 검증 명령)

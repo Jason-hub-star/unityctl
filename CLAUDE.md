@@ -194,6 +194,8 @@ unityctl.slnx
 - Phase 2B 설계: `docs/ref/phase-2b-plan.md`
 - 프로젝트 상태: `docs/status/PROJECT-STATUS.md`
 - Phase 실행 보드: `docs/status/PHASE-EXECUTION-BOARD.md`
+- 명령어 레퍼런스: `docs/ref/commands.md` (ko: `docs/ref/commands.ko.md`)
+- README 부록 (예제·아키텍처·플랫폼): `docs/ref/readme-appendix.md` (ko: `docs/ref/readme-appendix.ko.md`)
 - 사용자 가이드: `docs/ref/getting-started.md`
 - AI 빠른 시작: `docs/ref/ai-quickstart.md`
 - 용어 사전: `docs/ref/glossary.md`

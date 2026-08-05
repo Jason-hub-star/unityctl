@@ -131,14 +131,14 @@ npx skills add Jason-hub-star/unityctl \
 선택하며, 모든 변경을 구조화된 재조회와 검증으로 마무리하도록 안내합니다.
 
 참고:
-- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.3`
+- `--source`에 로컬 `Unityctl.Plugin` 폴더 경로나 Git URL을 넣을 수 있습니다: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.4`
 
 ## 빠른 시작
 
 ```bash
 # 1. 에디터 플러그인 설치
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.3"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.4"
 
 # 2. Unity Editor에서 프로젝트를 열고 연결 확인
 unityctl ping --project /path/to/project --json
