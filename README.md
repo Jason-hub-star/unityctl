@@ -131,14 +131,14 @@ The skill teaches agents to discover the live command surface, target the right
 Unity project, and close every edit with structured readback and verification.
 
 Bootstrap notes:
-- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.5`
+- `--source` accepts a local `Unityctl.Plugin` folder or a Git URL: `https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.6`
 
 ## Quick Start
 
 ```bash
 # 1. Install the Editor plugin
 unityctl init --project /path/to/project \
-  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.5"
+  --source "https://github.com/Jason-hub-star/unityctl.git?path=/src/Unityctl.Plugin#v0.6.6"
 
 # 2. Open the project in Unity Editor, then verify connectivity
 unityctl ping --project /path/to/project --json
