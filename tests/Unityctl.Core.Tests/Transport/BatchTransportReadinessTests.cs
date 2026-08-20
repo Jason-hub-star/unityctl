@@ -69,6 +69,50 @@ public sealed class BatchTransportReadinessTests : IDisposable
         Assert.Contains("stale lock", response.Message);
     }
 
+    [Fact]
+    public async Task SendAsync_ProjectNotUnity_ReportsMissingProjectVersion()
+    {
+        var transport = CreateTransport(new FakePlatform(locked: false));
+
+        var response = await transport.SendAsync(new CommandRequest { Command = WellKnownCommands.Status });
+
+        Assert.False(response.Success);
+        Assert.Equal(StatusCode.NotFound, response.StatusCode);
+        Assert.Contains("Not a Unity project", response.Message);
+        Assert.Contains("ProjectVersion.txt", response.Message);
+    }
+
+    [Fact]
+    public async Task SendAsync_ProjectPathMissing_ReportsMissingPath()
+    {
+        var missing = Path.Combine(_projectPath, "gone");
+        var platform = new FakePlatform(locked: false);
+        var transport = new BatchTransport(platform, new UnityEditorDiscovery(platform), missing);
+
+        var response = await transport.SendAsync(new CommandRequest { Command = WellKnownCommands.Status });
+
+        Assert.False(response.Success);
+        Assert.Equal(StatusCode.NotFound, response.StatusCode);
+        Assert.Contains("does not exist", response.Message);
+    }
+
+    [Fact]
+    public async Task SendAsync_NoInstalledEditorForVersion_ReportsRequiredVersion()
+    {
+        Directory.CreateDirectory(Path.Combine(_projectPath, "ProjectSettings"));
+        File.WriteAllText(
+            Path.Combine(_projectPath, "ProjectSettings", "ProjectVersion.txt"),
+            "m_EditorVersion: 6000.0.64f1");
+        var transport = CreateTransport(new FakePlatform(locked: false));
+
+        var response = await transport.SendAsync(new CommandRequest { Command = WellKnownCommands.Status });
+
+        Assert.False(response.Success);
+        Assert.Equal(StatusCode.NotFound, response.StatusCode);
+        Assert.Contains("requires Unity 6000.0.64f1", response.Message);
+        Assert.Contains("editor list", response.Message);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_projectPath))

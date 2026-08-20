@@ -26,13 +26,43 @@ public sealed class CommandRunnerSelectionTests : IDisposable
     public void TryResolveProject_WithExplicitProject_ReturnsFullPath()
     {
         var projectPath = Path.Combine(_configDir, "ProjectA");
-        Directory.CreateDirectory(projectPath);
+        Directory.CreateDirectory(Path.Combine(projectPath, "ProjectSettings"));
+        File.WriteAllText(Path.Combine(projectPath, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.0.64f1");
 
         var ok = CommandRunner.TryResolveProject(projectPath, out var resolvedProject, out var failureResponse, _store);
 
         Assert.True(ok);
         Assert.Equal(Path.GetFullPath(projectPath), resolvedProject);
         Assert.Null(failureResponse);
+    }
+
+    [CliTestFact]
+    public void TryResolveProject_ExplicitProjectMissing_FailsWithPathMessage()
+    {
+        var missing = Path.Combine(_configDir, "NoSuchProject");
+
+        var ok = CommandRunner.TryResolveProject(missing, out var resolvedProject, out var failureResponse, _store);
+
+        Assert.False(ok);
+        Assert.Equal(string.Empty, resolvedProject);
+        Assert.NotNull(failureResponse);
+        Assert.Equal(StatusCode.InvalidParameters, failureResponse!.StatusCode);
+        Assert.Contains("does not exist", failureResponse.Message);
+    }
+
+    [CliTestFact]
+    public void TryResolveProject_ExplicitProjectNotUnity_FailsWithProjectVersionMessage()
+    {
+        var notUnity = Path.Combine(_configDir, "PlainFolder");
+        Directory.CreateDirectory(notUnity);
+
+        var ok = CommandRunner.TryResolveProject(notUnity, out var resolvedProject, out var failureResponse, _store);
+
+        Assert.False(ok);
+        Assert.Equal(string.Empty, resolvedProject);
+        Assert.NotNull(failureResponse);
+        Assert.Equal(StatusCode.InvalidParameters, failureResponse!.StatusCode);
+        Assert.Contains("ProjectVersion.txt", failureResponse.Message);
     }
 
     [CliTestFact]

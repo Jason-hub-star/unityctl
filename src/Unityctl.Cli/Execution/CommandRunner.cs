@@ -87,6 +87,24 @@ public static class CommandRunner
         if (!string.IsNullOrWhiteSpace(project))
         {
             resolvedProject = Path.GetFullPath(project);
+            if (!Directory.Exists(resolvedProject))
+            {
+                failureResponse = CommandResponse.Fail(
+                    StatusCode.InvalidParameters,
+                    $"Project path does not exist: {resolvedProject}");
+                resolvedProject = string.Empty;
+                return false;
+            }
+
+            if (!File.Exists(Path.Combine(resolvedProject, "ProjectSettings", "ProjectVersion.txt")))
+            {
+                failureResponse = CommandResponse.Fail(
+                    StatusCode.InvalidParameters,
+                    $"Not a Unity project (ProjectSettings/ProjectVersion.txt not found): {resolvedProject}");
+                resolvedProject = string.Empty;
+                return false;
+            }
+
             return true;
         }
 

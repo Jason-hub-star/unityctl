@@ -31,6 +31,34 @@ public sealed class BatchTransport : ITransport
         _processDetector = new UnityProcessDetector(_platform);
     }
 
+    /// <summary>
+    /// FindEditorForProject collapses distinct failures into null; report the actual cause
+    /// (missing path, not a Unity project, unparsable version, or version not installed).
+    /// </summary>
+    private string BuildEditorNotFoundMessage()
+    {
+        if (!Directory.Exists(_projectPath))
+            return $"Project path does not exist: {_projectPath}";
+
+        var versionFile = Path.Combine(_projectPath, "ProjectSettings", "ProjectVersion.txt");
+        if (!File.Exists(versionFile))
+            return $"Not a Unity project (ProjectSettings/ProjectVersion.txt not found): {_projectPath}";
+
+        string? version = null;
+        try
+        {
+            version = UnityEditorDiscovery.ParseProjectVersion(File.ReadAllText(versionFile));
+        }
+        catch (IOException)
+        {
+        }
+
+        if (version == null)
+            return $"Could not parse a Unity version from {versionFile}";
+
+        return $"Project requires Unity {version} but no matching Editor is installed. Run `unityctl editor list` to see installed versions.";
+    }
+
     public async Task<CommandResponse> SendAsync(CommandRequest request, CancellationToken ct = default)
     {
         if (_platform.IsProjectLocked(_projectPath))
@@ -56,8 +84,7 @@ public sealed class BatchTransport : ITransport
         var editor = _discovery.FindEditorForProject(_projectPath);
         if (editor == null)
         {
-            return CommandResponse.Fail(StatusCode.NotFound,
-                $"No matching Unity Editor found for project at {_projectPath}");
+            return CommandResponse.Fail(StatusCode.NotFound, BuildEditorNotFoundMessage());
         }
 
         var unityExe = _platform.GetUnityExecutablePath(editor.Location);
