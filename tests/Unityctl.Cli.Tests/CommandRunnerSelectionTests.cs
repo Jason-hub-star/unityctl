@@ -47,6 +47,43 @@ public sealed class CommandRunnerSelectionTests : IDisposable
     }
 
     [CliTestFact]
+    public void TryResolveProject_StaleSelection_FallsBackToCwdProject()
+    {
+        var stalePath = Path.Combine(_configDir, "DeletedProject");
+        _store.SaveProject(stalePath);
+
+        var cwdProject = Path.Combine(_configDir, "CwdProject");
+        Directory.CreateDirectory(Path.Combine(cwdProject, "ProjectSettings"));
+        File.WriteAllText(Path.Combine(cwdProject, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.0.64f1");
+        Directory.CreateDirectory(Path.Combine(cwdProject, "Assets"));
+
+        var ok = CommandRunner.TryResolveProject(null, out var resolvedProject, out var failureResponse, _store, cwdProject);
+
+        Assert.True(ok);
+        Assert.Equal(Path.GetFullPath(cwdProject), resolvedProject);
+        Assert.Null(failureResponse);
+    }
+
+    [CliTestFact]
+    public void TryResolveProject_StaleSelection_WithoutCwdProject_FailsWithGuidance()
+    {
+        var stalePath = Path.Combine(_configDir, "DeletedProject");
+        _store.SaveProject(stalePath);
+
+        var nonProjectDir = Path.Combine(_configDir, "NotAProject");
+        Directory.CreateDirectory(nonProjectDir);
+
+        var ok = CommandRunner.TryResolveProject(null, out var resolvedProject, out var failureResponse, _store, nonProjectDir);
+
+        Assert.False(ok);
+        Assert.Equal(string.Empty, resolvedProject);
+        Assert.NotNull(failureResponse);
+        Assert.Equal(StatusCode.InvalidParameters, failureResponse!.StatusCode);
+        Assert.Contains("stale", failureResponse.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("--project", failureResponse.Message);
+    }
+
+    [CliTestFact]
     public void TryResolveProject_UsesSelectedProject()
     {
         var projectPath = Path.Combine(_configDir, "SelectedProject");

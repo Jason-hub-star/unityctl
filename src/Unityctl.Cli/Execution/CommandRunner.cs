@@ -78,7 +78,8 @@ public static class CommandRunner
         string? project,
         out string resolvedProject,
         out CommandResponse? failureResponse,
-        EditorSelectionStore? selectionStore = null)
+        EditorSelectionStore? selectionStore = null,
+        string? workingDirectory = null)
     {
         failureResponse = null;
         resolvedProject = string.Empty;
@@ -89,11 +90,12 @@ public static class CommandRunner
             return true;
         }
 
+        var startDir = workingDirectory ?? Directory.GetCurrentDirectory();
         var selection = (selectionStore ?? new EditorSelectionStore()).GetCurrent();
         if (selection == null)
         {
             // Try auto-detect from current working directory
-            var detected = DetectUnityProject(Directory.GetCurrentDirectory());
+            var detected = DetectUnityProject(startDir);
             if (detected != null)
             {
                 resolvedProject = detected;
@@ -109,9 +111,20 @@ public static class CommandRunner
         var versionFilePath = Path.Combine(selection.ProjectPath, "ProjectSettings", "ProjectVersion.txt");
         if (!File.Exists(versionFilePath))
         {
+            // Selected project was moved or deleted: fall back to cwd auto-detect so a
+            // stale selection never locks out status/ping/check/doctor.
+            var detected = DetectUnityProject(startDir);
+            if (detected != null)
+            {
+                Console.Error.WriteLine(
+                    $"Warning: editor selection is stale ({selection.ProjectPath}); using Unity project detected at {detected}.");
+                resolvedProject = detected;
+                return true;
+            }
+
             failureResponse = CommandResponse.Fail(
                 StatusCode.InvalidParameters,
-                $"Current editor selection is stale: {selection.ProjectPath}. Re-run `unityctl editor select --project <path>`.");
+                $"Current editor selection is stale: {selection.ProjectPath} (ProjectSettings/ProjectVersion.txt not found). Re-run `unityctl editor select --project <path>`, pass --project, or run from inside a Unity project.");
             return false;
         }
 
